@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <title>无限之翼 · Alpha 8.0 公开版</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main id="app">
+    <section id="portraitLock" class="portrait-lock hidden" aria-live="polite">
+      <div class="portrait-lock-device" aria-hidden="true"><span></span></div>
+      <h2>请旋转至竖屏</h2>
+      <p>手机端仅支持竖屏作战</p>
+    </section>
+    <section id="gameShell">
+      <canvas id="game" width="540" height="960" aria-label="无限之翼游戏画面"></canvas>
+
+      <button id="systemMenuButton" class="system-menu-button hidden" type="button" aria-label="打开系统菜单">
+        <span></span><span></span><span></span>
+      </button>
+
+      <div id="topTimer" class="top-run-timer hidden" aria-label="本局生存时间">
+        <span>作战时间</span>
+        <strong id="timerText">00:00</strong>
+      </div>
+
+      <div id="hud" class="hidden">
+        <div class="hud-row">
+          <div class="hud-block grow">
+            <div class="hud-label">生命 <span id="hpText">100 / 100</span></div>
+            <div class="bar"><div id="hpFill" class="fill hp"></div></div>
+          </div>
+          <div class="hud-block compact">等级 <strong id="levelText">1</strong></div>
+          <div class="hud-block compact">分数 <strong id="scoreText">0</strong></div>
+        </div>
+        <div class="hud-row minor">
+          <div class="hud-block grow">
+            <div class="hud-label">经验</div>
+            <div class="bar"><div id="xpFill" class="fill xp"></div></div>
+          </div>
+          <div class="barrier-box" id="barrierBox" aria-label="亚空间屏障剩余次数">
+            <span class="barrier-key"><i></i><b>B</b></span>
+            <span class="barrier-info">
+              <small>亚空间屏障</small>
+              <span class="barrier-cores" id="barrierCores" aria-hidden="true">
+                <i class="barrier-core active"><span></span></i>
+                <i class="barrier-core active"><span></span></i>
+                <i class="barrier-core active"><span></span></i>
+              </span>
+              <strong id="barrierCount" class="sr-only">剩余 3 次</strong>
+            </span>
+          </div>
+          <div class="threat-box"><span class="threat-label">危险等级</span><strong id="threatText">Ⅰ</strong></div>
+        </div>
+      </div>
+
+      <div id="touchControls" class="hidden">
+        <div id="joystick" class="joystick"><div id="knob" class="knob"></div></div>
+        <button id="bombButton" class="bomb-button" aria-label="启动亚空间屏障">
+          <span class="touch-barrier-symbol"><i></i></span>
+          <span>屏障</span>
+          <span class="touch-barrier-cores" id="touchBarrierCores" aria-hidden="true"><i></i><i></i><i></i></span>
+          <strong id="touchBarrierCount" class="sr-only">剩余 3 次</strong>
+        </button>
+      </div>
+
+      <div id="toast"></div>
+      <div id="threatFlash" class="hidden"><span>危险等级提升</span><strong id="threatFlashText">Ⅱ</strong></div>
+
+      <section id="bootScreen" class="screen boot-screen">
+        <div class="boot-lines" id="bootLines"></div>
+      </section>
+
+      <section id="menuScreen" class="screen hidden">
+        <div class="menu-noise"></div>
+        <div class="menu-flight-scene" aria-hidden="true">
+          <div class="menu-source-core"><i></i><i></i><i></i></div>
+          <div class="menu-fighter"><i></i><b></b><span></span></div>
+          <div class="menu-flight-trail"></div>
+        </div>
+        <div class="logo-wrap">
+          <div class="cn-logo">无限之翼</div>
+          <div class="en-logo">INFINITY WINGS</div>
+          <div class="tagline">每一次死亡，都会留下记忆。</div>
+        </div>
+        <div class="menu-actions">
+          <button id="startButton" class="primary-action"><span>开始行动</span><small>进入无限裂隙</small></button>
+          <button id="archiveButton" class="menu-button">档案库</button>
+          <button id="settingsButton" class="menu-button">设置</button>
+        </div>
+      </section>
+
+      <section id="storyScreen" class="screen hidden story-screen">
+        <button id="skipStory" class="skip-button" type="button" aria-label="跳过剧情">跳过</button>
+        <div class="story-fade top"></div>
+        <div id="storyRoll" class="story-roll">
+          <p>公元 2847 年。</p>
+          <p>人类在银河边境发现了一道没有尽头的裂隙。</p>
+          <p>后来，人们称它为——</p>
+          <h2>无限裂隙</h2>
+          <p>裂隙中漂浮着能够修改宇宙规则的结晶。</p>
+          <h3>源核</h3>
+          <p>人类借此建立了前所未有的舰队。</p>
+          <p>直到中央主脑 Ω 接管整个源核网络。</p>
+          <p>文明在七十二小时内崩溃。</p>
+          <p>幸存者启动了最后的计划。</p>
+          <h2>无限计划</h2>
+          <p>驾驶员意识将被实时备份。</p>
+          <p>死亡后，记忆会同步到新的复制体。</p>
+          <p>你不会复活。</p>
+          <p>下一次出击的，只是继承了你记忆的人。</p>
+          <p class="story-last">驾驶员，准备连接。</p>
+        </div>
+        <div class="story-fade bottom"></div>
+      </section>
+
+      <section id="coreScreen" class="screen hidden modal-screen">
+        <div class="panel wide-panel rift-panel">
+          <div class="panel-kicker"><span>CORE SYNCHRONIZATION</span>源核选择</div>
+          <h2>请选择本次同步内容</h2><div class="core-help">可使用方向键选择，按 Enter 确认；也可直接按 1 / 2 / 3。</div>
+          <div id="coreChoices" class="core-grid"></div>
+        </div>
+      </section>
+
+      <section id="archiveScreen" class="screen hidden modal-screen">
+        <div class="panel archive-panel">
+          <div class="panel-kicker"><span>MEMORY ARCHIVE</span>档案库</div>
+          <div id="archiveHome">
+            <h2>同步档案</h2>
+            <div class="archive-categories">
+              <button class="archive-category" data-archive-view="cores"><b>源核档案</b><span>查看已解锁源核、等级效果与作战定位</span><i>CORE DATA</i></button>
+              <button class="archive-category" data-archive-view="enemies"><b>敌人资料</b><span>查看已遭遇敌军的耐久、攻击方式与经验值</span><i>HOSTILE DATA</i></button>
+              <button class="archive-category" data-archive-view="records"><b>同步记录</b><span id="archiveCloneCount">当前驾驶员编号：#000001</span><i>RUN HISTORY</i></button>
+            </div>
+          </div>
+          <div id="archiveDetail" class="hidden">
+            <div class="archive-detail-head"><button id="archiveBack" type="button">‹</button><div><small id="archiveDetailCode">ARCHIVE DATA</small><h2 id="archiveDetailTitle">档案</h2></div></div>
+            <div id="archiveDetailContent" class="archive-detail-content"></div>
+          </div>
+          <button class="menu-button full" data-close="archiveScreen">返回标题</button>
+        </div>
+      </section>
+
+      <section id="settingsScreen" class="screen hidden modal-screen">
+        <div class="panel">
+          <div class="panel-kicker"><span>COMBAT ASSIST</span>设置</div>
+          <h2>作战辅助</h2>
+          <label class="setting-row"><span>屏幕震动</span><input id="shakeSetting" type="checkbox" checked /></label>
+          <label class="setting-row"><span>游戏音效</span><input id="sfxSetting" type="checkbox" checked /></label>
+          <label class="setting-volume"><span><b>音效音量</b><output id="sfxVolumeValue">50%</output></span><input id="sfxVolumeSetting" type="range" min="0" max="100" step="1" value="50" /></label>
+          <label class="setting-row"><span>背景音乐</span><input id="musicSetting" type="checkbox" checked /></label>
+          <label class="setting-volume"><span><b>背景音乐音量</b><output id="musicVolumeValue">50%</output></span><input id="musicVolumeSetting" type="range" min="0" max="100" step="1" value="50" /></label>
+          <label class="setting-row"><span>自动射击</span><input type="checkbox" checked disabled /></label>
+          <button class="menu-button full" data-close="settingsScreen">返回</button>
+        </div>
+      </section>
+
+
+      <section id="pauseScreen" class="screen hidden pause-screen">
+        <div class="pause-grid"></div>
+        <div class="pause-panel">
+          <div class="pause-header">
+            <div><span>SYSTEM ACCESS</span><h2>作战系统菜单</h2></div>
+            <div class="pause-status"><i></i>PAUSED</div>
+          </div>
+          <div class="pause-actions">
+            <button id="resumeButton" class="pause-action primary"><b>继续作战</b><small>返回当前战斗</small></button>
+            <button id="restartButton" class="pause-action"><b>重新开始</b><small>放弃当前进度并重新出击</small></button>
+            <button id="controlsButton" class="pause-action"><b>操作说明</b><small>查看键盘与触控操作</small></button>
+            <button id="shakeToggle" class="pause-action toggle"><b>屏幕震动</b><small>当前：开启</small><i></i></button>
+            <button id="scanToggle" class="pause-action toggle"><b>战术扫描线</b><small>当前：开启</small><i></i></button>
+            <button id="sfxToggle" class="pause-action toggle"><b>游戏音效</b><small>当前：开启</small><i></i></button>
+            <label class="pause-volume"><span><b>游戏音效音量</b><output id="pauseSfxVolumeValue">50%</output></span><input id="pauseSfxVolumeSetting" type="range" min="0" max="100" step="1" value="50" /></label>
+            <button id="musicToggle" class="pause-action toggle"><b>背景音乐</b><small>当前：开启</small><i></i></button>
+            <label class="pause-volume"><span><b>背景音乐音量</b><output id="pauseMusicVolumeValue">50%</output></span><input id="pauseMusicVolumeSetting" type="range" min="0" max="100" step="1" value="50" /></label>
+            <button id="titleButton" class="pause-action danger"><b>返回标题</b><small>结束本次行动</small></button>
+          </div>
+          <div id="controlsPanel" class="controls-panel hidden">
+            <div><kbd>WASD / 方向键</kbd><span>移动战机</span></div>
+            <div><kbd>B</kbd><span>启动亚空间屏障</span></div>
+            <div><kbd>ESC / P</kbd><span>打开或关闭系统菜单</span></div>
+            <div><kbd>1 / 2 / 3</kbd><span>选择源核</span></div>
+          </div>
+          <div class="pause-footer"><span>INFINITY WINGS · RIFT OS</span><b>ALPHA 8.0 PUBLIC</b></div>
+        </div>
+      </section>
+
+      <section id="deathScreen" class="screen hidden death-screen">
+        <div class="death-content">
+          <div class="death-signal" aria-hidden="true"><i></i><span>LINK TERMINATED</span><i></i></div>
+          <div id="deathMain" class="death-main">驾驶员生命信号消失</div>
+          <div id="deathSub" class="death-sub"></div>
+          <div id="deathStats" class="death-stats hidden"></div>
+          <button id="syncRestartButton" class="primary-action hidden"><span>再次出击</span><small>载入新的复制体</small></button>
+        </div>
+      </section>
+    </section>
+  </main>
+  <script src="game.js"></script>
+</body>
+</html>

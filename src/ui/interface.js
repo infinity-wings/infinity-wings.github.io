@@ -137,8 +137,23 @@ function recoverFrameState(error){
 function loop(t){
  if(!running)return;
  requestAnimationFrame(loop);
- const dt=Math.min(.028,Math.max(0,(t-last)/1000||0));last=t;
- try{const battleUpdating=(state==='game'&&!paused)||(state==='dying'&&dying);if(battleUpdating)update(dt);updateBarrierDangerHint(dt);draw()}catch(error){recoverFrameState(error)}
+ const rawDt=Math.max(0,(t-last)/1000||0),dt=Math.min(.028,rawDt);last=t;
+ if(typeof mobilePerf!=='undefined'&&mobilePerf.enabled){
+  mobilePerf.frameMs=mobilePerf.frameMs*.9+rawDt*1000*.1;mobilePerf.sampleFrames++;
+  const sampleAge=t-mobilePerf.lastSample;
+  if(sampleAge>=1000){
+   mobilePerf.avgFps=Math.max(1,Math.round(mobilePerf.sampleFrames*1000/sampleAge));mobilePerf.sampleFrames=0;mobilePerf.lastSample=t;
+   if(mobilePerf.avgFps<48){mobilePerf.slowFrames++;mobilePerf.fastFrames=0}else if(mobilePerf.avgFps>57){mobilePerf.fastFrames++;mobilePerf.slowFrames=Math.max(0,mobilePerf.slowFrames-1)}else{mobilePerf.slowFrames=Math.max(0,mobilePerf.slowFrames-1);mobilePerf.fastFrames=0}
+   if(mobilePerf.slowFrames>=2){mobilePerf.quality=Math.max(.55,mobilePerf.quality-.15);mobilePerf.slowFrames=0}
+   if(mobilePerf.fastFrames>=7){mobilePerf.quality=Math.min(1,mobilePerf.quality+.1);mobilePerf.fastFrames=0}
+  }
+ }
+ try{
+  const battleUpdating=(state==='game'&&!paused)||(state==='dying'&&dying);
+  if(battleUpdating)update(dt);
+  if(state==='game'&&!paused)updateBarrierDangerHint(dt);
+  draw();
+ }catch(error){recoverFrameState(error)}
 }
 function renderCoreSelection(){
  const cards=[...document.querySelectorAll('.core-card')];

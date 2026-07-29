@@ -18,6 +18,9 @@ let player,bullets,missiles,enemies,enemyBullets,particles,blastWaves,lightningA
 // 驾驶员编号使用独立的新存档键，避免旧版 Clone/测试计数污染编号。
 pilotId=Math.max(1,Number(localStorage.getItem('infinityWingsPilotIdV2'))||1);
 const stars=Array.from({length:110},()=>({x:Math.random()*W,y:Math.random()*H,s:.4+Math.random()*1.8,v:18+Math.random()*65}));
+const MOBILE_DEVICE=/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)||navigator.maxTouchPoints>1;
+const mobilePerf={enabled:MOBILE_DEVICE,quality:1,avgFps:60,frameMs:16.7,slowFrames:0,fastFrames:0,lastSample:performance.now(),sampleFrames:0};
+window.IWMobilePerf=mobilePerf;
 
 const CORES=[
  {id:'rapid',name:'快速装填',tag:'通用',desc:'主炮射速提高 18%。',can:()=>true,apply:()=>player.fireRate*=.82},

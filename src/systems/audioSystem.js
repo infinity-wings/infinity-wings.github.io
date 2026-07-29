@@ -20,6 +20,7 @@ class InfinityAudioSystem{
   this.assetUrls={
    bgm:'./assets/audio/bgm.mp3',
    weaponShot:'./assets/audio/main-cannon.mp3',
+   droneShot:'./assets/audio/drone-shot.mp3',
    explosionLarge:'./assets/audio/explosion-large.mp3',
    explosionSmall:'./assets/audio/explosion-small.mp3'
   };
@@ -139,13 +140,14 @@ class InfinityAudioSystem{
  }
  play(name){
   if(document.hidden||this.backgrounded)return;this.unlock();
-  const gateName=(name==='shot'||name==='droneShot')?'weaponShot':name;
-  const gateGap=gateName==='weaponShot'?.085:(name==='hit'?.09:.03);if(!this.canPlay(gateName,gateGap))return;
+  const gateName=name==='shot'?'weaponShot':name==='droneShot'?'droneShot':name;
+  const gateGap=gateName==='weaponShot'?.085:gateName==='droneShot'?.11:(name==='hit'?.09:.03);if(!this.canPlay(gateName,gateGap))return;
   if(name==='ui'){this.tone(720,.055,'square',.045);this.tone(1080,.045,'sine',.03,.035)}
-  else if(name==='shot'||name==='droneShot'){
-   // Event-based weapon SFX: a decoded buffer is started and hard-stopped after 72ms.
-   // There is no looping HTMLAudio element, so iPhone PWA cannot keep a weapon track alive.
-   if(!this.playBuffer('weaponShot',{gain:.022,duration:.072,rate:1.08})){this.loadBuffer('weaponShot');this.tone(1180,.045,'triangle',.006,0,-260);this.tone(760,.055,'sine',.0038,.008,-180)}
+  else if(name==='shot'){
+   if(!this.playBuffer('weaponShot',{gain:.05,duration:.072,rate:1.08})){this.loadBuffer('weaponShot');this.tone(1180,.045,'triangle',.012,0,-260);this.tone(760,.055,'sine',.007,.008,-180)}
+  }
+  else if(name==='droneShot'){
+   if(!this.playBuffer('droneShot',{gain:.032,duration:.068,rate:1.12})){this.loadBuffer('droneShot');this.tone(940,.04,'triangle',.006,0,-180)}
   }
   else if(name==='explosionSmall'){if(!this.playBuffer('explosionSmall',{gain:.14,duration:.42})){this.loadBuffer('explosionSmall');this.noise(.22,.075,0,760);this.tone(125,.2,'sine',.05,0,-45)}}
   else if(name==='explosionLarge'){if(!this.playBuffer('explosionLarge',{gain:.24,duration:.8})){this.loadBuffer('explosionLarge');this.noise(.5,.15,0,520);this.tone(80,.5,'sine',.11,0,-45)}}

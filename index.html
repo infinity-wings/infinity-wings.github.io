@@ -3,7 +3,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
-  <title>无限之翼 · Alpha 8.42 稳定性修复 F2 测试版</title>
+  <title>无限之翼 · Alpha 8.43 图标与Boss攻击重制 F2测试版</title>
+  <meta name="theme-color" content="#050816" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="无限之翼" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <link rel="icon" type="image/png" href="favicon.png" />
+  <link rel="manifest" href="manifest.webmanifest" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -70,7 +77,7 @@
       <div id="threatFlash" class="hidden"><span>危险等级提升</span><strong id="threatFlashText">Ⅱ</strong></div>
 
       <section id="bootScreen" class="screen boot-screen">
-        <div class="boot-lines" id="bootLines"></div>
+        <div class="boot-emblem"><img src="assets/icons/icon-512.png" alt="" /><i></i></div><div class="boot-lines" id="bootLines"></div>
       </section>
 
       <section id="menuScreen" class="screen hidden">
@@ -81,7 +88,7 @@
           <div class="menu-flight-trail"></div>
         </div>
         <div class="logo-wrap">
-          <div class="cn-logo">无限之翼 <small class="home-version">Alpha 8.42</small></div>
+          <div class="cn-logo">无限之翼 <small class="home-version">Alpha 8.43</small></div>
           <div class="en-logo">INFINITY WINGS</div>
           <div class="tagline">每一次死亡，都会留下记忆。</div>
         </div>
@@ -180,7 +187,7 @@
             <div><kbd>ESC / P</kbd><span>打开或关闭系统菜单</span></div>
             <div><kbd>1 / 2 / 3</kbd><span>选择源核</span></div>
           </div>
-          <div class="pause-footer"><span>INFINITY WINGS · RIFT OS</span><b>ALPHA 8.34 F2 TEST</b></div>
+          <div class="pause-footer"><span>INFINITY WINGS · RIFT OS</span><b>ALPHA 8.43 F2 TEST</b></div>
         </div>
       </section>
 
@@ -199,5 +206,6 @@
     </section>
   </main>
   <script src="game.js"></script>
+  <script>if('serviceWorker' in navigator){addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));}</script>
 </body>
 </html>

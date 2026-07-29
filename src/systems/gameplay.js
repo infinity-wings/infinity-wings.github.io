@@ -6,8 +6,10 @@ function restartCurrentRun(){reset();state='game';UI.pause.classList.add('hidden
 function returnToTitle(){running=false;paused=false;dying=false;state='menu';UI.hud.classList.add('hidden');UI.timerPanel.classList.add('hidden');UI.touch.classList.add('hidden');setSystemMenuVisible(false);showScreen(UI.menu)}
 function boot(){
  const lines=['正在建立加密连接……','正在读取驾驶员档案……','意识备份：可用','源核网络：异常','欢迎回来，驾驶员。'];
- const box=$('#bootLines');box.innerHTML='';let i=0;
- const timer=setInterval(()=>{const d=document.createElement('div');d.className='boot-line '+(i===2?'ok':i===3?'warn':'');d.textContent=lines[i];box.appendChild(d);i++;if(i===lines.length){clearInterval(timer);setTimeout(()=>{state='menu';showScreen(UI.menu)},900)}},520)
+ const box=$('#bootLines');box.innerHTML='';let i=0,finished=false;
+ const finish=()=>{if(finished)return;finished=true;clearInterval(timer);state='menu';showScreen(UI.menu)};
+ const timer=setInterval(()=>{if(i>=lines.length)return finish();const d=document.createElement('div');d.className='boot-line '+(i===2?'ok':i===3?'warn':'');d.textContent=lines[i];box.appendChild(d);i++;if(i===lines.length)setTimeout(finish,420)},360);
+ setTimeout(finish,4000);
 }
 let storyAutoTimer=0;
 function startStory(){state='story';showScreen(UI.story);const roll=$('#storyRoll');roll.style.animation='none';void roll.offsetWidth;roll.style.animation='storyScroll 36s linear forwards';clearTimeout(storyAutoTimer);storyAutoTimer=setTimeout(()=>{if(state==='story')beginGame()},35000)}
@@ -183,8 +185,10 @@ function spawnBoss(stage=currentStageNumber()){
  const names={rift:'裂隙主宰',fortress:'赤钢堡垒',seraph:'紫电天穹',omega:'终焉核心'};
  const kind=kinds[Math.min(6,Math.max(3,stage))]||'omega';
  const bossScale=1+(stage-3)*.28+Math.min(.38,Math.max(0,combatPower()-10)*.014);
- const bossHp=Math.round(1150*bossScale);
- enemies.push({type:'boss',boss:true,bossKind:kind,bossName:names[kind],bossStage:stage,x:W/2,y:100,r:58,hp:bossHp,max:bossHp,v:32,shoot:99999,dir:1,age:0,bossPhase:1,bossModeIndex:0,bossModeTimer:.9,bossActionCd:.65});
+ const awakened=stage===5||stage===8;
+ const bossHp=Math.round(1150*bossScale*(awakened?1.7:1));
+ enemies.push({type:'boss',boss:true,awakenedBoss:awakened,bossKind:kind,bossName:names[kind],bossStage:stage,x:W/2,y:100,r:58,hp:bossHp,max:bossHp,v:awakened?38:32,shoot:99999,dir:1,age:0,bossPhase:1,bossModeIndex:0,bossModeTimer:.9,bossActionCd:.65,guardWaveUsed:false});
+ if(awakened)toast(`第 ${stage} 阶段 · 觉醒Boss反应确认`);
  if(typeof markEnemyEncounter==='function')markEnemyEncounter('boss');
 }
 function projectionSnapshot(delayFrames=0){
@@ -523,14 +527,21 @@ function explodeMissile(m){
 function pushEnemyBullet(x,y,vx,vy,r,type,damage){enemyBullets.push({x,y,vx,vy,r,type,damage})}
 function bossPhase(e){const ratio=e.hp/e.max;return ratio<=.3?3:ratio<=.6?2:1}
 function bossModes(e,phase){
- const kind=e.bossKind||'rift';
- const sets={
-  rift:{1:['burst','fan'],2:['ring','beam'],3:['sweep','fanStrong']},
-  fortress:{1:['burst','fan'],2:['beam','fanStrong'],3:['sweep','ring']},
-  seraph:{1:['ring','burst'],2:['fan','beam'],3:['ringStrong','sweep']},
-  omega:{1:['fanStrong','ring'],2:['beam','ringStrong'],3:['sweep','fanStrong']}
- };
- return (sets[kind]||sets.rift)[phase]||['burst','fan'];
+ const stage=Math.max(3,e.bossStage||3);
+ // Boss不再使用普通点射：3/4阶段2种，5/6阶段3种，后续逐步增加。
+ if(stage<=4)return phase===1?['fan','ring']:['fanStrong','ringStrong'];
+ if(stage<=6)return phase===1?['fanStrong','ring','guard']:phase===2?['ringStrong','beam','guard']:['fanStrong','sweep','guard'];
+ if(stage===7)return ['fanStrong','ringStrong','beam','guard'];
+ return ['fanStrong','ringStrong','beam','sweep','guard'];
+}
+function summonBossGuards(e){
+ if(enemies.some(x=>x.bossGuardFor===e))return;
+ const count=e.bossStage>=8?3:2;
+ for(let i=0;i<count;i++){
+  const offset=(i-(count-1)/2)*78;
+  enemies.push({type:'heavy',bossGuard:true,bossGuardFor:e,x:Math.max(55,Math.min(W-55,e.x+offset)),y:e.y+92,r:25,hp:220+(e.bossStage||5)*38,max:220+(e.bossStage||5)*38,v:0,shoot:1200+i*170,dir:0,age:0,rewardless:true});
+ }
+ e.guardActive=true;toast(`${e.bossName||'觉醒Boss'} · 护卫舰阵列展开`);
 }
 function spawnBossLaser(e,mode){
  const warning=mode==='sweep'?1.05:.9;
@@ -540,8 +551,7 @@ function spawnBossLaser(e,mode){
  enemyLasers.push({boss:e,mode,x:startX,y:e.y+32,width,warning,duration,life:warning+duration,damage:mode==='sweep'?24:28,tick:0,sweepDir:e.dir||1});
 }
 function fireBossMode(e,mode){
- if(mode==='burst'){
-  for(let i=-2;i<=2;i++)pushEnemyBullet(e.x+i*15,e.y+30,i*16,220,5,'cyan',10);
+ if(mode==='guard'){summonBossGuards(e);
  }else if(mode==='fan'){
   for(let a=-.82;a<=.82;a+=.28)pushEnemyBullet(e.x,e.y+32,Math.sin(a)*185,Math.cos(a)*185,6,'purple',14);
  }else if(mode==='fanStrong'){
@@ -558,7 +568,7 @@ function updateBossAttackPattern(e,dt){
  e.bossModeTimer-=dt;
  if(e.bossModeTimer<=0){e.bossModeIndex=(e.bossModeIndex+1)%modes.length;e.bossModeTimer=5.4;e.bossActionCd=.45;toast(`${e.bossName||'阶段Boss'} · ${modes[e.bossModeIndex].includes('beam')||modes[e.bossModeIndex]==='sweep'?'激光武装':'弹幕武装'}`)}
  e.bossActionCd-=dt;
- if(e.bossActionCd<=0){const mode=modes[e.bossModeIndex];fireBossMode(e,mode);e.bossActionCd=(mode==='beam'||mode==='sweep')?4.2:mode.includes('ring')?2.1:1.15}
+ if(e.bossActionCd<=0){const mode=modes[e.bossModeIndex];fireBossMode(e,mode);e.bossActionCd=mode==='guard'?5.2:(mode==='beam'||mode==='sweep')?4.2:mode.includes('ring')?2.1:1.15}
 }
 
 function bountyTargetShoot(e){
@@ -672,6 +682,7 @@ function updateDefenseCores(dt){
 function nearestLivingEnemy(x,y,exclude=null){let best=null,bestD=Infinity;for(const e of enemies){if(e===exclude||e.hp<=0)continue;const dx=e.x-x,dy=e.y-y,d=dx*dx+dy*dy;if(d<bestD){bestD=d;best=e}}return best}
 function timeCooldownScale(){return coreManager.getLevel('time')>=2?.82:1;}
 function damageEnemy(e,d,opts={}){
+ if(e.boss){const guards=enemies.filter(g=>g.bossGuardFor===e&&g.hp>0);e.guardActive=guards.length>0;if(e.guardActive&&!opts.piercing){e.guardFlash=.16;return false}if(e.guardActive&&opts.piercing)d*=.42;}
  if(e.shield>0){const absorbed=Math.min(e.shield,d);e.shield-=absorbed;d-=absorbed;if(d<=0)return false;}
  e.hp-=d;if(e.hp<=0){audioSystem?.play(e.boss||e.type==='carrier'?'explosionLarge':'explosionSmall');const [points,experience]=enemyReward(e);score+=points;spawnExperienceFragments(e,experience);build.killWindow.push(elapsed);addBarrierCharge(barrierChargeValue(e));maybeDropRepair(e);if(e.type==='carrier')releaseCarrierDrones(e);if(e.type==='suicide')suicideBlast(e);awakeningSystem.onEnemyKilled(e,opts);battleEventSystem.onEnemyKilled(e);explode(e.x,e.y,e.boss?60:e.type==='carrier'?30:18);return true}return false
 }
@@ -721,10 +732,10 @@ function hardSanitizeCombatState(){
   if(pool.length>max)pool.splice(0,pool.length-max);
  };
  sanitizePool(enemies,72,e=>{e.x=clamp(e.x,-120,W+120);e.y=clamp(e.y,-180,H+180);e.r=clamp(e.r,4,90,18);e.hp=finite(e.hp,1);e.max=Math.max(1,finite(e.max,e.hp));e.age=clamp(e.age,0,1e6,0)});
- sanitizePool(enemyBullets,190,b=>{b.x=clamp(b.x,-80,W+80);b.y=clamp(b.y,-100,H+100);b.vx=clamp(b.vx,-1600,1600);b.vy=clamp(b.vy,-1600,1600);b.r=clamp(b.r,1,18,5);b.damage=clamp(b.damage,0,250,8)});
- sanitizePool(bullets,230,b=>{b.x=clamp(b.x,-80,W+80);b.y=clamp(b.y,-120,H+120);b.vx=clamp(b.vx,-2200,2200);b.vy=clamp(b.vy,-2200,2200);b.r=clamp(b.r,.5,18,3);b.w=clamp(b.w,.5,36,4);b.h=clamp(b.h,1,H+80,14);b.life=clamp(b.life,-1,12,2)});
+ sanitizePool(enemyBullets,Math.round(190*(.68+.32*((typeof mobilePerf!=='undefined'&&mobilePerf.enabled)?mobilePerf.quality:1))),b=>{b.x=clamp(b.x,-80,W+80);b.y=clamp(b.y,-100,H+100);b.vx=clamp(b.vx,-1600,1600);b.vy=clamp(b.vy,-1600,1600);b.r=clamp(b.r,1,18,5);b.damage=clamp(b.damage,0,250,8)});
+ sanitizePool(bullets,Math.round(230*(.72+.28*((typeof mobilePerf!=='undefined'&&mobilePerf.enabled)?mobilePerf.quality:1))),b=>{b.x=clamp(b.x,-80,W+80);b.y=clamp(b.y,-120,H+120);b.vx=clamp(b.vx,-2200,2200);b.vy=clamp(b.vy,-2200,2200);b.r=clamp(b.r,.5,18,3);b.w=clamp(b.w,.5,36,4);b.h=clamp(b.h,1,H+80,14);b.life=clamp(b.life,-1,12,2)});
  sanitizePool(missiles,36,m=>{m.x=clamp(m.x,-100,W+100);m.y=clamp(m.y,-120,H+120);m.vx=clamp(m.vx,-1300,1300);m.vy=clamp(m.vy,-1300,1300);m.life=clamp(m.life,0,12,3)});
- sanitizePool(particles,300,p=>{p.x=clamp(p.x,-100,W+100);p.y=clamp(p.y,-120,H+120);p.vx=clamp(p.vx,-1800,1800);p.vy=clamp(p.vy,-1800,1800);p.r=clamp(p.r,.1,42,2);p.life=clamp(p.life,0,4,.2);p.max=clamp(p.max,.01,4,p.life||.2)});
+ sanitizePool(particles,Math.round(300*(.38+.62*((typeof mobilePerf!=='undefined'&&mobilePerf.enabled)?mobilePerf.quality:1))),p=>{p.x=clamp(p.x,-100,W+100);p.y=clamp(p.y,-120,H+120);p.vx=clamp(p.vx,-1800,1800);p.vy=clamp(p.vy,-1800,1800);p.r=clamp(p.r,.1,42,2);p.life=clamp(p.life,0,4,.2);p.max=clamp(p.max,.01,4,p.life||.2)});
  sanitizePool(pickups,120,p=>{p.x=clamp(p.x,-50,W+50);p.y=clamp(p.y,-70,H+70);p.r=clamp(p.r,2,15,5)});
  if(Array.isArray(enemyLasers)){
   for(let i=enemyLasers.length-1;i>=0;i--){const l=enemyLasers[i];if(!l||!Number.isFinite(l.x)||!Number.isFinite(l.y)){enemyLasers.splice(i,1);continue}l.x=clamp(l.x,0,W);l.y=clamp(l.y,-80,H);l.width=clamp(l.width,2,70,14);l.life=clamp(l.life,-1,12,0);l.duration=clamp(l.duration,.05,8,1)}
@@ -830,7 +841,7 @@ function update(dt){
  projectionHistory.unshift({x:player.x,y:player.y,tilt:player.tilt,pitch:player.pitch,thrust:player.thrust,visualY:player.visualY,recoil:player.recoil,vx:player.vx,vy:player.vy,speed:player.speed});if(projectionHistory.length>90)projectionHistory.pop();
  spawnCd-=dt;if(spawnCd<=0){const bossActive=enemies.some(e=>e.boss);spawnEnemy();const gradual=Math.min(.48,elapsed/1800+Math.max(0,level-1)*.012);const pressure=Math.min(.18,combatPower()*.004+recentKillRate()*.03);spawnCd=bossActive?1.7:Math.max(.30,1.18-gradual-pressure)}maybeSpawnStageBoss();
  const timeLevel=coreManager.getLevel('time');const slow=(build.awakeTimeStop||0)>0?.015:(build.chronoActive>0?(timeLevel===3?.02:.42):1);
- for(let i=bullets.length-1;i>=0;i--){const b=bullets[i];if(b.laser){b.life-=dt;const emitter=b.source==='clone'?clonePositions()[b.emitterIndex||0]:player;if(emitter){b.x=emitter.x+(b.emitterOffset||0);b.h=emitter.y-20}for(let j=enemies.length-1;j>=0;j--){const e=enemies[j];if(Math.abs(e.x-b.x)<b.w+enemyHitRadius(e)&&e.y<(emitter?emitter.y:player.y)){const killed=damageEnemy(e,b.d*dt);if(b.awakening==='laser_reflect'&&Math.random()<dt*7){const others=enemies.filter(x=>x!==e&&Math.hypot(x.x-e.x,x.y-e.y)<180).slice(0,4);let from=e;for(const target of others){createLightningArc(from,target,2);if(damageEnemy(target,b.d*dt*.65)){const idx=enemies.indexOf(target);if(idx>=0)enemies.splice(idx,1)}from=target}}if(killed)enemies.splice(j,1)}}if(b.life<=0||!emitter)bullets.splice(i,1);continue}if(b.isSplit){b.life-=dt;if(b.life<=0){bullets.splice(i,1);continue}}if(b.awakening==='blast_chain'){if(!Number.isFinite(b.life)){b.life=1.1;b.maxLife=1.1}if(!b.isSplit){b.life-=dt;if(b.life<=0){bullets.splice(i,1);continue}}if(!b.target||b.target.hp<=0||!enemies.includes(b.target)){b.target=nearestLivingEnemy(b.x,b.y)}if(b.target){const dx=b.target.x-b.x,dy=b.target.y-b.y,len=Math.hypot(dx,dy)||1,speed=Math.hypot(b.vx,b.vy)||500,turn=Math.min(1,(b.seek||7.5)*dt);b.vx+=(dx/len*speed-b.vx)*turn;b.vy+=(dy/len*speed-b.vy)*turn}}b.x+=b.vx*dt;b.y+=b.vy*dt;if(b.y<-30||b.y>H+30||b.x<-30||b.x>W+30){bullets.splice(i,1);continue}for(let j=enemies.length-1;j>=0;j--){const e=enemies[j];if(Math.hypot(b.x-e.x,b.y-e.y)<b.r+enemyHitRadius(e)){const hitX=e.x,hitY=e.y;if(b.awakening==='blast_chain'&&b.splitMark){e.blastAwakeMarks=(e.blastAwakeMarks||0)+1;if(e.blastAwakeMarks>=3){e.blastAwakeMarks=0;blastWaves.push({x:e.x,y:e.y,life:.28,maxLife:.28,radius:6,prevRadius:0,maxRadius:72,absorbed:0,temporalCollapse:true});for(const other of [...enemies])if(other!==e&&Math.hypot(other.x-e.x,other.y-e.y)<72)damageEnemy(other,34)}}const killed=damageEnemy(e,b.d);if(killed){enemies.splice(j,1);if(b.blastLevel&&!b.isSplit)spawnSplitBullets(hitX,hitY,b.d,b.blastLevel);if(b.awakening==='blast_chain'&&b.chainDepth<2)awakeningSystem.spawnChainSplit?.(hitX,hitY,b.d,b.chainDepth+1)}if(b.thunderLevel)triggerThunder({x:hitX,y:hitY},b.d,b.thunderLevel,b.blastLevel&&!b.isSplit?b.blastLevel:0,e);if(b.pierce>0){b.pierce--;b.d*=1.08;break}else{bullets.splice(i,1);break}}}}
+ for(let i=bullets.length-1;i>=0;i--){const b=bullets[i];if(b.laser){b.life-=dt;const emitter=b.source==='clone'?clonePositions()[b.emitterIndex||0]:player;if(emitter){b.x=emitter.x+(b.emitterOffset||0);b.h=emitter.y-20}for(let j=enemies.length-1;j>=0;j--){const e=enemies[j];if(Math.abs(e.x-b.x)<b.w+enemyHitRadius(e)&&e.y<(emitter?emitter.y:player.y)){const killed=damageEnemy(e,b.d*dt,{piercing:true});if(b.awakening==='laser_reflect'&&Math.random()<dt*7){const others=enemies.filter(x=>x!==e&&Math.hypot(x.x-e.x,x.y-e.y)<180).slice(0,4);let from=e;for(const target of others){createLightningArc(from,target,2);if(damageEnemy(target,b.d*dt*.65)){const idx=enemies.indexOf(target);if(idx>=0)enemies.splice(idx,1)}from=target}}if(killed)enemies.splice(j,1)}}if(b.life<=0||!emitter)bullets.splice(i,1);continue}if(b.isSplit){b.life-=dt;if(b.life<=0){bullets.splice(i,1);continue}}if(b.awakening==='blast_chain'){if(!Number.isFinite(b.life)){b.life=1.1;b.maxLife=1.1}if(!b.isSplit){b.life-=dt;if(b.life<=0){bullets.splice(i,1);continue}}if(!b.target||b.target.hp<=0||!enemies.includes(b.target)){b.target=nearestLivingEnemy(b.x,b.y)}if(b.target){const dx=b.target.x-b.x,dy=b.target.y-b.y,len=Math.hypot(dx,dy)||1,speed=Math.hypot(b.vx,b.vy)||500,turn=Math.min(1,(b.seek||7.5)*dt);b.vx+=(dx/len*speed-b.vx)*turn;b.vy+=(dy/len*speed-b.vy)*turn}}b.x+=b.vx*dt;b.y+=b.vy*dt;if(b.y<-30||b.y>H+30||b.x<-30||b.x>W+30){bullets.splice(i,1);continue}for(let j=enemies.length-1;j>=0;j--){const e=enemies[j];if(Math.hypot(b.x-e.x,b.y-e.y)<b.r+enemyHitRadius(e)){const hitX=e.x,hitY=e.y;if(b.awakening==='blast_chain'&&b.splitMark){e.blastAwakeMarks=(e.blastAwakeMarks||0)+1;if(e.blastAwakeMarks>=3){e.blastAwakeMarks=0;blastWaves.push({x:e.x,y:e.y,life:.28,maxLife:.28,radius:6,prevRadius:0,maxRadius:72,absorbed:0,temporalCollapse:true});for(const other of [...enemies])if(other!==e&&Math.hypot(other.x-e.x,other.y-e.y)<72)damageEnemy(other,34)}}const killed=damageEnemy(e,b.d,{piercing:(b.pierce||0)>0});if(killed){enemies.splice(j,1);if(b.blastLevel&&!b.isSplit)spawnSplitBullets(hitX,hitY,b.d,b.blastLevel);if(b.awakening==='blast_chain'&&b.chainDepth<2)awakeningSystem.spawnChainSplit?.(hitX,hitY,b.d,b.chainDepth+1)}if(b.thunderLevel)triggerThunder({x:hitX,y:hitY},b.d,b.thunderLevel,b.blastLevel&&!b.isSplit?b.blastLevel:0,e);if(b.pierce>0){b.pierce--;b.d*=1.08;break}else{bullets.splice(i,1);break}}}}
  for(let i=missiles.length-1;i>=0;i--){
   const m=missiles[i];m.life-=dt;m.trail-=dt;
   if(!m.target||m.target.hp<=0||!enemies.includes(m.target))m.target=nearestLivingEnemy(m.x,m.y);
@@ -843,7 +854,8 @@ function update(dt){
  }
  for(let i=enemies.length-1;i>=0;i--){
   const e=enemies[i];e.age+=dt;
-  if(e.boss){const bossSlow=build.chronoActive>0?(timeLevel===3?.28:slow):1;e.x+=e.dir*90*dt*bossSlow;if(e.x<70||e.x>W-70)e.dir*=-1;updateBossAttackPattern(e,dt*bossSlow)}
+  if(e.bossGuard&&e.bossGuardFor){const host=e.bossGuardFor;if(!enemies.includes(host)){enemies.splice(i,1);continue}const guards=enemies.filter(g=>g.bossGuardFor===host);const gi=Math.max(0,guards.indexOf(e));const targetX=host.x+(gi-(guards.length-1)/2)*78,targetY=host.y+92;e.x+=(targetX-e.x)*Math.min(1,dt*5);e.y+=(targetY-e.y)*Math.min(1,dt*5);}
+  else if(e.boss){const bossSlow=build.chronoActive>0?(timeLevel===3?.28:slow):1;e.x+=e.dir*90*dt*bossSlow;if(e.x<70||e.x>W-70)e.dir*=-1;updateBossAttackPattern(e,dt*bossSlow)}
   else if(e.huntTarget){const targetY=Math.min(145,H*.2);e.y+=(targetY-e.y)*Math.min(1,dt*2.2);e.x+=e.dir*(e.enraged?36:25)*dt*slow;if(e.x<75||e.x>W-75)e.dir*=-1;}
   else if(e.type==='suicide'){
    const distance=Math.hypot(player.x-e.x,player.y-e.y);

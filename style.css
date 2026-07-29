@@ -813,3 +813,18 @@ body.touch-device .mobile-debug-entry{display:block;border-color:rgba(184,120,25
 @keyframes bootCorePulse{50%{transform:scale(1.035);filter:drop-shadow(0 0 42px rgba(142,98,255,.75))}}
 @keyframes bootRing{to{transform:rotate(360deg)}}
 .boot-lines{min-height:122px;text-align:left}
+
+
+/* Alpha 8.44 standalone fullscreen and home credits */
+html,body{min-height:100%;min-height:100dvh;background:#01030a}
+body{padding:0;overscroll-behavior:none;-webkit-user-select:none;user-select:none}
+.home-credits{position:absolute;z-index:4;left:28px;right:28px;bottom:18px;display:flex;align-items:center;justify-content:center;gap:7px;white-space:nowrap;color:rgba(117,154,176,.72);font:600 8px/1.2 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.11em;text-transform:uppercase;pointer-events:none}
+.home-credits b{color:rgba(176,220,235,.82);font-weight:700;letter-spacing:.08em}.home-credits i{width:1px;height:10px;margin:0 3px;background:linear-gradient(transparent,rgba(105,225,255,.6),transparent)}
+@media (display-mode:standalone){
+  #app{width:100vw;height:100vh;height:100dvh;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);background:#01030a}
+  #gameShell{width:min(100vw,calc(100dvh * 9 / 16),540px);height:min(100dvh,calc(100vw * 16 / 9),960px);max-height:none;border-radius:0;border-top-color:rgba(72,223,255,.18);border-bottom-color:rgba(72,223,255,.18)}
+}
+@supports (-webkit-touch-callout:none){
+  body.standalone-mode #app{height:100dvh;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
+}
+@media(max-width:700px){.home-credits{left:12px;right:12px;bottom:10px;gap:5px;font-size:7px;letter-spacing:.07em}.home-credits i{margin:0 1px}}

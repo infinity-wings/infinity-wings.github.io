@@ -627,13 +627,19 @@ function update(dt){
   updateUI();return;
  }
  let dx=(keys.ArrowRight||keys.d?1:0)-(keys.ArrowLeft||keys.a?1:0)+joyX,dy=(keys.ArrowDown||keys.s?1:0)-(keys.ArrowUp||keys.w?1:0)+joyY;
- const inputLength=Math.hypot(dx,dy);
- if(inputLength>1){dx/=inputLength;dy/=inputLength}
- const hasInput=inputLength>.035;
+ let inputLength=Math.hypot(dx,dy);
+ const keyboardInput=inputLength>.035;
  player.slowTimer=Math.max(0,(player.slowTimer||0)-dt);
  const movementSpeed=player.speed*(player.slowTimer>0?.58:1);
- player.targetVx=hasInput?dx*movementSpeed:0;
- player.targetVy=hasInput?dy*movementSpeed:0;
+ let touchDistance=0;
+ if(touchMoveActive&&!keyboardInput){
+  const tx=touchTargetX-player.x,ty=touchTargetY-player.y;touchDistance=Math.hypot(tx,ty);
+  if(touchDistance>3){dx=tx/touchDistance;dy=ty/touchDistance;inputLength=1}else{dx=dy=0;inputLength=0}
+ }else if(inputLength>1){dx/=inputLength;dy/=inputLength;inputLength=1}
+ const hasInput=inputLength>.035;
+ const touchSpeedScale=touchMoveActive&&!keyboardInput?Math.max(.22,Math.min(1,touchDistance/105)):1;
+ player.targetVx=hasInput?dx*movementSpeed*touchSpeedScale:0;
+ player.targetVy=hasInput?dy*movementSpeed*touchSpeedScale:0;
  // 位置控制采用单调逼近：快速起步、快速制动，绝不越过目标速度或反弹。
  const approach=(value,target,step)=>value<target?Math.min(value+step,target):Math.max(value-step,target);
  const reversingX=hasInput&&Math.sign(player.targetVx)&&Math.sign(player.vx)&&Math.sign(player.targetVx)!==Math.sign(player.vx);

@@ -200,7 +200,33 @@ addEventListener('keydown',e=>{
  if((e.key==='Escape'||e.key==='p'||e.key==='P')&&running){e.preventDefault();state==='pause'?closePauseMenu():openPauseMenu();return}
  if(e.key==='b'||e.key==='B')pulse();if(state==='story'&&(e.key==='Escape'||e.key===' '))beginGame()
 });addEventListener('keyup',e=>keys[e.key]=false);
-const joy=$('#joystick'),knob=$('#knob');function moveJoy(e){const r=joy.getBoundingClientRect(),p=e.touches?e.touches[0]:e,x=p.clientX-r.left-r.width/2,y=p.clientY-r.top-r.height/2,m=Math.min(42,Math.hypot(x,y)),a=Math.atan2(y,x);joyX=Math.cos(a)*m/42;joyY=Math.sin(a)*m/42;knob.style.transform=`translate(${Math.cos(a)*m}px,${Math.sin(a)*m}px)`}function endJoy(){joyX=joyY=0;knob.style.transform='translate(0,0)'}joy.addEventListener('touchstart',moveJoy,{passive:false});joy.addEventListener('touchmove',e=>{e.preventDefault();moveJoy(e)},{passive:false});joy.addEventListener('touchend',endJoy);joy.addEventListener('pointerdown',e=>{joy.setPointerCapture(e.pointerId);moveJoy(e)});joy.addEventListener('pointermove',e=>{if(e.buttons)moveJoy(e)});joy.addEventListener('pointerup',endJoy);
+const joy=$('#joystick'),knob=$('#knob');
+function endTouchDrive(pointerId=null){
+ if(pointerId!==null&&touchMovePointerId!==pointerId)return;
+ touchMoveActive=false;touchMovePointerId=null;joyX=joyY=0;
+ if(knob)knob.style.transform='translate(0,0)';
+}
+function updateTouchTarget(clientX,clientY){
+ const rect=canvas.getBoundingClientRect();
+ if(!rect.width||!rect.height)return;
+ const scaleX=W/rect.width,scaleY=H/rect.height;
+ const fingerClearance=Math.max(54,Math.min(88,rect.height*.085));
+ touchTargetX=Math.max(28,Math.min(W-28,(clientX-rect.left)*scaleX));
+ touchTargetY=Math.max(48,Math.min(H-SAFE_BOTTOM-28,(clientY-rect.top-fingerClearance)*scaleY));
+ touchMoveActive=true;
+}
+canvas.addEventListener('pointerdown',e=>{
+ if(!touchDevice||state!=='game'||!running||paused||dying||e.pointerType==='mouse')return;
+ e.preventDefault();touchMovePointerId=e.pointerId;canvas.setPointerCapture?.(e.pointerId);updateTouchTarget(e.clientX,e.clientY);
+},{passive:false});
+canvas.addEventListener('pointermove',e=>{
+ if(!touchMoveActive||e.pointerId!==touchMovePointerId)return;
+ e.preventDefault();updateTouchTarget(e.clientX,e.clientY);
+},{passive:false});
+canvas.addEventListener('pointerup',e=>endTouchDrive(e.pointerId),{passive:true});
+canvas.addEventListener('pointercancel',e=>endTouchDrive(e.pointerId),{passive:true});
+canvas.addEventListener('lostpointercapture',e=>endTouchDrive(e.pointerId),{passive:true});
+
 const portraitLock=$('#portraitLock');
 const touchDevice=('ontouchstart' in window)||(navigator.maxTouchPoints>0);
 const phoneDevice=touchDevice&&Math.min(screen.width||innerWidth,screen.height||innerHeight)<=600;
@@ -208,13 +234,29 @@ if(touchDevice)document.body.classList.add('touch-device');
 function syncPortraitLock(){
  const blocked=phoneDevice&&innerWidth>innerHeight;
  portraitLock?.classList.toggle('hidden',!blocked);
- if(blocked){joyX=0;joyY=0;if(running&&!paused){paused=true;document.body.dataset.orientationPaused='1'}}
+ if(blocked){endTouchDrive();if(running&&!paused){paused=true;document.body.dataset.orientationPaused='1'}}
  else if(document.body.dataset.orientationPaused==='1'){delete document.body.dataset.orientationPaused;if(running&&state==='game'){paused=false;last=performance.now()}}
 }
 addEventListener('resize',syncPortraitLock,{passive:true});
 addEventListener('orientationchange',()=>setTimeout(syncPortraitLock,120),{passive:true});
-addEventListener('visibilitychange',()=>{if(document.hidden&&running&&!paused){openPauseMenu()}});
+addEventListener('visibilitychange',()=>{if(document.hidden){endTouchDrive();if(running&&!paused)openPauseMenu()}});
 ['gesturestart','gesturechange','gestureend'].forEach(type=>document.addEventListener(type,e=>e.preventDefault(),{passive:false}));
-document.addEventListener('touchmove',e=>{if(e.target.closest('#gameShell'))e.preventDefault()},{passive:false});
+function isNativeTouchSurface(target){
+ if(!(target instanceof Element))return false;
+ if(target.closest('input[type=range],select,textarea'))return true;
+ const surface=target.closest('.archive-detail-content,.touch-scroll,[data-touch-scroll]');
+ if(!surface)return false;
+ return surface.scrollHeight>surface.clientHeight||surface.scrollWidth>surface.clientWidth;
+}
+document.addEventListener('touchmove',e=>{if(e.target.closest('#gameShell')&&!isNativeTouchSurface(e.target))e.preventDefault()},{passive:false});
+function enableRangeTouch(input){
+ if(!input)return;
+ const update=clientX=>{const rect=input.getBoundingClientRect();const min=Number(input.min)||0,max=Number(input.max)||100;const ratio=Math.max(0,Math.min(1,(clientX-rect.left)/Math.max(1,rect.width)));input.value=String(min+(max-min)*ratio);input.dispatchEvent(new Event('input',{bubbles:true}))};
+ input.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse')return;e.preventDefault();input.setPointerCapture?.(e.pointerId);update(e.clientX)},{passive:false});
+ input.addEventListener('pointermove',e=>{if(e.pointerType==='mouse'||!input.hasPointerCapture?.(e.pointerId))return;e.preventDefault();update(e.clientX)},{passive:false});
+ input.addEventListener('touchstart',e=>{const t=e.touches[0];if(t)update(t.clientX)},{passive:true});
+ input.addEventListener('touchmove',e=>{const t=e.touches[0];if(t){e.preventDefault();update(t.clientX)}},{passive:false});
+}
+document.querySelectorAll('input[type=range]').forEach(enableRangeTouch);
 syncPortraitLock();
 boot();draw();

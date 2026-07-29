@@ -14,7 +14,8 @@
     './src/systems/upgradeSystem.js',
     './src/systems/gameplay.js',
     './src/render/renderer.js',
-    './src/ui/interface.js'
+    './src/ui/interface.js',
+    './src/systems/debugMenu.js'
   ];
   const loadNext = (index) => {
     if (index >= files.length) return;

@@ -12,9 +12,9 @@ const CORE_CATEGORIES = Object.freeze({
 });
 
 const CORE_CATEGORY_META = Object.freeze({
-  [CORE_CATEGORIES.WEAPON]: Object.freeze({ name: '攻击源核', color: '#ff4d5f', icon: '🔴' }),
-  [CORE_CATEGORIES.DEFENSE]: Object.freeze({ name: '防御源核', color: '#4da3ff', icon: '🔵' }),
-  [CORE_CATEGORIES.TACTICAL]: Object.freeze({ name: '战术源核', color: '#a56cff', icon: '🟣' })
+  [CORE_CATEGORIES.WEAPON]: Object.freeze({ name: '攻击源核', color: '#ff4d5f', icon: '' }),
+  [CORE_CATEGORIES.DEFENSE]: Object.freeze({ name: '防御源核', color: '#4da3ff', icon: '' }),
+  [CORE_CATEGORIES.TACTICAL]: Object.freeze({ name: '战术源核', color: '#a56cff', icon: '' })
 });
 
 function defineCore(core) {

@@ -32,6 +32,8 @@ function reset(){
  targetVx:0,
  targetVy:0,
  tilt:0,
+ pitch:0,
+ thrust:.28,
  visualY:0,
  shotSide:-1,
  recoil:0,
@@ -41,7 +43,7 @@ function reset(){
  mainBulletSize:1,
  mainBulletDamageScale:1
 };
- bullets=[];missiles=[];enemies=[];enemyBullets=[];particles=[];blastWaves=[];lightningArcs=[];drones=[];pickups=[];score=0;level=1;xp=0;nextXp=50;bombs=3;build={laserState:{phase:'cooldown',timer:1.8,level:0},missileCd:1.4,chronoActive:0,chronoCd:8,levelUpLock:0,killWindow:[],spawnBurst:0,lastEnemyUnlock:1,barrierCharge:0,shieldLayers:0,shieldRecharge:0,lastHitAt:-99,projectionActive:0,projectionCd:0,projectionLevel:0,projectionMirrorSide:1,projectionCacheFrame:-1,projectionCacheLevel:0,projectionCache:[],projectionMode:'none',projectionMainCd:0,projectionMissileCd:0,projectionLaserState:{phase:'idle',timer:0},debugLockHp:false,debugLockXp:false,debugThreatLevel:null,droneVolleyCd:0,droneVolleyMode:'none',heavyEscortShieldActive:0,heavyEscortShieldCd:0,heavyEscortShieldDuration:4.5,heavyEscortShieldCooldown:9,awakeFrontShieldActive:0,awakeFrontShieldCd:0,awakeFrontShieldDuration:4,awakeFrontShieldCooldown:8,awakeFrontShieldBurstDone:false};coreManager.reset({silent:true});awakeningSystem.reset();battleEventSystem.reset();upgradeSystem.reset();rewindHistory=[];projectionHistory=[];elapsed=0;spawnCd=0;bossSpawned=false;dying=false;deathTimer=0;deathFade=0;build.allCoresMax=false;updateUI();coreEffects.init()
+ bullets=[];missiles=[];enemies=[];enemyBullets=[];enemyLasers=[];particles=[];blastWaves=[];lightningArcs=[];drones=[];pickups=[];score=0;level=1;xp=0;nextXp=50;bombs=3;build={laserState:{phase:'cooldown',timer:1.8,level:0},missileCd:1.4,chronoActive:0,chronoCd:8,levelUpLock:0,killWindow:[],spawnBurst:0,lastEnemyUnlock:1,barrierCharge:0,shieldLayers:0,shieldRecharge:0,lastHitAt:-99,projectionActive:0,projectionCd:0,projectionLevel:0,projectionMirrorSide:1,projectionCacheFrame:-1,projectionCacheLevel:0,projectionCache:[],projectionMode:'none',projectionMainCd:0,projectionMissileCd:0,projectionLaserState:{phase:'idle',timer:0},debugLockHp:false,debugLockXp:false,debugThreatLevel:null,bossStagesSpawned:{},droneVolleyCd:0,droneVolleyMode:'none',heavyEscortShieldActive:0,heavyEscortShieldCd:0,heavyEscortShieldDuration:4.5,heavyEscortShieldCooldown:9,awakeFrontShieldActive:0,awakeFrontShieldCd:0,awakeFrontShieldDuration:4,awakeFrontShieldCooldown:8,awakeFrontShieldBurstDone:false};coreManager.reset({silent:true});awakeningSystem.reset();battleEventSystem.reset();upgradeSystem.reset();rewindHistory=[];projectionHistory=[];elapsed=0;spawnCd=0;bossSpawned=false;dying=false;deathTimer=0;deathFade=0;build.allCoresMax=false;updateUI();coreEffects.init()
 }
 function threatLevel(){
  if(Number.isInteger(build?.debugThreatLevel))return Math.max(0,Math.min(5,build.debugThreatLevel));
@@ -60,8 +62,12 @@ function recentKillRate(){
 }
 function enemyCap(){
  const t=threatLevel(),power=combatPower(),rate=recentKillRate();
- const early=Math.min(1,elapsed/90);
- return Math.min(24,5+t*2+Math.floor(power*(.42+.28*early))+Math.floor(rate*(.9+1.35*early)));
+ // 敌军数量随作战时间、等级和玩家火力平滑增长，不在某个阶段突然形成敌潮。
+ const timeGrowth=Math.floor(elapsed/95);
+ const levelGrowth=Math.floor(Math.max(0,level-1)/2.4);
+ const powerGrowth=Math.floor(Math.max(0,power-3)*.28);
+ const killGrowth=Math.floor(rate*1.15);
+ return Math.min(28,5+t+timeGrowth+levelGrowth+powerGrowth+killGrowth);
 }
 function enemyStage(){
  if(level<=3)return 0;
@@ -160,14 +166,25 @@ function spawnEnemy(){
   enemies.push(makeEnemy(burstType));enemies.push(makeEnemy(burstType));
  }
 }
-function spawnBoss(){
- bossSpawned=true;toast('高危信号锁定 · 清理交战空域');
+function currentStageNumber(){return threatLevel()+1}
+function stageStartTime(stage){const starts=[0,0,120,300,540,840,1200];return starts[Math.max(1,Math.min(6,stage))]||0}
+function maybeSpawnStageBoss(){
+ const stage=currentStageNumber();
+ if(stage<3||enemies.some(e=>e.boss)||build.bossStagesSpawned?.[stage])return;
+ if(elapsed-stageStartTime(stage)<12)return;
+ build.bossStagesSpawned[stage]=true;spawnBoss(stage);
+}
+function spawnBoss(stage=currentStageNumber()){
+ bossSpawned=true;toast(`第 ${stage} 阶段 Boss 信号锁定 · 清理交战空域`);
  enemyBullets.length=0;
  const survivors=enemies.filter(e=>!['barrage','jammer','support','carrier'].includes(e.type)).slice(0,4);
  enemies.length=0;enemies.push(...survivors);
- const bossScale=1+enemyStage()*.16+Math.min(.35,Math.max(0,combatPower()-10)*.014);
- const bossHp=Math.round(1100*bossScale);
- enemies.push({type:'boss',boss:true,x:W/2,y:100,r:54,hp:bossHp,max:bossHp,v:32,shoot:760,dir:1,age:0});
+ const kinds={3:'rift',4:'fortress',5:'seraph',6:'omega'};
+ const names={rift:'裂隙主宰',fortress:'赤钢堡垒',seraph:'紫电天穹',omega:'终焉核心'};
+ const kind=kinds[Math.min(6,Math.max(3,stage))]||'omega';
+ const bossScale=1+(stage-3)*.28+Math.min(.38,Math.max(0,combatPower()-10)*.014);
+ const bossHp=Math.round(1150*bossScale);
+ enemies.push({type:'boss',boss:true,bossKind:kind,bossName:names[kind],bossStage:stage,x:W/2,y:100,r:58,hp:bossHp,max:bossHp,v:32,shoot:99999,dir:1,age:0,bossPhase:1,bossModeIndex:0,bossModeTimer:.9,bossActionCd:.65});
  if(typeof markEnemyEncounter==='function')markEnemyEncounter('boss');
 }
 function projectionSnapshot(delayFrames=0){
@@ -503,24 +520,87 @@ function explodeMissile(m){
  for(let i=0;i<22;i++){const a=Math.random()*Math.PI*2,s=70+Math.random()*250;particles.push({x:m.x,y:m.y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:.25+Math.random()*.35,max:.6,r:1.8+Math.random()*3.8,type:'missile'})}
  shake=Math.max(shake,m.awakening==='missile_hunter'?19:m.awakening==='missile_cluster'?14:12);
 }
-function enemyShoot(e){
- if(e.boss){
-  const phase=e.hp/e.max<.35?3:e.hp/e.max<.7?2:1,spread=phase===3?.25:.38;
-  for(let a=-1.1;a<=1.1;a+=spread)enemyBullets.push({x:e.x,y:e.y+30,vx:Math.sin(a)*(phase===3?230:185),vy:Math.cos(a)*(phase===3?230:185),r:6,type:'normal'});
-  return;
+function pushEnemyBullet(x,y,vx,vy,r,type,damage){enemyBullets.push({x,y,vx,vy,r,type,damage})}
+function bossPhase(e){const ratio=e.hp/e.max;return ratio<=.3?3:ratio<=.6?2:1}
+function bossModes(e,phase){
+ const kind=e.bossKind||'rift';
+ const sets={
+  rift:{1:['burst','fan'],2:['ring','beam'],3:['sweep','fanStrong']},
+  fortress:{1:['burst','fan'],2:['beam','fanStrong'],3:['sweep','ring']},
+  seraph:{1:['ring','burst'],2:['fan','beam'],3:['ringStrong','sweep']},
+  omega:{1:['fanStrong','ring'],2:['beam','ringStrong'],3:['sweep','fanStrong']}
+ };
+ return (sets[kind]||sets.rift)[phase]||['burst','fan'];
+}
+function spawnBossLaser(e,mode){
+ const warning=mode==='sweep'?1.05:.9;
+ const duration=mode==='sweep'?2.15:1.25;
+ const width=mode==='sweep'?18:24;
+ const startX=mode==='sweep'?Math.max(45,Math.min(W-45,e.x)):Math.max(45,Math.min(W-45,player.x));
+ enemyLasers.push({boss:e,mode,x:startX,y:e.y+32,width,warning,duration,life:warning+duration,damage:mode==='sweep'?24:28,tick:0,sweepDir:e.dir||1});
+}
+function fireBossMode(e,mode){
+ if(mode==='burst'){
+  for(let i=-2;i<=2;i++)pushEnemyBullet(e.x+i*15,e.y+30,i*16,220,5,'cyan',10);
+ }else if(mode==='fan'){
+  for(let a=-.82;a<=.82;a+=.28)pushEnemyBullet(e.x,e.y+32,Math.sin(a)*185,Math.cos(a)*185,6,'purple',14);
+ }else if(mode==='fanStrong'){
+  for(let a=-1.08;a<=1.08;a+=.22)pushEnemyBullet(e.x,e.y+34,Math.sin(a)*230,Math.cos(a)*230,7,'orange',20);
+ }else if(mode==='ring'||mode==='ringStrong'){
+  const count=mode==='ringStrong'?18:12,speed=mode==='ringStrong'?205:170,damage=mode==='ringStrong'?18:13;
+  for(let i=0;i<count;i++){const a=i*Math.PI*2/count+e.age*.24;pushEnemyBullet(e.x,e.y+18,Math.cos(a)*speed,Math.sin(a)*speed,5.5,mode==='ringStrong'?'orange':'purple',damage)}
+ }else if(mode==='beam'||mode==='sweep')spawnBossLaser(e,mode);
+}
+function updateBossAttackPattern(e,dt){
+ const phase=bossPhase(e);
+ if(e.bossPhase!==phase){e.bossPhase=phase;e.bossModeIndex=0;e.bossModeTimer=1.25;e.bossActionCd=.55;toast(`${e.bossName||'阶段Boss'} · 攻击模式切换`)}
+ const modes=bossModes(e,phase);
+ e.bossModeTimer-=dt;
+ if(e.bossModeTimer<=0){e.bossModeIndex=(e.bossModeIndex+1)%modes.length;e.bossModeTimer=5.4;e.bossActionCd=.45;toast(`${e.bossName||'阶段Boss'} · ${modes[e.bossModeIndex].includes('beam')||modes[e.bossModeIndex]==='sweep'?'激光武装':'弹幕武装'}`)}
+ e.bossActionCd-=dt;
+ if(e.bossActionCd<=0){const mode=modes[e.bossModeIndex];fireBossMode(e,mode);e.bossActionCd=(mode==='beam'||mode==='sweep')?4.2:mode.includes('ring')?2.1:1.15}
+}
+
+function bountyTargetShoot(e){
+ const muzzleY=e.y+Math.max(14,e.r*.48);
+ if(muzzleY>=player.y-36)return;
+ const phase=e.enraged?2:(e.hp/e.max<.5?2:1);
+ e.bountyPattern=((e.bountyPattern||0)+1)%3;
+ if(e.bountyPattern===0){
+  const count=phase===2?9:7;
+  const spread=phase===2?.92:.72;
+  for(let i=0;i<count;i++){const a=-spread+(spread*2)*(i/(count-1));pushEnemyBullet(e.x,muzzleY,Math.sin(a)*205,Math.cos(a)*205,5.2,'orange',phase===2?17:14)}
+ }else if(e.bountyPattern===1){
+  const speed=phase===2?285:245;
+  const base=Math.atan2(player.y-muzzleY,player.x-e.x);
+  for(let i=-1;i<=1;i++){const a=base+i*.12;pushEnemyBullet(e.x+i*8,muzzleY,Math.cos(a)*speed,Math.sin(a)*speed,4.8,'red',phase===2?19:16)}
+ }else{
+  const count=phase===2?16:12;
+  for(let i=0;i<count;i++){const a=Math.PI*2*i/count+elapsed*.35;pushEnemyBullet(e.x,muzzleY,Math.cos(a)*155,Math.sin(a)*155,4.4,'purple',phase===2?13:11)}
  }
+}
+function enemyShoot(e){
+ if(e.boss)return;
+ if(e.huntTarget){bountyTargetShoot(e);return;}
  const muzzleY=e.y+Math.max(10,e.r*.55);if(muzzleY>=player.y-28||e.y>H-SAFE_BOTTOM-45)return;
  if(e.type==='barrage'){
-  for(let a=-.72;a<=.72;a+=.24)enemyBullets.push({x:e.x,y:muzzleY,vx:Math.sin(a)*190,vy:Math.cos(a)*190,r:5,type:'barrage'});return;
+  for(let a=-.72;a<=.72;a+=.24)pushEnemyBullet(e.x,muzzleY,Math.sin(a)*190,Math.cos(a)*190,5,'orange',16);return;
  }
- const speed=e.type==='sniper'?245:e.type==='heavy'?125:e.type==='jammer'?150:205;
+ if(e.type==='raider'){
+  const speed=255;
+  for(let i=0;i<6;i++){const lag=i*9*e.dir;pushEnemyBullet(e.x-lag,muzzleY-i*2,-e.dir*(18+i*2),speed+i*7,4.2,'yellow',7)}
+  return;
+ }
+ const speed=e.type==='sniper'?265:e.type==='heavy'?125:e.type==='jammer'?150:205;
  const distance=Math.hypot(player.x-e.x,player.y-muzzleY),travel=Math.min(1.15,distance/speed);
  const lead=e.type==='sniper'?.78:e.type==='heavy'?.22:.42;
  let targetX=player.x+player.vx*travel*lead,targetY=player.y+player.vy*travel*lead;
  targetX=Math.max(18,Math.min(W-18,targetX));targetY=Math.max(muzzleY+70,Math.min(H-SAFE_BOTTOM-18,targetY));
  let dx=targetX-e.x,dy=Math.max(70,targetY-muzzleY);const maxSide=dy*(e.type==='sniper'?1.05:.72);dx=Math.max(-maxSide,Math.min(maxSide,dx));
  const len=Math.hypot(dx,dy)||1;
- enemyBullets.push({x:e.x,y:muzzleY,vx:dx/len*speed,vy:dy/len*speed,r:e.type==='heavy'?6:e.type==='jammer'?7:5,type:e.type==='jammer'?'jammer':'normal'});
+ const type=e.type==='jammer'?'purple':e.type==='heavy'?'red':e.type==='sniper'?'yellow':'cyan';
+ const damage=e.type==='jammer'?10:e.type==='heavy'?18:e.type==='sniper'?13:10;
+ pushEnemyBullet(e.x,muzzleY,dx/len*speed,dy/len*speed,e.type==='heavy'?6:e.type==='jammer'?7:5,type,damage);
 }
 function releaseCarrierDrones(e){
  for(let i=0;i<(e.spawnCount||3);i++){
@@ -533,8 +613,19 @@ function suicideBlast(e){
 }
 function enemyReward(e){
  if(e.rewardless||e.eventMeteor)return [0,0];
- const data={scout:[30,5],heavy:[80,12],sniper:[65,9],suicide:[55,8],support:[95,13],barrage:[110,15],raider:[60,8],carrier:[145,18],jammer:[90,12],boss:[1500,140]};
- return data[e.boss?'boss':e.type]||[30,6];
+ const data={scout:[30,7],heavy:[80,17],sniper:[65,13],suicide:[55,11],support:[95,18],barrage:[110,21],raider:[60,12],carrier:[145,26],jammer:[90,17],boss:[1500,210]};
+ const reward=data[e.boss?'boss':e.type]||[30,8];
+ if(e.boss)reward[1]+=Math.max(0,(e.bossStage||3)-3)*35;
+ return reward;
+}
+function spawnExperienceFragments(e,total){
+ if(total<=0)return;
+ // 每个圆形经验点固定代表5点经验；不足5点的奖励向上补齐，避免出现不同价值但外观相同的碎片。
+ const count=Math.max(1,Math.ceil(total/5));
+ for(let i=0;i<count;i++){
+  const a=Math.random()*Math.PI*2,s=38+Math.random()*88;
+  pickups.push({type:'xpShard',x:e.x,y:e.y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:14,r:e.boss?5.8:4.6,xp:5});
+ }
 }
 function barrierChargeValue(e){
  if(e.boss)return 45;
@@ -582,7 +673,7 @@ function nearestLivingEnemy(x,y,exclude=null){let best=null,bestD=Infinity;for(c
 function timeCooldownScale(){return coreManager.getLevel('time')>=2?.82:1;}
 function damageEnemy(e,d,opts={}){
  if(e.shield>0){const absorbed=Math.min(e.shield,d);e.shield-=absorbed;d-=absorbed;if(d<=0)return false;}
- e.hp-=d;if(e.hp<=0){audioSystem?.play(e.boss||e.type==='carrier'?'explosionLarge':'explosionSmall');const [points,experience]=enemyReward(e);score+=points;if(!build.debugLockXp)xp+=experience;build.killWindow.push(elapsed);addBarrierCharge(barrierChargeValue(e));maybeDropRepair(e);if(e.type==='carrier')releaseCarrierDrones(e);if(e.type==='suicide')suicideBlast(e);awakeningSystem.onEnemyKilled(e,opts);battleEventSystem.onEnemyKilled(e);explode(e.x,e.y,e.boss?60:e.type==='carrier'?30:18);return true}return false
+ e.hp-=d;if(e.hp<=0){audioSystem?.play(e.boss||e.type==='carrier'?'explosionLarge':'explosionSmall');const [points,experience]=enemyReward(e);score+=points;spawnExperienceFragments(e,experience);build.killWindow.push(elapsed);addBarrierCharge(barrierChargeValue(e));maybeDropRepair(e);if(e.type==='carrier')releaseCarrierDrones(e);if(e.type==='suicide')suicideBlast(e);awakeningSystem.onEnemyKilled(e,opts);battleEventSystem.onEnemyKilled(e);explode(e.x,e.y,e.boss?60:e.type==='carrier'?30:18);return true}return false
 }
 function damagePlayer(d){
  audioSystem?.play('damage');
@@ -591,14 +682,14 @@ function damagePlayer(d){
  if(player.inv>0)return;build.lastHitAt=elapsed;
  if((build.shieldLayers||0)>0){build.shieldLayers--;player.inv=.42;shake=8;toast('偏转护层承受冲击');if(coreManager.getLevel('shield')===3){for(let i=enemyBullets.length-1;i>=0;i--)if(Math.hypot(enemyBullets[i].x-player.x,enemyBullets[i].y-player.y)<150)enemyBullets.splice(i,1);blastWaves.push({x:player.x,y:player.y,life:.35,maxLife:.35,radius:18,prevRadius:0,maxRadius:150,absorbed:0,shieldPulse:true});}return;}
  player.hp-=d;player.inv=.65;shake=12;
- if(player.hp<=0&&build.rewind&&!build.rewindUsed&&rewindHistory.length){const snap=rewindHistory[0];Object.assign(player,{x:snap.x,y:snap.y,hp:Math.max(35,snap.hp)});enemyBullets=[];build.rewindUsed=1;toast('回溯保险已启动');return}
+ if(player.hp<=0&&build.rewind&&!build.rewindUsed&&rewindHistory.length){const snap=rewindHistory[0];Object.assign(player,{x:snap.x,y:snap.y,hp:Math.max(35,snap.hp)});enemyBullets=[];enemyLasers=[];build.rewindUsed=1;toast('回溯保险已启动');return}
  if(player.hp<=0&&awakeningSystem.onLethalDamage())return;
  if(player.hp<=0)startDeathSequence()
 }
 function startDeathSequence(){
  if(dying)return;
  dying=true;paused=false;state='dying';deathTimer=0;deathFade=0;player.hp=0;player.inv=999;
- enemyBullets=[];explode(player.x,player.y,90);shake=22;
+ enemyBullets=[];enemyLasers=[];explode(player.x,player.y,90);shake=22;
  toast('机体严重受损');
 }
 function pulse(){
@@ -612,7 +703,7 @@ function pulse(){
 function explode(x,y,n=18){const load=(enemies.length+enemyBullets.length*.045+particles.length*.025);n=Math.max(5,Math.min(n,load>30?10:load>20?14:28));for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,s=40+Math.random()*230;particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:.25+Math.random()*.55,max:.8,r:2+Math.random()*4})}shake=9}
 function trimEntityPools(){
  const pressure=enemies.length+enemyBullets.length*.06+bullets.length*.025+particles.length*.018;
- const limits=[[particles,pressure>34?220:300],[bullets,pressure>34?180:230],[missiles,36],[enemyBullets,pressure>34?130:170],[lightningArcs,pressure>34?28:42],[blastWaves,6],[pickups,8]];
+ const limits=[[particles,pressure>34?220:300],[bullets,pressure>34?180:230],[missiles,36],[enemyBullets,pressure>34?150:190],[lightningArcs,pressure>34?28:42],[blastWaves,6],[pickups,120]];
  for(const [pool,max] of limits)if(pool.length>max)pool.splice(0,pool.length-max);
  if(build.killWindow.length>120)build.killWindow.splice(0,build.killWindow.length-120);
 }
@@ -637,15 +728,17 @@ function update(dt){
   if(touchDistance>3){dx=tx/touchDistance;dy=ty/touchDistance;inputLength=1}else{dx=dy=0;inputLength=0}
  }else if(inputLength>1){dx/=inputLength;dy/=inputLength;inputLength=1}
  const hasInput=inputLength>.035;
- const touchSpeedScale=touchMoveActive&&!keyboardInput?Math.max(.22,Math.min(1,touchDistance/105)):1;
+ const touchSensitivity=touchMoveActive&&!keyboardInput?(uiPrefs?.touchSensitivity||1.5):1;
+ const touchSpeedScale=touchMoveActive&&!keyboardInput?Math.max(.72,Math.min(1.65,touchDistance/62))*touchSensitivity:1;
  player.targetVx=hasInput?dx*movementSpeed*touchSpeedScale:0;
  player.targetVy=hasInput?dy*movementSpeed*touchSpeedScale:0;
  // 位置控制采用单调逼近：快速起步、快速制动，绝不越过目标速度或反弹。
  const approach=(value,target,step)=>value<target?Math.min(value+step,target):Math.max(value-step,target);
  const reversingX=hasInput&&Math.sign(player.targetVx)&&Math.sign(player.vx)&&Math.sign(player.targetVx)!==Math.sign(player.vx);
  const reversingY=hasInput&&Math.sign(player.targetVy)&&Math.sign(player.vy)&&Math.sign(player.targetVy)!==Math.sign(player.vy);
- const responseX=!hasInput||reversingX?player.brake:player.accel;
- const responseY=!hasInput||reversingY?player.brake:player.accel;
+ const touchResponse=touchMoveActive&&!keyboardInput?Math.max(1.25,uiPrefs?.touchSensitivity||1.5):1;
+ const responseX=(!hasInput||reversingX?player.brake:player.accel)*touchResponse;
+ const responseY=(!hasInput||reversingY?player.brake:player.accel)*touchResponse;
  player.vx=approach(player.vx,player.targetVx,responseX*dt);
  player.vy=approach(player.vy,player.targetVy,responseY*dt);
  // 极低速度直接归零，消除松手后的亚像素爬动。
@@ -663,8 +756,18 @@ function update(dt){
  player.tilt+=(targetTilt-player.tilt)*tiltBlend;
  if(Math.abs(targetTilt)<.01&&Math.abs(player.tilt)<.008)player.tilt=0;
  player.tilt=Math.max(-1,Math.min(1,player.tilt));
+ // 纵向动作采用机头俯仰：向前推进时略微俯冲，向后制动时轻微抬头。
+ const targetPitch=Math.max(-1,Math.min(1,-player.vy/(movementSpeed||player.speed)));
+ const pitchBlend=1-Math.exp(-10.5*dt);
+ player.pitch+=(targetPitch-player.pitch)*pitchBlend;
+ if(Math.abs(targetPitch)<.01&&Math.abs(player.pitch)<.008)player.pitch=0;
+ // 推力依据实际速度和加速状态变化，避免机体动作与推进器脱节。
+ const speedRatio=Math.min(1.35,Math.hypot(player.vx,player.vy)/(movementSpeed||player.speed));
+ const accelDemand=Math.min(1,Math.hypot(player.targetVx-player.vx,player.targetVy-player.vy)/(movementSpeed||player.speed));
+ const targetThrust=Math.min(1.35,.28+speedRatio*.72+accelDemand*.32);
+ player.thrust+=(targetThrust-player.thrust)*(1-Math.exp(-8*dt));
  // 只保留极轻微的推进器呼吸，不参与横移停止反馈。
- player.visualY=Math.sin(elapsed*3.1)*.55;
+ player.visualY=Math.sin(elapsed*3.1)*.38;
  player.recoil=Math.max(0,player.recoil-dt*8);
  player.inv=Math.max(0,player.inv-dt);player.fireCd-=dt*1000;if(player.fireCd<=0){playerShoot();const mainAwakening=awakeningSystem.get('main');player.fireCd=mainAwakening?.id==='main_piercer'?1550:mainAwakening?.id==='main_rapid'?220:player.fireRate}
  syncAttackCoreState();updateDefenseCores(dt);updateProjectionCore(dt);updateProjectionInheritedSkills(dt);awakeningSystem.update(dt);
@@ -672,8 +775,8 @@ function update(dt){
  const laserLevel=coreManager.getLevel('laser');updateLaserCore(dt/cooldownScale,laserLevel)
  const missileLevel=coreManager.getLevel('missile');if(missileLevel){build.missileCd-=dt/cooldownScale;if(build.missileCd<=0){fireMissiles(missileLevel);build.missileCd=missileStats(missileLevel).cooldown}}
  rewindHistory.unshift({x:player.x,y:player.y,hp:player.hp});if(rewindHistory.length>240)rewindHistory.pop();
- projectionHistory.unshift({x:player.x,y:player.y,tilt:player.tilt,visualY:player.visualY,recoil:player.recoil,vx:player.vx,vy:player.vy,speed:player.speed});if(projectionHistory.length>90)projectionHistory.pop();
- spawnCd-=dt;if(spawnCd<=0){const bossActive=enemies.some(e=>e.boss);spawnEnemy();const ramp=Math.min(1,elapsed/150);const pressure=Math.min(.22,ramp*(combatPower()*.007+recentKillRate()*.042));spawnCd=bossActive?1.85:Math.max(.34,1.16-threat*.065-pressure)}if(!bossSpawned&&(level>=7||elapsed>=300))spawnBoss();
+ projectionHistory.unshift({x:player.x,y:player.y,tilt:player.tilt,pitch:player.pitch,thrust:player.thrust,visualY:player.visualY,recoil:player.recoil,vx:player.vx,vy:player.vy,speed:player.speed});if(projectionHistory.length>90)projectionHistory.pop();
+ spawnCd-=dt;if(spawnCd<=0){const bossActive=enemies.some(e=>e.boss);spawnEnemy();const gradual=Math.min(.48,elapsed/1800+Math.max(0,level-1)*.012);const pressure=Math.min(.18,combatPower()*.004+recentKillRate()*.03);spawnCd=bossActive?1.7:Math.max(.30,1.18-gradual-pressure)}maybeSpawnStageBoss();
  const timeLevel=coreManager.getLevel('time');const slow=(build.awakeTimeStop||0)>0?.015:(build.chronoActive>0?(timeLevel===3?.02:.42):1);
  for(let i=bullets.length-1;i>=0;i--){const b=bullets[i];if(b.laser){b.life-=dt;const emitter=b.source==='clone'?clonePositions()[b.emitterIndex||0]:player;if(emitter){b.x=emitter.x+(b.emitterOffset||0);b.h=emitter.y-20}for(let j=enemies.length-1;j>=0;j--){const e=enemies[j];if(Math.abs(e.x-b.x)<b.w+enemyHitRadius(e)&&e.y<(emitter?emitter.y:player.y)){const killed=damageEnemy(e,b.d*dt);if(b.awakening==='laser_reflect'&&Math.random()<dt*7){const others=enemies.filter(x=>x!==e&&Math.hypot(x.x-e.x,x.y-e.y)<180).slice(0,4);let from=e;for(const target of others){createLightningArc(from,target,2);if(damageEnemy(target,b.d*dt*.65)){const idx=enemies.indexOf(target);if(idx>=0)enemies.splice(idx,1)}from=target}}if(killed)enemies.splice(j,1)}}if(b.life<=0||!emitter)bullets.splice(i,1);continue}if(b.isSplit){b.life-=dt;if(b.life<=0){bullets.splice(i,1);continue}}if(b.awakening==='blast_chain'){if(!Number.isFinite(b.life)){b.life=1.1;b.maxLife=1.1}if(!b.isSplit){b.life-=dt;if(b.life<=0){bullets.splice(i,1);continue}}if(!b.target||b.target.hp<=0||!enemies.includes(b.target)){b.target=nearestLivingEnemy(b.x,b.y)}if(b.target){const dx=b.target.x-b.x,dy=b.target.y-b.y,len=Math.hypot(dx,dy)||1,speed=Math.hypot(b.vx,b.vy)||500,turn=Math.min(1,(b.seek||7.5)*dt);b.vx+=(dx/len*speed-b.vx)*turn;b.vy+=(dy/len*speed-b.vy)*turn}}b.x+=b.vx*dt;b.y+=b.vy*dt;if(b.y<-30||b.y>H+30||b.x<-30||b.x>W+30){bullets.splice(i,1);continue}for(let j=enemies.length-1;j>=0;j--){const e=enemies[j];if(Math.hypot(b.x-e.x,b.y-e.y)<b.r+enemyHitRadius(e)){const hitX=e.x,hitY=e.y;if(b.awakening==='blast_chain'&&b.splitMark){e.blastAwakeMarks=(e.blastAwakeMarks||0)+1;if(e.blastAwakeMarks>=3){e.blastAwakeMarks=0;blastWaves.push({x:e.x,y:e.y,life:.28,maxLife:.28,radius:6,prevRadius:0,maxRadius:72,absorbed:0,temporalCollapse:true});for(const other of [...enemies])if(other!==e&&Math.hypot(other.x-e.x,other.y-e.y)<72)damageEnemy(other,34)}}const killed=damageEnemy(e,b.d);if(killed){enemies.splice(j,1);if(b.blastLevel&&!b.isSplit)spawnSplitBullets(hitX,hitY,b.d,b.blastLevel);if(b.awakening==='blast_chain'&&b.chainDepth<2)awakeningSystem.spawnChainSplit?.(hitX,hitY,b.d,b.chainDepth+1)}if(b.thunderLevel)triggerThunder({x:hitX,y:hitY},b.d,b.thunderLevel,b.blastLevel&&!b.isSplit?b.blastLevel:0,e);if(b.pierce>0){b.pierce--;b.d*=1.08;break}else{bullets.splice(i,1);break}}}}
  for(let i=missiles.length-1;i>=0;i--){
@@ -688,7 +791,8 @@ function update(dt){
  }
  for(let i=enemies.length-1;i>=0;i--){
   const e=enemies[i];e.age+=dt;
-  if(e.boss){const bossSlow=build.chronoActive>0?(timeLevel===3?.28:slow):1;e.x+=e.dir*90*dt*bossSlow;if(e.x<70||e.x>W-70)e.dir*=-1}
+  if(e.boss){const bossSlow=build.chronoActive>0?(timeLevel===3?.28:slow):1;e.x+=e.dir*90*dt*bossSlow;if(e.x<70||e.x>W-70)e.dir*=-1;updateBossAttackPattern(e,dt*bossSlow)}
+  else if(e.huntTarget){const targetY=Math.min(145,H*.2);e.y+=(targetY-e.y)*Math.min(1,dt*2.2);e.x+=e.dir*(e.enraged?36:25)*dt*slow;if(e.x<75||e.x>W-75)e.dir*=-1;}
   else if(e.type==='suicide'){
    const distance=Math.hypot(player.x-e.x,player.y-e.y);
    if(e.fuse==null&&distance<220){e.fuse=e.fuseDuration||2.2;e.warning=1}
@@ -703,11 +807,19 @@ function update(dt){
     e.supportCd-=dt;if(e.supportCd<=0){e.supportCd=1.15;for(const ally of enemies)if(ally!==e&&Math.hypot(ally.x-e.x,ally.y-e.y)<125){ally.maxShield=Math.max(ally.maxShield||0,28+threat*4);ally.shield=Math.min(ally.maxShield,(ally.shield||0)+18+threat*3)}}
    }
   }
-  e.shoot-=dt*1000*slow;if(e.shoot<=0&&!['suicide','support'].includes(e.type)){enemyShoot(e);e.shoot=e.boss?Math.max(380,760-threat*36):e.type==='barrage'?Math.max(1250,1950-threat*70):e.type==='heavy'?Math.max(1350,2200-threat*90):Math.max(820,1600-threat*80)}
+  e.shoot-=dt*1000*slow;if(e.shoot<=0&&!e.boss&&!['suicide','support'].includes(e.type)){enemyShoot(e);e.shoot=e.huntTarget?(e.enraged?560:760):e.type==='barrage'?Math.max(1250,1950-threat*70):e.type==='heavy'?Math.max(1350,2200-threat*90):Math.max(820,1600-threat*80)}
   if(Math.hypot(player.x-e.x,player.y-e.y)<player.r+e.r){damagePlayer(e.boss?30:e.type==='suicide'?28:16);if(e.type==='suicide')suicideBlast(e);explode(e.x,e.y);enemies.splice(i,1);if(dying)break;continue}
   if(e.y>H+50||e.x<-70||e.x>W+70)enemies.splice(i,1)
  }
- for(let i=enemyBullets.length-1;i>=0;i--){const b=enemyBullets[i];b.x+=b.vx*dt*slow;b.y+=b.vy*dt*slow;if(build.heavyEscortShieldActive>0){const dx=b.x-player.x,dy=b.y-(player.y-8),dist=Math.hypot(dx,dy);const inFront=dy<2&&dy>-112;const insideGuard=dist<92&&Math.abs(dx)<88;if(inFront&&insideGuard){enemyBullets.splice(i,1);particles.push({x:b.x,y:b.y,vx:dx*.75,vy:-70,life:.26,max:.26,r:5.5,type:'barrier'});continue}}if(build.awakeFrontShieldActive>0){const dx=b.x-player.x,dy=b.y-(player.y-78);if(dy>-26&&dy<34&&Math.abs(dx)<118){enemyBullets.splice(i,1);particles.push({x:b.x,y:b.y,vx:dx*.55,vy:-65,life:.28,max:.28,r:6,type:'barrier'});continue}}const bd=Math.hypot(b.x-player.x,b.y-player.y);if(bd<b.r+player.r){if(b.type==='jammer'){player.slowTimer=2.2;toast('动力受阻 · 移动速度下降')}damagePlayer(b.type==='jammer'?7:10+threat*1.5);enemyBullets.splice(i,1);if(dying)break;continue}if(b.y>H+30||b.x<-30||b.x>W+30)enemyBullets.splice(i,1)}
+ for(let i=enemyLasers.length-1;i>=0;i--){
+  const l=enemyLasers[i];l.life-=dt;
+  if(!l.boss||!enemies.includes(l.boss)){enemyLasers.splice(i,1);continue}
+  if(l.mode==='sweep'&&l.life<l.duration){const progress=1-Math.max(0,l.life)/l.duration;l.x=35+(W-70)*(l.sweepDir>0?progress:1-progress)}
+  const active=l.life<l.duration;
+  if(active){l.tick-=dt;if(l.tick<=0&&Math.abs(player.x-l.x)<l.width+player.r&&player.y>l.y){damagePlayer(l.damage);l.tick=.42}}
+  if(l.life<=0)enemyLasers.splice(i,1)
+ }
+ for(let i=enemyBullets.length-1;i>=0;i--){const b=enemyBullets[i];b.x+=b.vx*dt*slow;b.y+=b.vy*dt*slow;if(build.heavyEscortShieldActive>0){const dx=b.x-player.x,dy=b.y-(player.y-8),dist=Math.hypot(dx,dy);const inFront=dy<2&&dy>-112;const insideGuard=dist<92&&Math.abs(dx)<88;if(inFront&&insideGuard){enemyBullets.splice(i,1);particles.push({x:b.x,y:b.y,vx:dx*.75,vy:-70,life:.26,max:.26,r:5.5,type:'barrier'});continue}}if(build.awakeFrontShieldActive>0){const dx=b.x-player.x,dy=b.y-(player.y-78);if(dy>-26&&dy<34&&Math.abs(dx)<118){enemyBullets.splice(i,1);particles.push({x:b.x,y:b.y,vx:dx*.55,vy:-65,life:.28,max:.28,r:6,type:'barrier'});continue}}const bd=Math.hypot(b.x-player.x,b.y-player.y);if(bd<b.r+player.r){if(b.type==='purple'&&b.damage<=10){player.slowTimer=2.2;toast('动力受阻 · 移动速度下降')}damagePlayer(Number.isFinite(b.damage)?b.damage:10+threat*1.5);enemyBullets.splice(i,1);if(dying)break;continue}if(b.y>H+30||b.x<-30||b.x>W+30)enemyBullets.splice(i,1)}
  if(dying){updateUI();return}
  const heavyEscortActive=drones.some(d=>d.mode==='drone_heavy');
  if(heavyEscortActive){
@@ -735,9 +847,18 @@ function update(dt){
  for(let i=particles.length-1;i>=0;i--){const p=particles[i];p.x+=p.vx*dt;p.y+=p.vy*dt;p.vx*=.985;p.vy*=.985;p.life-=dt;if(p.life<=0)particles.splice(i,1)}
  for(let i=pickups.length-1;i>=0;i--){
   const p=pickups[i];p.life-=dt;const dx=player.x-p.x,dy=player.y-p.y,dist=Math.hypot(dx,dy)||1;
-  if(dist<(p.type==='repairShard'?999:230)){p.vx+=dx/dist*(p.type==='repairShard'?920:520)*dt;p.vy+=dy/dist*(p.type==='repairShard'?920:520)*dt}
-  p.vx*=Math.pow(.985,dt*60);p.vy*=Math.pow(.985,dt*60);p.x+=p.vx*dt;p.y+=p.vy*dt;
-  if(dist<p.r+player.r+8){if(p.type==='eventXp'){if(!build.debugLockXp)xp+=p.xp||18;particles.push({x:player.x,y:player.y,vx:0,vy:-30,life:.35,max:.35,r:4,type:'thunder'});}else if(p.type==='repairShard'){audioSystem?.play('pickup');awakeningSystem.collectRepairShard(p.value||1);}else if(player.hp>=player.maxHp-1){audioSystem?.play('pickup');addBarrierCharge(6);toast('维修包转化为屏障能量')}else{audioSystem?.play('pickup');player.hp=Math.min(player.maxHp,player.hp+p.heal);toast(`维修包 +${p.heal} 生命`)}pickups.splice(i,1);continue}
+  const xpPickup=p.type==='xpShard'||p.type==='eventXp';
+  if(xpPickup||p.type==='repairShard'||dist<230){
+   const nearBoost=xpPickup&&dist<150?1.75:1;
+   const force=(xpPickup?1900:p.type==='repairShard'?920:520)*nearBoost;
+   p.vx+=dx/dist*force*dt;p.vy+=dy/dist*force*dt
+  }
+  const drag=xpPickup?.994:.985;p.vx*=Math.pow(drag,dt*60);p.vy*=Math.pow(drag,dt*60);
+  if(xpPickup){const speed=Math.hypot(p.vx,p.vy);if(speed>1450){p.vx=p.vx/speed*1450;p.vy=p.vy/speed*1450}}
+  p.x+=p.vx*dt;p.y+=p.vy*dt;
+  const playerMoveSpeed=Math.hypot(player.vx||0,player.vy||0);
+  const collectRadius=xpPickup?Math.min(86,48+playerMoveSpeed*.08):p.r+player.r+8;
+  if(dist<collectRadius){if(p.type==='eventXp'||p.type==='xpShard'){if(!build.debugLockXp)xp+=p.xp||18;particles.push({x:player.x,y:player.y,vx:0,vy:-30,life:.35,max:.35,r:4,type:'thunder'});}else if(p.type==='repairShard'){audioSystem?.play('pickup');awakeningSystem.collectRepairShard(p.value||1);}else if(player.hp>=player.maxHp-1){audioSystem?.play('pickup');addBarrierCharge(6);toast('维修包转化为屏障能量')}else{audioSystem?.play('pickup');player.hp=Math.min(player.maxHp,player.hp+p.heal);toast(`维修包 +${p.heal} 生命`)}pickups.splice(i,1);continue}
   if(p.life<=0||p.y>H+30)pickups.splice(i,1)
  }
  for(let i=lightningArcs.length-1;i>=0;i--){lightningArcs[i].life-=dt;if(lightningArcs[i].life<=0)lightningArcs.splice(i,1)}

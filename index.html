@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
-  <title>无限之翼 · Alpha 8.4 公开版</title>
+  <title>无限之翼 · Alpha 8.26 F2 测试版</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -138,21 +138,21 @@
             <div class="archive-detail-head"><button id="archiveBack" type="button">‹</button><div><small id="archiveDetailCode">ARCHIVE DATA</small><h2 id="archiveDetailTitle">档案</h2></div></div>
             <div id="archiveDetailContent" class="archive-detail-content"></div>
           </div>
-          <button class="menu-button full" data-close="archiveScreen">返回标题</button>
+          <button class="menu-button full" data-close="archiveScreen">回到主菜单</button>
         </div>
       </section>
 
       <section id="settingsScreen" class="screen hidden modal-screen">
         <div class="panel">
-          <div class="panel-kicker"><span>COMBAT ASSIST</span>设置</div>
-          <h2>作战辅助</h2>
-          <label class="setting-row"><span>屏幕震动</span><input id="shakeSetting" type="checkbox" checked /></label>
+          <div class="panel-kicker"><span>GAME SETTINGS</span>设置</div>
+          <h2>游戏设置</h2>
           <label class="setting-row"><span>游戏音效</span><input id="sfxSetting" type="checkbox" checked /></label>
           <label class="setting-volume"><span><b>音效音量</b><output id="sfxVolumeValue">50%</output></span><input id="sfxVolumeSetting" type="range" min="0" max="100" step="1" value="50" /></label>
           <label class="setting-row"><span>背景音乐</span><input id="musicSetting" type="checkbox" checked /></label>
           <label class="setting-volume"><span><b>背景音乐音量</b><output id="musicVolumeValue">50%</output></span><input id="musicVolumeSetting" type="range" min="0" max="100" step="1" value="50" /></label>
+          <label class="setting-volume"><span><b>触控灵敏度</b><output id="touchSensitivityValue">150%</output></span><input id="touchSensitivitySetting" type="range" min="80" max="220" step="5" value="150" /></label>
           <label class="setting-row"><span>自动射击</span><input type="checkbox" checked disabled /></label>
-          <button class="menu-button full" data-close="settingsScreen">返回</button>
+          <button id="settingsBackButton" class="menu-button full">返回</button>
         </div>
       </section>
 
@@ -168,13 +168,8 @@
             <button id="resumeButton" class="pause-action primary"><b>继续作战</b><small>返回当前战斗</small></button>
             <button id="restartButton" class="pause-action"><b>重新开始</b><small>放弃当前进度并重新出击</small></button>
             <button id="controlsButton" class="pause-action"><b>操作说明</b><small>查看键盘与触控操作</small></button>
-            <button id="shakeToggle" class="pause-action toggle"><b>屏幕震动</b><small>当前：开启</small><i></i></button>
-            <button id="scanToggle" class="pause-action toggle"><b>战术扫描线</b><small>当前：开启</small><i></i></button>
-            <button id="sfxToggle" class="pause-action toggle"><b>游戏音效</b><small>当前：开启</small><i></i></button>
-            <label class="pause-volume"><span><b>游戏音效音量</b><output id="pauseSfxVolumeValue">50%</output></span><input id="pauseSfxVolumeSetting" type="range" min="0" max="100" step="1" value="50" /></label>
-            <button id="musicToggle" class="pause-action toggle"><b>背景音乐</b><small>当前：开启</small><i></i></button>
-            <label class="pause-volume"><span><b>背景音乐音量</b><output id="pauseMusicVolumeValue">50%</output></span><input id="pauseMusicVolumeSetting" type="range" min="0" max="100" step="1" value="50" /></label>
-            <button id="titleButton" class="pause-action danger"><b>返回标题</b><small>结束本次行动</small></button>
+            <button id="gameSettingsButton" class="pause-action"><b>游戏设置</b><small>音效、音乐与触控灵敏度</small></button>
+            <button id="titleButton" class="pause-action danger"><b>回到主菜单</b><small>结束本次行动</small></button>
           </div>
           <div id="controlsPanel" class="controls-panel hidden">
             <div><kbd>WASD / 方向键</kbd><span>移动战机</span></div>
@@ -182,7 +177,7 @@
             <div><kbd>ESC / P</kbd><span>打开或关闭系统菜单</span></div>
             <div><kbd>1 / 2 / 3</kbd><span>选择源核</span></div>
           </div>
-          <div class="pause-footer"><span>INFINITY WINGS · RIFT OS</span><b>ALPHA 8.4 PUBLIC</b></div>
+          <div class="pause-footer"><span>INFINITY WINGS · RIFT OS</span><b>ALPHA 8.26 F2 TEST</b></div>
         </div>
       </section>
 
@@ -192,7 +187,10 @@
           <div id="deathMain" class="death-main">驾驶员生命信号消失</div>
           <div id="deathSub" class="death-sub"></div>
           <div id="deathStats" class="death-stats hidden"></div>
-          <button id="syncRestartButton" class="primary-action hidden"><span>再次出击</span><small>载入新的复制体</small></button>
+          <div id="deathActions" class="death-actions hidden">
+            <button id="syncRestartButton" class="primary-action"><span>继续游戏</span><small>载入新的复制体</small></button>
+            <button id="deathMenuButton" class="menu-button"><span>回到主菜单</span></button>
+          </div>
         </div>
       </section>
     </section>

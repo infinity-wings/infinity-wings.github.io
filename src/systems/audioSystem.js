@@ -14,7 +14,8 @@ class InfinityAudioSystem{
   this.assetPools={};this.assetIndexes={};this.prepareAudioAssets();
   this.bgm=this.createBgm('./assets/audio/bgm.mp3');
   this.unlock=this.unlock.bind(this);
-  ['pointerdown','touchstart','keydown'].forEach(type=>window.addEventListener(type,this.unlock,{passive:true,once:false}));
+  this.handleUnlockEvent=e=>{if(e?.type==='keydown'&&e.repeat)return;this.unlock()};
+  ['pointerdown','touchstart','keydown'].forEach(type=>window.addEventListener(type,this.handleUnlockEvent,{passive:true,once:false}));
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)this.recover();else this.syncState()});
   window.addEventListener('pageshow',()=>this.recover(),{passive:true});
   window.addEventListener('focus',()=>this.recover(),{passive:true});
@@ -30,8 +31,9 @@ class InfinityAudioSystem{
   try{this.assetPools[name]=Array.from({length:count},()=>{const a=new Audio(src);a.preload='auto';a.dataset.baseVolume=String(volume);a.volume=volume*this.prefs.sfxVolume;a.load();return a});this.assetIndexes[name]=0;}catch(_){this.assetPools[name]=[];}
  }
  prepareAudioAssets(){
-  this.preparePool('shot','./assets/audio/main-cannon.mp3',5,.03);
-  this.preparePool('droneShot','./assets/audio/drone-shot.mp3',4,.03);
+  const cannonVolume=.03;
+  this.preparePool('shot','./assets/audio/main-cannon.mp3',5,cannonVolume);
+  this.preparePool('droneShot','./assets/audio/drone-shot.mp3',4,cannonVolume);
   this.preparePool('explosionLarge','./assets/audio/explosion-large.mp3',3,.24);
   this.preparePool('explosionSmall','./assets/audio/explosion-small.mp3',5,.14);
  }
@@ -42,14 +44,19 @@ class InfinityAudioSystem{
   try{const base=Number.isFinite(volume)?volume:Number(a.dataset.baseVolume||.1);a.pause();a.currentTime=0;a.volume=Math.max(0,Math.min(1,base*this.prefs.sfxVolume));const r=a.play();if(r&&typeof r.catch==='function')r.catch(()=>{});return true}catch(_){return false}
  }
  unlock(){
+  let created=false;
   if(!this.ctx){
    const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
    this.ctx=new AC();this.master=this.ctx.createGain();this.musicBus=this.ctx.createGain();this.sfxBus=this.ctx.createGain();
    this.master.gain.value=.72;this.musicBus.gain.value=0;this.sfxBus.gain.value=.42*this.prefs.sfxVolume;
-   this.musicBus.connect(this.master);this.sfxBus.connect(this.master);this.master.connect(this.ctx.destination);this.ready=true;
+   this.musicBus.connect(this.master);this.sfxBus.connect(this.master);this.master.connect(this.ctx.destination);this.ready=true;created=true;
   }
-  if(this.ctx.state==='suspended'){const resumed=this.ctx.resume();if(resumed&&typeof resumed.then==='function')resumed.then(()=>this.recover()).catch(()=>{})}
-  this.recover();
+  if(this.ctx.state==='suspended'){
+   const resumed=this.ctx.resume();
+   if(resumed&&typeof resumed.then==='function')resumed.then(()=>this.recover()).catch(()=>{});
+   return;
+  }
+  if(created)this.recover();
  }
  recover(){
   if(document.hidden)return;
@@ -106,7 +113,7 @@ class InfinityAudioSystem{
   this.unlock();if(!this.canPlay(name,name==='shot'?.065:name==='hit'?.09:.03))return;
   if(name==='ui'){this.tone(720,.055,'square',.045);this.tone(1080,.045,'sine',.03,.035)}
   else if(name==='shot'){if(!this.playAsset('shot',.03)){this.tone(1180,.045,'triangle',.007,0,-260);this.tone(760,.06,'sine',.0045,.008,-180)}}
-  else if(name==='droneShot'){if(!this.playAsset('droneShot',.03))this.tone(940,.045,'square',.0045,0,-180)}
+  else if(name==='droneShot'){if(!this.playAsset('droneShot',Number(this.assetPools.shot?.[0]?.dataset.baseVolume||.03)))this.tone(940,.045,'square',.0045,0,-180)}
   else if(name==='explosionSmall'){if(!this.playAsset('explosionSmall',.14)){this.noise(.22,.075,0,760);this.tone(125,.2,'sine',.05,0,-45)}}
   else if(name==='explosionLarge'){if(!this.playAsset('explosionLarge',.24)){this.noise(.5,.15,0,520);this.tone(80,.5,'sine',.11,0,-45)}}
   else if(name==='laser'){this.tone(180,.28,'sawtooth',.07,0,520);this.tone(680,.24,'sine',.05,.06,260)}

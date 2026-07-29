@@ -12,6 +12,7 @@ const THREAT_ROMAN=['Ⅰ','Ⅱ','Ⅲ','Ⅳ','Ⅴ','Ω'];
 const keys={};
 let state='boot',running=false,paused=false,last=0,elapsed=0,spawnCd=0,bossSpawned=false,shake=0,joyX=0,joyY=0;
 let touchMoveActive=false,touchMovePointerId=null,touchTargetX=0,touchTargetY=0;
+let mouseMoveActive=false,mouseTargetX=W/2,mouseTargetY=H-SAFE_BOTTOM-75,mouseDeltaX=0,mouseDeltaY=0;
 let dying=false,deathTimer=0,deathFade=0,coreSelection=0,currentCorePool=[];
 let player,bullets,missiles,enemies,enemyBullets,particles,blastWaves,lightningArcs,drones,pickups,score,level,xp,nextXp,bombs,build,rewindHistory,pilotId;
 // 驾驶员编号使用独立的新存档键，避免旧版 Clone/测试计数污染编号。

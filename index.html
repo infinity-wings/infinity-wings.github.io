@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
-  <title>无限之翼 · Alpha 8.26 F2 测试版</title>
+  <title>无限之翼 · Alpha 8.30 音频稳定修复 F2 测试版</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -151,6 +151,7 @@
           <label class="setting-row"><span>背景音乐</span><input id="musicSetting" type="checkbox" checked /></label>
           <label class="setting-volume"><span><b>背景音乐音量</b><output id="musicVolumeValue">50%</output></span><input id="musicVolumeSetting" type="range" min="0" max="100" step="1" value="50" /></label>
           <label class="setting-volume"><span><b>触控灵敏度</b><output id="touchSensitivityValue">150%</output></span><input id="touchSensitivitySetting" type="range" min="80" max="220" step="5" value="150" /></label>
+          <label class="setting-select desktop-control-setting"><span><b>电脑版控制方式</b><small>鼠标模式下光标会自动隐藏</small></span><select id="controlModeSetting"><option value="keyboard">键盘控制</option><option value="mouse">鼠标控制</option></select></label>
           <label class="setting-row"><span>自动射击</span><input type="checkbox" checked disabled /></label>
           <button id="settingsBackButton" class="menu-button full">返回</button>
         </div>
@@ -172,12 +173,12 @@
             <button id="titleButton" class="pause-action danger"><b>回到主菜单</b><small>结束本次行动</small></button>
           </div>
           <div id="controlsPanel" class="controls-panel hidden">
-            <div><kbd>WASD / 方向键</kbd><span>移动战机</span></div>
-            <div><kbd>B</kbd><span>启动亚空间屏障</span></div>
+            <div id="controlMoveHelp"><kbd>WASD / 方向键</kbd><span>移动战机</span></div>
+            <div id="controlBarrierHelp"><kbd>B</kbd><span>启动亚空间屏障</span></div>
             <div><kbd>ESC / P</kbd><span>打开或关闭系统菜单</span></div>
             <div><kbd>1 / 2 / 3</kbd><span>选择源核</span></div>
           </div>
-          <div class="pause-footer"><span>INFINITY WINGS · RIFT OS</span><b>ALPHA 8.26 F2 TEST</b></div>
+          <div class="pause-footer"><span>INFINITY WINGS · RIFT OS</span><b>ALPHA 8.28 F2 TEST</b></div>
         </div>
       </section>
 

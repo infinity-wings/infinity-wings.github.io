@@ -2,8 +2,8 @@
 
 class InfinityAudioSystem{
  constructor(){
-  this.ctx=null;this.master=null;this.musicBus=null;this.sfxBus=null;this.ready=false;this.lastPlayed=new Map();
-  this.bgmFadeFrame=0;this.bgmTarget=-1;this.bgmFadeMs=3000;this.lastBgmPlayAttempt=0;
+  this.ctx=null;this.master=null;this.musicBus=null;this.sfxBus=null;this.ready=false;this.lastPlayed=new Map();this.assetStopTimers=new WeakMap();
+  this.bgmFadeFrame=0;this.bgmTarget=-1;this.bgmFadeMs=3000;this.lastBgmPlayAttempt=0;this.backgrounded=document.hidden;this.awaitingForegroundGesture=false;
   if(localStorage.getItem('iwAudioDefaults73')!=='applied'){localStorage.setItem('iwMusicVolume','.5');localStorage.setItem('iwSfxVolume','.5');localStorage.setItem('iwAudioDefaults73','applied')}
   this.prefs={
    music:localStorage.getItem('iwMusic')!=='off',
@@ -14,11 +14,13 @@ class InfinityAudioSystem{
   this.assetPools={};this.assetIndexes={};this.prepareAudioAssets();
   this.bgm=this.createBgm('./assets/audio/bgm.mp3');
   this.unlock=this.unlock.bind(this);
-  this.handleUnlockEvent=e=>{if(e?.type==='keydown'&&e.repeat)return;this.unlock()};
+  this.handleUnlockEvent=e=>{if(e?.type==='keydown'&&e.repeat)return;if(this.awaitingForegroundGesture){this.awaitingForegroundGesture=false;this.backgrounded=false}this.unlock();this.recover(true)};
   ['pointerdown','touchstart','keydown'].forEach(type=>window.addEventListener(type,this.handleUnlockEvent,{passive:true,once:false}));
-  document.addEventListener('visibilitychange',()=>{if(!document.hidden)this.recover();else this.syncState()});
-  window.addEventListener('pageshow',()=>this.recover(),{passive:true});
-  window.addEventListener('focus',()=>this.recover(),{passive:true});
+  document.addEventListener('visibilitychange',()=>{if(document.hidden)this.enterBackground();else this.leaveBackground()});
+  window.addEventListener('pagehide',()=>this.enterBackground(),{passive:true});
+  window.addEventListener('pageshow',()=>this.leaveBackground(),{passive:true});
+  window.addEventListener('blur',()=>{if(document.hidden)this.enterBackground()},{passive:true});
+  window.addEventListener('focus',()=>{if(!document.hidden)this.leaveBackground()},{passive:true});
   window.addEventListener('online',()=>this.recover(),{passive:true});
   if(this.bgm){['canplay','loadeddata','ended','stalled'].forEach(type=>this.bgm.addEventListener(type,()=>this.syncState(),{passive:true}))}
   setInterval(()=>this.syncState(),500);
@@ -28,20 +30,28 @@ class InfinityAudioSystem{
   try{const audio=new Audio(src);audio.preload='auto';audio.loop=true;audio.playsInline=true;audio.volume=0;audio.load();return audio}catch(_){return null}
  }
  preparePool(name,src,count,volume){
-  try{this.assetPools[name]=Array.from({length:count},()=>{const a=new Audio(src);a.preload='auto';a.dataset.baseVolume=String(volume);a.volume=volume*this.prefs.sfxVolume;a.load();return a});this.assetIndexes[name]=0;}catch(_){this.assetPools[name]=[];}
+  try{this.assetPools[name]=Array.from({length:count},()=>{const a=new Audio(src);a.preload='auto';a.loop=false;a.playsInline=true;a.dataset.baseVolume=String(volume);a.volume=volume*this.prefs.sfxVolume;a.load();return a});this.assetIndexes[name]=0;}catch(_){this.assetPools[name]=[];}
  }
  prepareAudioAssets(){
   const cannonVolume=.03;
-  this.preparePool('shot','./assets/audio/main-cannon.mp3',5,cannonVolume);
-  this.preparePool('droneShot','./assets/audio/drone-shot.mp3',4,cannonVolume);
+  // Main cannon and drones share one short weapon pool. This prevents dozens of
+  // overlapping HTMLAudio instances from turning the shot tail into a continuous tone.
+  this.preparePool('weaponShot','./assets/audio/main-cannon.mp3',3,cannonVolume);
   this.preparePool('explosionLarge','./assets/audio/explosion-large.mp3',3,.24);
   this.preparePool('explosionSmall','./assets/audio/explosion-small.mp3',5,.14);
  }
- playAsset(name,volume){
-  if(!this.prefs.sfx||this.prefs.sfxVolume<=0)return false;
+ playAsset(name,volume,maxDuration=0){
+  if(document.hidden||this.backgrounded||!this.prefs.sfx||this.prefs.sfxVolume<=0)return false;
   const pool=this.assetPools[name]||[];if(!pool.length)return false;
   const index=this.assetIndexes[name]||0,a=pool[index%pool.length];this.assetIndexes[name]=index+1;
-  try{const base=Number.isFinite(volume)?volume:Number(a.dataset.baseVolume||.1);a.pause();a.currentTime=0;a.volume=Math.max(0,Math.min(1,base*this.prefs.sfxVolume));const r=a.play();if(r&&typeof r.catch==='function')r.catch(()=>{});return true}catch(_){return false}
+  try{
+   const previousTimer=this.assetStopTimers.get(a);if(previousTimer)clearTimeout(previousTimer);
+   const base=Number.isFinite(volume)?volume:Number(a.dataset.baseVolume||.1);
+   a.pause();a.loop=false;a.currentTime=0;a.volume=Math.max(0,Math.min(1,base*this.prefs.sfxVolume));
+   const r=a.play();if(r&&typeof r.catch==='function')r.catch(()=>{});
+   if(maxDuration>0){const timer=setTimeout(()=>{try{a.pause();a.currentTime=0}catch(_){}this.assetStopTimers.delete(a)},Math.ceil(maxDuration*1000));this.assetStopTimers.set(a,timer)}
+   return true;
+  }catch(_){return false}
  }
  unlock(){
   let created=false;
@@ -58,8 +68,19 @@ class InfinityAudioSystem{
   }
   if(created)this.recover();
  }
- recover(){
-  if(document.hidden)return;
+ enterBackground(){
+  this.backgrounded=true;this.awaitingForegroundGesture=true;this.bgmTarget=0;
+  if(this.bgmFadeFrame){cancelAnimationFrame(this.bgmFadeFrame);this.bgmFadeFrame=0}
+  if(this.bgm){try{this.bgm.volume=0;this.bgm.pause()}catch(_){}}
+  for(const audio of Object.values(this.assetPools).flat()){const timer=this.assetStopTimers.get(audio);if(timer)clearTimeout(timer);this.assetStopTimers.delete(audio);try{audio.pause();audio.loop=false;audio.currentTime=0}catch(_){}}
+  if(this.ctx&&this.ctx.state==='running'){const suspended=this.ctx.suspend();if(suspended&&typeof suspended.catch==='function')suspended.catch(()=>{})}
+ }
+ leaveBackground(){
+  if(document.hidden)return;this.backgrounded=false;this.awaitingForegroundGesture=true;
+  if(this.bgm){this.bgm.volume=0;this.bgmTarget=0}
+ }
+ recover(fromGesture=false){
+  if(document.hidden||this.backgrounded||this.awaitingForegroundGesture&&!fromGesture)return;
   if(this.ctx&&this.ctx.state==='suspended'){const resumed=this.ctx.resume();if(resumed&&typeof resumed.catch==='function')resumed.catch(()=>{})}
   this.bgmTarget=-1;
   this.syncState(true);
@@ -81,7 +102,7 @@ class InfinityAudioSystem{
   this.unlock();this.syncState();
  }
  musicTargetVolume(){return Math.max(0,Math.min(1,this.prefs.musicVolume*.62))}
- shouldMusicPlay(){return this.prefs.music&&this.prefs.musicVolume>0&&!document.hidden&&typeof state!=='undefined'&&['menu','story','game','core','dying'].includes(state)}
+ shouldMusicPlay(){return this.prefs.music&&this.prefs.musicVolume>0&&!document.hidden&&!this.backgrounded&&!this.awaitingForegroundGesture&&typeof state!=='undefined'&&['menu','story','game','core','dying'].includes(state)}
  fadeBgmTo(target,duration=this.bgmFadeMs,pauseAtEnd=false){
   if(!this.bgm)return;target=Math.max(0,Math.min(1,target));
   if(Math.abs(this.bgmTarget-target)<.0005&&this.bgmFadeFrame)return;
@@ -110,10 +131,12 @@ class InfinityAudioSystem{
   if(!this.ready)return;const len=Math.max(1,Math.floor(this.ctx.sampleRate*duration)),buffer=this.ctx.createBuffer(1,len,this.ctx.sampleRate),data=buffer.getChannelData(0);for(let i=0;i<len;i++)data[i]=(Math.random()*2-1)*(1-i/len);const src=this.ctx.createBufferSource(),f=this.ctx.createBiquadFilter(),g=this.ctx.createGain(),t=this.ctx.currentTime+when;src.buffer=buffer;f.type='lowpass';f.frequency.value=filter;g.gain.setValueAtTime(gain,t);g.gain.exponentialRampToValueAtTime(.0001,t+duration);src.connect(f);f.connect(g);g.connect(this.sfxBus);src.start(t);
  }
  play(name){
-  this.unlock();if(!this.canPlay(name,name==='shot'?.065:name==='hit'?.09:.03))return;
+  if(document.hidden||this.backgrounded)return;this.unlock();
+  const gateName=(name==='shot'||name==='droneShot')?'weaponShot':name;
+  const gateGap=(gateName==='weaponShot')?.075:(name==='hit'?.09:.03);
+  if(!this.canPlay(gateName,gateGap))return;
   if(name==='ui'){this.tone(720,.055,'square',.045);this.tone(1080,.045,'sine',.03,.035)}
-  else if(name==='shot'){if(!this.playAsset('shot',.03)){this.tone(1180,.045,'triangle',.007,0,-260);this.tone(760,.06,'sine',.0045,.008,-180)}}
-  else if(name==='droneShot'){if(!this.playAsset('droneShot',Number(this.assetPools.shot?.[0]?.dataset.baseVolume||.03)))this.tone(940,.045,'square',.0045,0,-180)}
+  else if(name==='shot'||name==='droneShot'){if(!this.playAsset('weaponShot',.03,.11)){this.tone(1180,.045,'triangle',.007,0,-260);this.tone(760,.06,'sine',.0045,.008,-180)}}
   else if(name==='explosionSmall'){if(!this.playAsset('explosionSmall',.14)){this.noise(.22,.075,0,760);this.tone(125,.2,'sine',.05,0,-45)}}
   else if(name==='explosionLarge'){if(!this.playAsset('explosionLarge',.24)){this.noise(.5,.15,0,520);this.tone(80,.5,'sine',.11,0,-45)}}
   else if(name==='laser'){this.tone(180,.28,'sawtooth',.07,0,520);this.tone(680,.24,'sine',.05,.06,260)}

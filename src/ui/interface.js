@@ -65,18 +65,43 @@ function renderArchiveView(view){
  }
 }
 
+const interfaceTouchDevice=('ontouchstart' in window)||(navigator.maxTouchPoints>0);
 const uiPrefs={
  shake:true,
  scan:true,
  sfx:localStorage.getItem('iwSfx')!=='off',
  music:localStorage.getItem('iwMusic')!=='off',
- touchSensitivity:Math.max(.8,Math.min(2.2,(Number(localStorage.getItem('iwTouchSensitivity'))||150)/100))
+ touchSensitivity:Math.max(.8,Math.min(2.2,(Number(localStorage.getItem('iwTouchSensitivity'))||150)/100)),
+ controlMode:localStorage.getItem('iwControlMode')==='keyboard'?'keyboard':'mouse'
 };
 let settingsReturnState='menu';
+function isMouseBattleMode(){return !interfaceTouchDevice&&uiPrefs.controlMode==='mouse'&&state==='game'&&running&&!paused&&!dying}
+function refreshMouseCursorState(){
+ const active=isMouseBattleMode()&&document.pointerLockElement===canvas;
+ document.body.classList.toggle('mouse-game-active',active);
+}
+function releaseMouseLock(){
+ mouseMoveActive=false;mouseDeltaX=mouseDeltaY=0;
+ if(document.pointerLockElement===canvas)document.exitPointerLock?.();
+ refreshMouseCursorState();
+}
+function requestMouseBattleLock(){
+ if(!isMouseBattleMode())return;
+ if(document.pointerLockElement!==canvas){
+  const result=canvas.requestPointerLock?.();
+  if(result&&typeof result.catch==='function')result.catch(()=>{});
+ }else refreshMouseCursorState();
+}
+document.addEventListener('pointerlockchange',()=>{
+ mouseMoveActive=document.pointerLockElement===canvas&&isMouseBattleMode();
+ mouseDeltaX=mouseDeltaY=0;refreshMouseCursorState();
+ if(isMouseBattleMode()&&!mouseMoveActive)toast('点击战场启用鼠标控制');
+});
+document.addEventListener('pointerlockerror',()=>{mouseMoveActive=false;refreshMouseCursorState();toast('点击战场启用鼠标控制')});
 function refreshPauseToggles(){
  const sfxSetting=$('#sfxSetting'),musicSetting=$('#musicSetting');
  const sfxVolumeSetting=$('#sfxVolumeSetting'),musicVolumeSetting=$('#musicVolumeSetting');
- const touchSensitivitySetting=$('#touchSensitivitySetting');
+ const touchSensitivitySetting=$('#touchSensitivitySetting'),controlModeSetting=$('#controlModeSetting');
  const sfxVolumeValue=$('#sfxVolumeValue'),musicVolumeValue=$('#musicVolumeValue');
  const touchSensitivityValue=$('#touchSensitivityValue');
  if(sfxSetting)sfxSetting.checked=uiPrefs.sfx;
@@ -84,9 +109,15 @@ function refreshPauseToggles(){
  if(sfxVolumeSetting)sfxVolumeSetting.value=String(Math.round(audioSystem.prefs.sfxVolume*100));
  if(musicVolumeSetting)musicVolumeSetting.value=String(Math.round(audioSystem.prefs.musicVolume*100));
  if(touchSensitivitySetting)touchSensitivitySetting.value=String(Math.round(uiPrefs.touchSensitivity*100));
+ if(controlModeSetting)controlModeSetting.value=uiPrefs.controlMode;
  if(sfxVolumeValue)sfxVolumeValue.textContent=Math.round(audioSystem.prefs.sfxVolume*100)+'%';
  if(musicVolumeValue)musicVolumeValue.textContent=Math.round(audioSystem.prefs.musicVolume*100)+'%';
  if(touchSensitivityValue)touchSensitivityValue.textContent=Math.round(uiPrefs.touchSensitivity*100)+'%';
+ document.body.classList.toggle('mouse-control',!interfaceTouchDevice&&uiPrefs.controlMode==='mouse');
+ if(typeof refreshMouseCursorState==='function')refreshMouseCursorState();
+ const moveHelp=$('#controlMoveHelp'),barrierHelp=$('#controlBarrierHelp');
+ if(moveHelp)moveHelp.innerHTML=uiPrefs.controlMode==='mouse'?'<kbd>移动鼠标</kbd><span>控制战机</span>':'<kbd>WASD / 方向键</kbd><span>移动战机</span>';
+ if(barrierHelp)barrierHelp.innerHTML=uiPrefs.controlMode==='mouse'?'<kbd>鼠标右键</kbd><span>启动亚空间屏障</span>':'<kbd>B</kbd><span>启动亚空间屏障</span>';
  document.body.classList.remove('no-scanlines');
  if(typeof audioSystem!=='undefined'){audioSystem.prefs.sfx=uiPrefs.sfx;audioSystem.prefs.music=uiPrefs.music;audioSystem.syncState();}
 }
@@ -127,7 +158,7 @@ function coreModelMarkup(id,category){
  return `<span class="core-model ${category}" data-core-model="${id}" aria-hidden="true"><i class="core-model-ring ring-a"></i><i class="core-model-ring ring-b"></i><i class="core-model-shell"></i><i class="core-model-heart"></i><i class="core-model-mark"></i></span>`;
 }
 function chooseCore(){
- paused=true;state='core';setSystemMenuVisible(false);showScreen(UI.core);UI.hud.classList.remove('hidden');UI.timerPanel.classList.remove('hidden');
+ releaseMouseLock?.();paused=true;state='core';setSystemMenuVisible(false);showScreen(UI.core);refreshMouseCursorState?.();UI.hud.classList.remove('hidden');UI.timerPanel.classList.remove('hidden');
  currentCorePool=upgradeSystem.createChoices(3);coreSelection=0;
  const box=$('#coreChoices');box.innerHTML='';
  if(!currentCorePool.length){
@@ -183,14 +214,20 @@ $('#musicSetting')?.addEventListener('change',e=>{uiPrefs.music=e.target.checked
 $('#sfxVolumeSetting')?.addEventListener('input',e=>{const value=Math.max(0,Math.min(100,Number(e.target.value)||0));audioSystem.setVolume('sfx',value/100);const out=$('#sfxVolumeValue');if(out)out.textContent=Math.round(value)+'%'});
 $('#musicVolumeSetting')?.addEventListener('input',e=>{const value=Math.max(0,Math.min(100,Number(e.target.value)||0));audioSystem.setVolume('music',value/100);const out=$('#musicVolumeValue');if(out)out.textContent=Math.round(value)+'%'});
 $('#touchSensitivitySetting')?.addEventListener('input',e=>{const value=Math.max(80,Math.min(220,Number(e.target.value)||150));uiPrefs.touchSensitivity=value/100;localStorage.setItem('iwTouchSensitivity',String(value));refreshPauseToggles()});
+$('#controlModeSetting')?.addEventListener('change',e=>{uiPrefs.controlMode=e.target.value==='mouse'?'mouse':'keyboard';localStorage.setItem('iwControlMode',uiPrefs.controlMode);releaseMouseLock();for(const key of Object.keys(keys))keys[key]=false;refreshPauseToggles();toast(uiPrefs.controlMode==='mouse'?'已切换为鼠标控制，返回战场后点击启用':'已切换为键盘控制')});
 refreshPauseToggles();
 document.addEventListener('click',e=>{if(e.target.closest('button'))audioSystem?.play('ui')});
 $('#settingsBackButton').onclick=()=>{if(settingsReturnState==='pause'){showScreen(UI.pause);setSystemMenuVisible(false)}else showScreen(UI.menu)};
+// HUD 内的亚空间屏障在移动端直接作为按钮使用；独立圆形按钮不再显示。
+UI.barrierBox?.setAttribute('role','button');UI.barrierBox?.setAttribute('tabindex','0');UI.barrierBox?.setAttribute('aria-label','启动亚空间屏障');
+const activateHudBarrier=e=>{if(e){e.preventDefault();e.stopPropagation()}if(touchDevice&&state==='game'&&running&&!paused&&!dying)pulse()};
+UI.barrierBox?.addEventListener('pointerup',activateHudBarrier,{passive:false});
+UI.barrierBox?.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&touchDevice)activateHudBarrier(e)});
 $('#startButton').onclick=startStory;const skipStoryButton=$('#skipStory');const skipStoryNow=e=>{if(e){e.preventDefault();e.stopPropagation()}beginGame()};skipStoryButton.onclick=skipStoryNow;skipStoryButton.addEventListener('pointerup',skipStoryNow);skipStoryButton.addEventListener('touchend',skipStoryNow,{passive:false});$('#storyRoll').addEventListener('animationend',beginGame);$('#syncRestartButton').onclick=()=>{pilotId++;localStorage.setItem('infinityWingsPilotIdV2',String(pilotId));$('#archiveCloneCount').textContent='当前驾驶员编号：#'+String(pilotId).padStart(6,'0');beginGame()};$('#deathMenuButton').onclick=returnToTitle;$('#bombButton').onclick=pulse;
 $('#archiveButton').onclick=()=>{showScreen(UI.archive);$('#archiveCloneCount').textContent='当前驾驶员编号：#'+String(pilotId).padStart(6,'0');renderArchiveHome()};document.querySelectorAll('[data-archive-view]').forEach(button=>button.onclick=()=>renderArchiveView(button.dataset.archiveView));$('#archiveBack').onclick=renderArchiveHome;$('#settingsButton').onclick=()=>{settingsReturnState='menu';showScreen(UI.settings);refreshPauseToggles()};
 document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>showScreen(UI.menu));
 addEventListener('keydown',e=>{
- keys[e.key]=true;
+ if(uiPrefs.controlMode==='keyboard'||touchDevice)keys[e.key]=true;
  if(state==='core'){
   if(['ArrowDown','ArrowRight'].includes(e.key)){e.preventDefault();coreSelection=(coreSelection+1)%currentCorePool.length;renderCoreSelection();return}
   if(['ArrowUp','ArrowLeft'].includes(e.key)){e.preventDefault();coreSelection=(coreSelection-1+currentCorePool.length)%currentCorePool.length;renderCoreSelection();return}
@@ -199,9 +236,24 @@ addEventListener('keydown',e=>{
  }
  if(e.key==='Escape'&&(state==='death'||state==='dying')){e.preventDefault();beginGame();return}
  if((e.key==='Escape'||e.key==='p'||e.key==='P')&&running){e.preventDefault();state==='pause'?closePauseMenu():openPauseMenu();return}
- if(e.key==='b'||e.key==='B')pulse();if(state==='story'&&(e.key==='Escape'||e.key===' '))beginGame()
+ if((e.key==='b'||e.key==='B')&&(uiPrefs.controlMode==='keyboard'||touchDevice))pulse();if(state==='story'&&(e.key==='Escape'||e.key===' '))beginGame()
 });addEventListener('keyup',e=>keys[e.key]=false);
 const joy=$('#joystick'),knob=$('#knob');
+function updateMouseRelative(e){
+ if(!isMouseBattleMode()||document.pointerLockElement!==canvas)return;
+ const rect=canvas.getBoundingClientRect();if(!rect.width||!rect.height)return;
+ mouseDeltaX+=(Number(e.movementX)||0)*(W/rect.width);
+ mouseDeltaY+=(Number(e.movementY)||0)*(H/rect.height);
+ mouseMoveActive=true;
+}
+canvas.addEventListener('mousedown',e=>{
+ if(!isMouseBattleMode())return;
+ if(e.button===2){e.preventDefault();pulse();return}
+ if(e.button===0&&document.pointerLockElement!==canvas){e.preventDefault();requestMouseBattleLock()}
+});
+document.addEventListener('mousemove',updateMouseRelative,{passive:true});
+canvas.addEventListener('contextmenu',e=>{if(!interfaceTouchDevice&&uiPrefs.controlMode==='mouse'&&state==='game')e.preventDefault()});
+
 function endTouchDrive(pointerId=null){
  if(pointerId!==null&&touchMovePointerId!==pointerId)return;
  touchMoveActive=false;touchMovePointerId=null;joyX=joyY=0;
@@ -229,9 +281,9 @@ canvas.addEventListener('pointercancel',e=>endTouchDrive(e.pointerId),{passive:t
 canvas.addEventListener('lostpointercapture',e=>endTouchDrive(e.pointerId),{passive:true});
 
 const portraitLock=$('#portraitLock');
-const touchDevice=('ontouchstart' in window)||(navigator.maxTouchPoints>0);
+const touchDevice=interfaceTouchDevice;
 const phoneDevice=touchDevice&&Math.min(screen.width||innerWidth,screen.height||innerHeight)<=600;
-if(touchDevice)document.body.classList.add('touch-device');
+if(touchDevice){document.body.classList.add('touch-device');UI.bombButton?.classList.add('hidden');UI.bombButton?.setAttribute('aria-hidden','true')}else document.body.classList.add('desktop-device');
 function syncPortraitLock(){
  const blocked=phoneDevice&&innerWidth>innerHeight;
  portraitLock?.classList.toggle('hidden',!blocked);
@@ -240,7 +292,7 @@ function syncPortraitLock(){
 }
 addEventListener('resize',syncPortraitLock,{passive:true});
 addEventListener('orientationchange',()=>setTimeout(syncPortraitLock,120),{passive:true});
-addEventListener('visibilitychange',()=>{if(document.hidden){endTouchDrive();if(running&&!paused)openPauseMenu()}});
+addEventListener('visibilitychange',()=>{if(document.hidden){endTouchDrive();releaseMouseLock();audioSystem?.enterBackground?.();if(running&&!paused)openPauseMenu()}else{audioSystem?.leaveBackground?.()}});
 ['gesturestart','gesturechange','gestureend'].forEach(type=>document.addEventListener(type,e=>e.preventDefault(),{passive:false}));
 function isNativeTouchSurface(target){
  if(!(target instanceof Element))return false;

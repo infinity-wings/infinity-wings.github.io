@@ -1,6 +1,6 @@
 function showScreen(el){document.querySelectorAll('.screen').forEach(s=>s.classList.add('hidden'));el.classList.remove('hidden')}
 function setSystemMenuVisible(visible){UI.systemMenuButton.classList.toggle('hidden',!visible)}
-function openPauseMenu(){if(!running||dying||state==='core')return;paused=true;state='pause';showScreen(UI.pause);setSystemMenuVisible(false);$('#controlsPanel').classList.add('hidden')}
+function openPauseMenu(){if(!running||dying||state==='core')return;releaseMouseLock?.();paused=true;state='pause';showScreen(UI.pause);setSystemMenuVisible(false);$('#controlsPanel').classList.add('hidden');refreshMouseCursorState?.()}
 function closePauseMenu(){if(state!=='pause')return;state='game';UI.pause.classList.add('hidden');paused=false;last=performance.now();setSystemMenuVisible(true)}
 function restartCurrentRun(){reset();state='game';UI.pause.classList.add('hidden');UI.hud.classList.remove('hidden');UI.timerPanel.classList.remove('hidden');UI.touch.classList.remove('hidden');paused=false;running=true;last=performance.now();setSystemMenuVisible(true);toast('新的作战记录已建立')}
 function returnToTitle(){running=false;paused=false;dying=false;state='menu';UI.hud.classList.add('hidden');UI.timerPanel.classList.add('hidden');UI.touch.classList.add('hidden');setSystemMenuVisible(false);showScreen(UI.menu)}
@@ -11,7 +11,7 @@ function boot(){
 }
 let storyAutoTimer=0;
 function startStory(){state='story';showScreen(UI.story);const roll=$('#storyRoll');roll.style.animation='none';void roll.offsetWidth;roll.style.animation='storyScroll 36s linear forwards';clearTimeout(storyAutoTimer);storyAutoTimer=setTimeout(()=>{if(state==='story')beginGame()},35000)}
-function beginGame(){if(state==='game'&&running)return;clearTimeout(storyAutoTimer);storyAutoTimer=0;const roll=$('#storyRoll');if(roll)roll.style.animation='none';reset();state='game';document.querySelectorAll('.screen').forEach(s=>s.classList.add('hidden'));UI.hud.classList.remove('hidden');UI.timerPanel.classList.remove('hidden');UI.touch.classList.remove('hidden');setSystemMenuVisible(true);running=true;paused=false;last=performance.now();requestAnimationFrame(loop)}
+function beginGame(){if(state==='game'&&running)return;clearTimeout(storyAutoTimer);storyAutoTimer=0;const roll=$('#storyRoll');if(roll)roll.style.animation='none';reset();state='game';document.querySelectorAll('.screen').forEach(s=>s.classList.add('hidden'));UI.hud.classList.remove('hidden');UI.timerPanel.classList.remove('hidden');UI.touch.classList.remove('hidden');setSystemMenuVisible(true);running=true;paused=false;last=performance.now();refreshMouseCursorState?.();if(!touchDevice&&uiPrefs?.controlMode==='mouse'){requestMouseBattleLock?.();setTimeout(()=>{if(document.pointerLockElement!==canvas&&state==='game')toast('点击战场启用鼠标控制')},120)}requestAnimationFrame(loop)}
 function reset(){
  player={
  x:W/2,
@@ -717,34 +717,52 @@ function update(dt){
   if(deathTimer>=2.15)die();
   updateUI();return;
  }
- let dx=(keys.ArrowRight||keys.d?1:0)-(keys.ArrowLeft||keys.a?1:0)+joyX,dy=(keys.ArrowDown||keys.s?1:0)-(keys.ArrowUp||keys.w?1:0)+joyY;
+ const keyboardMode=touchDevice||uiPrefs?.controlMode!=='mouse';
+ let dx=keyboardMode?((keys.ArrowRight||keys.d?1:0)-(keys.ArrowLeft||keys.a?1:0)+joyX):0;
+ let dy=keyboardMode?((keys.ArrowDown||keys.s?1:0)-(keys.ArrowUp||keys.w?1:0)+joyY):0;
  let inputLength=Math.hypot(dx,dy);
- const keyboardInput=inputLength>.035;
+ const keyboardInput=keyboardMode&&inputLength>.035;
  player.slowTimer=Math.max(0,(player.slowTimer||0)-dt);
  const movementSpeed=player.speed*(player.slowTimer>0?.58:1);
- let touchDistance=0;
- if(touchMoveActive&&!keyboardInput){
+ let touchDistance=0,mouseDistance=0;
+ if(!touchDevice&&uiPrefs?.controlMode==='mouse'&&mouseMoveActive){
+  mouseDistance=Math.hypot(mouseDeltaX,mouseDeltaY);
+  if(mouseDistance>.01){dx=mouseDeltaX/mouseDistance;dy=mouseDeltaY/mouseDistance;inputLength=1}else{dx=dy=0;inputLength=0}
+ }else if(touchMoveActive&&!keyboardInput){
   const tx=touchTargetX-player.x,ty=touchTargetY-player.y;touchDistance=Math.hypot(tx,ty);
   if(touchDistance>3){dx=tx/touchDistance;dy=ty/touchDistance;inputLength=1}else{dx=dy=0;inputLength=0}
  }else if(inputLength>1){dx/=inputLength;dy/=inputLength;inputLength=1}
  const hasInput=inputLength>.035;
- const touchSensitivity=touchMoveActive&&!keyboardInput?(uiPrefs?.touchSensitivity||1.5):1;
- const touchSpeedScale=touchMoveActive&&!keyboardInput?Math.max(.72,Math.min(1.65,touchDistance/62))*touchSensitivity:1;
- player.targetVx=hasInput?dx*movementSpeed*touchSpeedScale:0;
- player.targetVy=hasInput?dy*movementSpeed*touchSpeedScale:0;
+ const usingTouch=touchMoveActive&&!keyboardInput;
+ const usingMouse=!touchDevice&&uiPrefs?.controlMode==='mouse'&&mouseMoveActive;
+ const touchSensitivity=usingTouch?(uiPrefs?.touchSensitivity||1.5):1;
+ const touchSpeedScale=usingTouch?Math.max(.72,Math.min(1.65,touchDistance/62))*touchSensitivity:1;
+ const mouseSpeedScale=1;
+ player.targetVx=hasInput?dx*movementSpeed*touchSpeedScale*mouseSpeedScale:0;
+ player.targetVy=hasInput?dy*movementSpeed*touchSpeedScale*mouseSpeedScale:0;
  // 位置控制采用单调逼近：快速起步、快速制动，绝不越过目标速度或反弹。
  const approach=(value,target,step)=>value<target?Math.min(value+step,target):Math.max(value-step,target);
  const reversingX=hasInput&&Math.sign(player.targetVx)&&Math.sign(player.vx)&&Math.sign(player.targetVx)!==Math.sign(player.vx);
  const reversingY=hasInput&&Math.sign(player.targetVy)&&Math.sign(player.vy)&&Math.sign(player.targetVy)!==Math.sign(player.vy);
- const touchResponse=touchMoveActive&&!keyboardInput?Math.max(1.25,uiPrefs?.touchSensitivity||1.5):1;
+ const touchResponse=usingTouch?Math.max(1.25,uiPrefs?.touchSensitivity||1.5):(usingMouse?2.15:1);
  const responseX=(!hasInput||reversingX?player.brake:player.accel)*touchResponse;
  const responseY=(!hasInput||reversingY?player.brake:player.accel)*touchResponse;
- player.vx=approach(player.vx,player.targetVx,responseX*dt);
- player.vy=approach(player.vy,player.targetVy,responseY*dt);
- // 极低速度直接归零，消除松手后的亚像素爬动。
- if(!hasInput&&Math.abs(player.vx)<8)player.vx=0;
- if(!hasInput&&Math.abs(player.vy)<8)player.vy=0;
- player.x+=player.vx*dt;player.y+=player.vy*dt;
+ if(usingMouse){
+  const sensitivity=uiPrefs?.touchSensitivity||1.5;
+  const moveX=mouseDeltaX*sensitivity,moveY=mouseDeltaY*sensitivity;
+  const safeDt=Math.max(dt,1/240);
+  player.vx=moveX/safeDt;player.vy=moveY/safeDt;
+  player.targetVx=player.vx;player.targetVy=player.vy;
+  player.x+=moveX;player.y+=moveY;
+  mouseDeltaX=0;mouseDeltaY=0;
+ }else{
+  player.vx=approach(player.vx,player.targetVx,responseX*dt);
+  player.vy=approach(player.vy,player.targetVy,responseY*dt);
+  // 极低速度直接归零，消除松手后的亚像素爬动。
+  if(!hasInput&&Math.abs(player.vx)<8)player.vx=0;
+  if(!hasInput&&Math.abs(player.vy)<8)player.vy=0;
+  player.x+=player.vx*dt;player.y+=player.vy*dt;
+ }
  const minX=28,maxX=W-28,minY=48,maxY=H-SAFE_BOTTOM-28;
  if(player.x<minX){player.x=minX;player.vx=Math.max(0,player.vx)}else if(player.x>maxX){player.x=maxX;player.vx=Math.min(0,player.vx)}
  if(player.y<minY){player.y=minY;player.vy=Math.max(0,player.vy)}else if(player.y>maxY){player.y=maxY;player.vy=Math.min(0,player.vy)}

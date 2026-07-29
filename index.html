@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
-  <title>无限之翼 · Alpha 8.32 Web Audio背景音乐 F2 测试版</title>
+  <title>无限之翼 · Alpha 8.34 移动端开发者测试 F2 测试版</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -66,6 +66,7 @@
       </div>
 
       <div id="toast"></div>
+      <aside id="barrierTutorial" class="barrier-tutorial hidden" role="dialog" aria-live="polite" aria-label="亚空间屏障说明"><div><strong>亚空间屏障</strong><p id="barrierTutorialText">启动屏障可立即吸收并清除画面中的全部敌方子弹。</p><button id="barrierTutorialClose" type="button">明白了</button></div></aside>
       <div id="threatFlash" class="hidden"><span>危险等级提升</span><strong id="threatFlashText">Ⅱ</strong></div>
 
       <section id="bootScreen" class="screen boot-screen">
@@ -170,6 +171,7 @@
             <button id="restartButton" class="pause-action"><b>重新开始</b><small>放弃当前进度并重新出击</small></button>
             <button id="controlsButton" class="pause-action"><b>操作说明</b><small>查看键盘与触控操作</small></button>
             <button id="gameSettingsButton" class="pause-action"><b>游戏设置</b><small>音效、音乐与触控灵敏度</small></button>
+            <button id="mobileDebugButton" class="pause-action mobile-debug-entry"><b>开发者测试</b><small>生成Boss、调整源核与触发随机事件</small></button>
             <button id="titleButton" class="pause-action danger"><b>回到主菜单</b><small>结束本次行动</small></button>
           </div>
           <div id="controlsPanel" class="controls-panel hidden">
@@ -178,7 +180,7 @@
             <div><kbd>ESC / P</kbd><span>打开或关闭系统菜单</span></div>
             <div><kbd>1 / 2 / 3</kbd><span>选择源核</span></div>
           </div>
-          <div class="pause-footer"><span>INFINITY WINGS · RIFT OS</span><b>ALPHA 8.28 F2 TEST</b></div>
+          <div class="pause-footer"><span>INFINITY WINGS · RIFT OS</span><b>ALPHA 8.34 F2 TEST</b></div>
         </div>
       </section>
 

@@ -1,7 +1,7 @@
 function showScreen(el){document.querySelectorAll('.screen').forEach(s=>s.classList.add('hidden'));el.classList.remove('hidden')}
 function setSystemMenuVisible(visible){UI.systemMenuButton.classList.toggle('hidden',!visible)}
-function openPauseMenu(){if(!running||dying||state==='core')return;releaseMouseLock?.();paused=true;state='pause';showScreen(UI.pause);setSystemMenuVisible(false);$('#controlsPanel').classList.add('hidden');refreshMouseCursorState?.()}
-function closePauseMenu(){if(state!=='pause')return;state='game';UI.pause.classList.add('hidden');paused=false;last=performance.now();setSystemMenuVisible(true)}
+function openPauseMenu(){if(!running||dying||state==='core'||state==='awakening'||state==='fusion')return;dismissBarrierTutorial?.(false);releaseMouseLock?.();paused=true;state='pause';showScreen(UI.pause);setSystemMenuVisible(false);$('#controlsPanel')?.classList.add('hidden');refreshMouseCursorState?.();last=performance.now()}
+function closePauseMenu(){if(!running||dying)return;UI.pause.classList.add('hidden');state='game';paused=false;last=performance.now();setSystemMenuVisible(true);refreshMouseCursorState?.();if(!touchDevice&&uiPrefs?.controlMode==='mouse')setTimeout(()=>requestMouseBattleLock?.(),0)}
 function restartCurrentRun(){reset();state='game';UI.pause.classList.add('hidden');UI.hud.classList.remove('hidden');UI.timerPanel.classList.remove('hidden');UI.touch.classList.remove('hidden');paused=false;running=true;last=performance.now();setSystemMenuVisible(true);toast('新的作战记录已建立')}
 function returnToTitle(){running=false;paused=false;dying=false;state='menu';UI.hud.classList.add('hidden');UI.timerPanel.classList.add('hidden');UI.touch.classList.add('hidden');setSystemMenuVisible(false);showScreen(UI.menu)}
 function boot(){
@@ -11,7 +11,7 @@ function boot(){
 }
 let storyAutoTimer=0;
 function startStory(){state='story';showScreen(UI.story);const roll=$('#storyRoll');roll.style.animation='none';void roll.offsetWidth;roll.style.animation='storyScroll 36s linear forwards';clearTimeout(storyAutoTimer);storyAutoTimer=setTimeout(()=>{if(state==='story')beginGame()},35000)}
-function beginGame(){if(state==='game'&&running)return;clearTimeout(storyAutoTimer);storyAutoTimer=0;const roll=$('#storyRoll');if(roll)roll.style.animation='none';reset();state='game';document.querySelectorAll('.screen').forEach(s=>s.classList.add('hidden'));UI.hud.classList.remove('hidden');UI.timerPanel.classList.remove('hidden');UI.touch.classList.remove('hidden');setSystemMenuVisible(true);running=true;paused=false;last=performance.now();refreshMouseCursorState?.();if(!touchDevice&&uiPrefs?.controlMode==='mouse'){requestMouseBattleLock?.();setTimeout(()=>{if(document.pointerLockElement!==canvas&&state==='game')toast('点击战场启用鼠标控制')},120)}requestAnimationFrame(loop)}
+function beginGame(){if(state==='game'&&running)return;clearTimeout(storyAutoTimer);storyAutoTimer=0;const roll=$('#storyRoll');if(roll)roll.style.animation='none';reset();state='game';document.querySelectorAll('.screen').forEach(s=>s.classList.add('hidden'));UI.hud.classList.remove('hidden');UI.timerPanel.classList.remove('hidden');UI.touch.classList.remove('hidden');setSystemMenuVisible(true);running=true;paused=false;last=performance.now();refreshMouseCursorState?.();if(!touchDevice&&uiPrefs?.controlMode==='mouse'){requestMouseBattleLock?.();setTimeout(()=>{if(document.pointerLockElement!==canvas&&state==='game')toast('点击战场启用鼠标控制')},120)}requestAnimationFrame(loop);setTimeout(()=>showBarrierTutorial?.(),420)}
 function reset(){
  player={
  x:W/2,
@@ -696,7 +696,8 @@ function pulse(){
  if(!running||paused||dying||bombs<=0)return;
  audioSystem?.play('barrier');
  const spentIndex=bombs-1;bombs--;animateBarrierUse(spentIndex);
- blastWaves.push({x:player.x,y:player.y,life:.82,maxLife:.82,radius:18,prevRadius:0,maxRadius:Math.hypot(W,H),absorbed:0});
+ const absorbedBullets=enemyBullets.length;enemyBullets.length=0;if(typeof enemyLasers!=='undefined')enemyLasers.length=0;
+ blastWaves.push({x:player.x,y:player.y,life:.82,maxLife:.82,radius:18,prevRadius:0,maxRadius:Math.hypot(W,H),absorbed:absorbedBullets});
  for(const e of enemies)e.hp-=120;
  shake=16;updateUI();toast(bombs>0?'亚空间屏障剩余 '+bombs:'亚空间屏障能量耗尽')
 }

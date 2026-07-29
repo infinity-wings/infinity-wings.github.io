@@ -138,7 +138,7 @@ function loop(t){
  if(!running)return;
  requestAnimationFrame(loop);
  const dt=Math.min(.028,Math.max(0,(t-last)/1000||0));last=t;
- try{if(!paused||dying)update(dt);draw()}catch(error){recoverFrameState(error)}
+ try{const battleUpdating=(state==='game'&&!paused)||(state==='dying'&&dying);if(battleUpdating)update(dt);updateBarrierDangerHint(dt);draw()}catch(error){recoverFrameState(error)}
 }
 function renderCoreSelection(){
  const cards=[...document.querySelectorAll('.core-card')];
@@ -189,6 +189,30 @@ function die(){
  const lines=['正在搜索意识备份……','发现可用备份。','开始同步记忆……','同步完成。','备用驾驶员编号：#'+String(nextPilotId).padStart(6,'0')];let i=0;
  setTimeout(()=>{const timer=setInterval(()=>{sub.innerHTML+=`<div>${lines[i]}</div>`;i++;if(i===lines.length){clearInterval(timer);stats.innerHTML=`本次行动分数：<b>${score}</b><br>生存时间：<b>${formatRunTime(elapsed)}</b><br>到达等级：<b>${level}</b><br>最高危险等级：<b>${THREAT_ROMAN[threatLevel()]}</b>`;stats.classList.remove('hidden');actions.classList.remove('hidden')}},850)},1150)
 }
+
+let barrierTutorialActive=false,barrierDangerHintCd=0;
+function barrierControlText(){if(touchDevice)return '点击右下角“亚空间屏障”按钮';return uiPrefs?.controlMode==='mouse'?'按鼠标右键':'按 B 键'}
+function dismissBarrierTutorial(remember=true){
+ const tip=$('#barrierTutorial');if(!tip)return;
+ tip.classList.add('hidden');UI.barrierBox?.classList.remove('tutorial-focus');barrierTutorialActive=false;
+ if(remember)localStorage.setItem('iwBarrierTutorialSeenV1','1');
+ if(running&&state==='game'&&!dying){paused=false;last=performance.now()}
+}
+function showBarrierTutorial(){
+ if(!running||state!=='game'||dying||localStorage.getItem('iwBarrierTutorialSeenV1')==='1')return;
+ const tip=$('#barrierTutorial'),copy=$('#barrierTutorialText');if(!tip||!copy)return;
+ barrierTutorialActive=true;paused=true;copy.textContent=`${barrierControlText()}启动屏障，可立即吸收并清除画面中的全部敌方子弹。`;
+ tip.classList.remove('hidden');UI.barrierBox?.classList.add('tutorial-focus');releaseMouseLock?.();refreshMouseCursorState?.();
+}
+$('#barrierTutorialClose')?.addEventListener('click',()=>dismissBarrierTutorial(true));
+UI.barrierBox?.addEventListener('pointerup',()=>{if(barrierTutorialActive){dismissBarrierTutorial(true);setTimeout(()=>pulse(),0)}},{passive:true});
+function updateBarrierDangerHint(dt){
+ barrierDangerHintCd=Math.max(0,barrierDangerHintCd-dt);
+ const danger=running&&state==='game'&&!paused&&!dying&&bombs>0&&enemyBullets.length>=38;
+ UI.barrierBox?.classList.toggle('danger-hint',danger);
+ if(danger&&barrierDangerHintCd<=0){barrierDangerHintCd=7;toast('弹幕过密：启动亚空间屏障可吸收全部敌弹')}
+}
+
 function updateUI(){
  if(UI.timer)UI.timer.textContent=formatRunTime(elapsed);
  UI.hpText.textContent=`${Math.ceil(player?.hp||0)} / ${player?.maxHp||100}`;UI.hpFill.style.width=Math.max(0,(player?.hp||0)/(player?.maxHp||100)*100)+'%';UI.xpFill.style.width=(build?.allCoresMax?100:xp/nextXp*100)+'%';UI.xpFill.classList.toggle('maxed',Boolean(build?.allCoresMax));UI.score.textContent=score;UI.level.textContent=level;UI.threat.textContent=THREAT_ROMAN[threatLevel()];
@@ -206,7 +230,7 @@ function animateBarrierUse(spentIndex){
 }
 function toast(text){UI.toast.textContent=text;UI.toast.classList.remove('show');void UI.toast.offsetWidth;UI.toast.classList.add('show');clearTimeout(UI.toast._timer);UI.toast._timer=setTimeout(()=>UI.toast.classList.remove('show'),1500)}
 
-$('#systemMenuButton').onclick=openPauseMenu;$('#resumeButton').onclick=closePauseMenu;$('#restartButton').onclick=restartCurrentRun;$('#titleButton').onclick=returnToTitle;
+$('#systemMenuButton').onclick=openPauseMenu;const resumeButton=$('#resumeButton');if(resumeButton){resumeButton.onclick=closePauseMenu;resumeButton.addEventListener('pointerup',e=>{e.preventDefault();closePauseMenu()},{passive:false})}$('#restartButton').onclick=restartCurrentRun;$('#titleButton').onclick=returnToTitle;
 $('#controlsButton').onclick=()=>$('#controlsPanel').classList.toggle('hidden');
 $('#gameSettingsButton').onclick=()=>{settingsReturnState='pause';showScreen(UI.settings);refreshPauseToggles()};
 $('#sfxSetting')?.addEventListener('change',e=>{uiPrefs.sfx=e.target.checked;audioSystem.setEnabled('sfx',uiPrefs.sfx);refreshPauseToggles()});

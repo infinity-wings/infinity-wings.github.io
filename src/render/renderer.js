@@ -79,10 +79,10 @@ function draw(){
   if(isPurple){ctx.rotate(elapsed*2.5+b.x*.01);ctx.strokeStyle='rgba(210,164,255,.55)';ctx.lineWidth=1;for(let i=0;i<3;i++){const a=i*Math.PI*2/3;ctx.beginPath();ctx.arc(b.x+Math.cos(a)*(b.r+7),b.y+Math.sin(a)*(b.r+7),2.1,0,Math.PI*2);ctx.stroke();}}
   ctx.restore();
  }
- ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.shadowBlur=0;ctx.shadowColor='transparent';ctx.filter='none';ctx.setLineDash([]);
+ ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.shadowBlur=0;ctx.shadowColor='transparent';ctx.filter='none';ctx.setLineDash([]);ctx.lineWidth=1;ctx.lineCap='butt';ctx.lineJoin='miter';
  enemyModelCtx=ctx;
  for(const e of enemies){try{withRenderState('敌机模型',()=>drawEnemyShip(e));if(e.boss){ctx.fillStyle='#18233b';ctx.fillRect(55,28,W-110,12);ctx.fillStyle='#a767ff';ctx.fillRect(55,28,(W-110)*Math.max(0,Math.min(1,(finite(e.hp,0)/Math.max(1,finite(e.max,1))))),12)}}catch(error){console.warn('敌机绘制已跳过',error,e)}}
- for(const d of drones){try{drawDrone(d)}catch(error){console.warn('无人机绘制已跳过',error,d)}}
+ for(const d of drones){try{withRenderState('无人机模型',()=>drawDrone(d))}catch(error){console.warn('无人机绘制已跳过',error,d)}}
  try{drawHeavyEscortShield()}catch(error){console.warn('护航盾绘制已跳过',error)}
  try{drawAwakenedFrontShield()}catch(error){console.warn('前盾绘制已跳过',error)}
  if(!dying){for(const clone of clonePositions()){try{ctx.save();ctx.globalAlpha=finite(clone.alpha,.54);drawShip(finite(clone.x,player.x),finite(clone.y,player.y),clone.color||'#b474ff',clone)}catch(error){console.warn('投影绘制已跳过',error,clone)}finally{ctx.restore()}}}

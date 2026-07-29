@@ -708,7 +708,40 @@ function trimEntityPools(){
  for(const [pool,max] of limits)if(pool.length>max)pool.splice(0,pool.length-max);
  if(build.killWindow.length>120)build.killWindow.splice(0,build.killWindow.length-120);
 }
+function hardSanitizeCombatState(){
+ const finite=(value,fallback=0)=>Number.isFinite(value)?value:fallback;
+ const clamp=(value,min,max,fallback=min)=>Math.max(min,Math.min(max,finite(value,fallback)));
+ const sanitizePool=(pool,max,fix)=>{
+  if(!Array.isArray(pool))return;
+  for(let i=pool.length-1;i>=0;i--){
+   const item=pool[i];
+   if(!item||!Number.isFinite(item.x)||!Number.isFinite(item.y)){pool.splice(i,1);continue}
+   fix?.(item);
+  }
+  if(pool.length>max)pool.splice(0,pool.length-max);
+ };
+ sanitizePool(enemies,72,e=>{e.x=clamp(e.x,-120,W+120);e.y=clamp(e.y,-180,H+180);e.r=clamp(e.r,4,90,18);e.hp=finite(e.hp,1);e.max=Math.max(1,finite(e.max,e.hp));e.age=clamp(e.age,0,1e6,0)});
+ sanitizePool(enemyBullets,190,b=>{b.x=clamp(b.x,-80,W+80);b.y=clamp(b.y,-100,H+100);b.vx=clamp(b.vx,-1600,1600);b.vy=clamp(b.vy,-1600,1600);b.r=clamp(b.r,1,18,5);b.damage=clamp(b.damage,0,250,8)});
+ sanitizePool(bullets,230,b=>{b.x=clamp(b.x,-80,W+80);b.y=clamp(b.y,-120,H+120);b.vx=clamp(b.vx,-2200,2200);b.vy=clamp(b.vy,-2200,2200);b.r=clamp(b.r,.5,18,3);b.w=clamp(b.w,.5,36,4);b.h=clamp(b.h,1,H+80,14);b.life=clamp(b.life,-1,12,2)});
+ sanitizePool(missiles,36,m=>{m.x=clamp(m.x,-100,W+100);m.y=clamp(m.y,-120,H+120);m.vx=clamp(m.vx,-1300,1300);m.vy=clamp(m.vy,-1300,1300);m.life=clamp(m.life,0,12,3)});
+ sanitizePool(particles,300,p=>{p.x=clamp(p.x,-100,W+100);p.y=clamp(p.y,-120,H+120);p.vx=clamp(p.vx,-1800,1800);p.vy=clamp(p.vy,-1800,1800);p.r=clamp(p.r,.1,42,2);p.life=clamp(p.life,0,4,.2);p.max=clamp(p.max,.01,4,p.life||.2)});
+ sanitizePool(pickups,120,p=>{p.x=clamp(p.x,-50,W+50);p.y=clamp(p.y,-70,H+70);p.r=clamp(p.r,2,15,5)});
+ if(Array.isArray(enemyLasers)){
+  for(let i=enemyLasers.length-1;i>=0;i--){const l=enemyLasers[i];if(!l||!Number.isFinite(l.x)||!Number.isFinite(l.y)){enemyLasers.splice(i,1);continue}l.x=clamp(l.x,0,W);l.y=clamp(l.y,-80,H);l.width=clamp(l.width,2,70,14);l.life=clamp(l.life,-1,12,0);l.duration=clamp(l.duration,.05,8,1)}
+  if(enemyLasers.length>8)enemyLasers.splice(0,enemyLasers.length-8);
+ }
+ if(Array.isArray(drones)){
+  if(drones.length>8)drones.length=8;
+  drones.forEach((d,index)=>{d.slot=index;d.x=clamp(d.x,20,W-20,player.x);d.y=clamp(d.y,40,H-SAFE_BOTTOM-20,player.y+30);d.bank=clamp(d.bank,-1.2,1.2,0);d.recoil=clamp(d.recoil,0,2,0)});
+ }
+ build.shieldLayers=clamp(build.shieldLayers,0,3,0);
+ build.heavyEscortShieldActive=clamp(build.heavyEscortShieldActive,0,8,0);
+ build.awakeFrontShieldActive=clamp(build.awakeFrontShieldActive,0,8,0);
+ if(!Number.isFinite(player.x)||!Number.isFinite(player.y)){player.x=W/2;player.y=H-SAFE_BOTTOM-90}
+ player.x=clamp(player.x,24,W-24,W/2);player.y=clamp(player.y,55,H-SAFE_BOTTOM-35,H-SAFE_BOTTOM-90);
+}
 function update(dt){
+ hardSanitizeCombatState();
  trimEntityPools();
  elapsed+=dt;const threat=threatLevel();battleEventSystem.update(dt);
  for(const s of stars){s.y+=s.v*(1+threat*.08)*dt;if(s.y>H){s.y=0;s.x=Math.random()*W}}

@@ -802,3 +802,5 @@ body.touch-device .mobile-debug-entry{display:block;border-color:rgba(184,120,25
  #iwDebugMenu .iw-debug-event-grid{grid-template-columns:1fr 1fr}
  #iwDebugMenu .iw-debug-event-actions{grid-template-columns:1fr}
 }
+
+.home-version{display:inline-block;margin-left:.55em;font-size:.28em;line-height:1;letter-spacing:.08em;vertical-align:middle;color:rgba(177,225,242,.72);font-weight:600;text-shadow:none;white-space:nowrap}

@@ -11,6 +11,7 @@ const UI={
 const THREAT_ROMAN=['Ⅰ','Ⅱ','Ⅲ','Ⅳ','Ⅴ','Ω'];
 const keys={};
 let state='boot',running=false,paused=false,last=0,elapsed=0,spawnCd=0,bossSpawned=false,shake=0,joyX=0,joyY=0;
+let runGeneration=0;
 let touchMoveActive=false,touchMovePointerId=null,touchTargetX=0,touchTargetY=0;
 let mouseMoveActive=false,mouseTargetX=W/2,mouseTargetY=H-SAFE_BOTTOM-75,mouseDeltaX=0,mouseDeltaY=0;
 let dying=false,deathTimer=0,deathFade=0,coreSelection=0,currentCorePool=[];

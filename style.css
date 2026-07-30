@@ -828,3 +828,115 @@ body{padding:0;overscroll-behavior:none;-webkit-user-select:none;user-select:non
   body.standalone-mode #app{height:100dvh;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
 }
 @media(max-width:700px){.home-credits{left:12px;right:12px;bottom:10px;gap:5px;font-size:7px;letter-spacing:.07em}.home-credits i{margin:0 1px}}
+
+
+/* Alpha 8.51 mobile and tablet portrait-only layout */
+body.mobile-portrait-device{
+  width:100vw;
+  height:100vh;
+  height:100dvh;
+  overflow:hidden;
+  background:#01030a;
+}
+body.mobile-portrait-device #app{
+  width:100vw;
+  height:100vh;
+  height:100dvh;
+  min-height:100dvh;
+  padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+body.mobile-portrait-device #gameShell{
+  width:min(
+    calc(100vw - env(safe-area-inset-left) - env(safe-area-inset-right)),
+    calc((100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom)) * 9 / 16),
+    540px
+  );
+  height:auto;
+  max-height:none;
+  border-radius:0;
+}
+body.mobile-portrait-device.orientation-blocked #gameShell{
+  visibility:hidden;
+  pointer-events:none;
+}
+body.mobile-portrait-device .portrait-lock{
+  padding:
+    calc(28px + env(safe-area-inset-top))
+    calc(28px + env(safe-area-inset-right))
+    calc(28px + env(safe-area-inset-bottom))
+    calc(28px + env(safe-area-inset-left));
+}
+@media (orientation:landscape){
+  body.mobile-portrait-device .portrait-lock:not(.hidden){display:flex!important}
+}
+@media (min-width:601px) and (pointer:coarse) and (orientation:portrait){
+  body.mobile-portrait-device #gameShell{
+    width:min(
+      calc(100vw - env(safe-area-inset-left) - env(safe-area-inset-right)),
+      calc((100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom)) * 9 / 16),
+      600px
+    );
+  }
+  body.mobile-portrait-device .portrait-lock h2{font-size:34px}
+  body.mobile-portrait-device .portrait-lock p{font-size:17px}
+}
+
+
+/* Alpha 8.52 phone/tablet adaptive fullscreen */
+body.mobile-portrait-device #app{
+  position:fixed;
+  inset:0;
+  width:100vw;
+  height:100vh;
+  height:100dvh;
+  min-height:0;
+  padding:0;
+  display:block;
+  overflow:hidden;
+  background:#01030a;
+}
+body.mobile-portrait-device #gameShell{
+  position:absolute;
+  inset:0;
+  width:100vw;
+  height:100vh;
+  height:100dvh;
+  max-width:none;
+  max-height:none;
+  aspect-ratio:auto;
+  margin:0;
+  border:0;
+  border-radius:0;
+  box-shadow:none;
+  overflow:hidden;
+  background:#020712;
+}
+body.mobile-portrait-device #game{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:fill;
+}
+/* Keep important DOM HUD controls inside notches and home-indicator areas. */
+body.mobile-portrait-device .system-menu-button{
+  top:max(12px,calc(env(safe-area-inset-top) + 8px));
+  left:max(10px,calc(env(safe-area-inset-left) + 8px));
+}
+body.mobile-portrait-device .top-run-timer{
+  top:max(8px,calc(env(safe-area-inset-top) + 6px));
+}
+body.mobile-portrait-device #hud{
+  left:max(8px,calc(env(safe-area-inset-left) + 6px));
+  right:max(8px,calc(env(safe-area-inset-right) + 6px));
+  bottom:max(8px,calc(env(safe-area-inset-bottom) + 6px));
+}
+body.mobile-portrait-device .modal-screen{
+  padding:max(18px,calc(env(safe-area-inset-top) + 14px))
+          max(18px,calc(env(safe-area-inset-right) + 14px))
+          max(18px,calc(env(safe-area-inset-bottom) + 14px))
+          max(18px,calc(env(safe-area-inset-left) + 14px));
+}
+body.mobile-portrait-device .home-credits{
+  bottom:max(10px,calc(env(safe-area-inset-bottom) + 6px));
+}

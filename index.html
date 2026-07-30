@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
-  <title>无限之翼 · Alpha 8.44 全屏显示与主页署名 F2测试版</title>
+  <title>无限之翼 · Alpha 8.52 Adaptive Fullscreen</title>
   <meta name="theme-color" content="#050816" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -18,7 +18,7 @@
     <section id="portraitLock" class="portrait-lock hidden" aria-live="polite">
       <div class="portrait-lock-device" aria-hidden="true"><span></span></div>
       <h2>请旋转至竖屏</h2>
-      <p>手机端仅支持竖屏作战</p>
+      <p>手机与平板仅支持竖屏作战</p>
     </section>
     <section id="gameShell">
       <canvas id="game" width="540" height="960" aria-label="无限之翼游戏画面"></canvas>
@@ -88,7 +88,7 @@
           <div class="menu-flight-trail"></div>
         </div>
         <div class="logo-wrap">
-          <div class="cn-logo">无限之翼 <small class="home-version">Alpha 8.44</small></div>
+          <div class="cn-logo">无限之翼 <small class="home-version">Alpha 8.52</small></div>
           <div class="en-logo">INFINITY WINGS</div>
           <div class="tagline">每一次死亡，都会留下记忆。</div>
         </div>
@@ -190,7 +190,7 @@
             <div><kbd>ESC / P</kbd><span>打开或关闭系统菜单</span></div>
             <div><kbd>1 / 2 / 3</kbd><span>选择源核</span></div>
           </div>
-          <div class="pause-footer"><span>INFINITY WINGS · RIFT OS</span><b>ALPHA 8.44 F2 TEST</b></div>
+          <div class="pause-footer"><span>INFINITY WINGS · RIFT OS</span><b>ALPHA 8.50.1 MOUSE HOTFIX</b></div>
         </div>
       </section>
 
@@ -208,6 +208,32 @@
       </section>
     </section>
   </main>
+  <script>
+    // Alpha 8.52: choose a portrait game world that fills each phone/tablet
+    // without stretching. The original 540 x 960 playfield is only expanded,
+    // never reduced, so existing gameplay scale remains familiar.
+    (() => {
+      const canvas = document.getElementById('game');
+      const isTouch = navigator.maxTouchPoints > 0 || matchMedia('(pointer: coarse)').matches;
+      if (!canvas || !isTouch) return;
+      const vv = window.visualViewport;
+      const rawWidth = Math.max(1, vv?.width || window.innerWidth || screen.width || 540);
+      const rawHeight = Math.max(1, vv?.height || window.innerHeight || screen.height || 960);
+      const portraitWidth = Math.min(rawWidth, rawHeight);
+      const portraitHeight = Math.max(rawWidth, rawHeight);
+      const ratio = portraitWidth / portraitHeight;
+      let logicalWidth = 540;
+      let logicalHeight = 960;
+      if (ratio < 9 / 16) logicalHeight = Math.round(logicalWidth / ratio);
+      else if (ratio > 9 / 16) logicalWidth = Math.round(logicalHeight * ratio);
+      logicalWidth = Math.max(540, Math.min(820, logicalWidth));
+      logicalHeight = Math.max(960, Math.min(1320, logicalHeight));
+      canvas.width = logicalWidth;
+      canvas.height = logicalHeight;
+      document.documentElement.style.setProperty('--iw-world-width', String(logicalWidth));
+      document.documentElement.style.setProperty('--iw-world-height', String(logicalHeight));
+    })();
+  </script>
   <script src="game.js"></script>
   <script>if('serviceWorker' in navigator){addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));}</script>
 

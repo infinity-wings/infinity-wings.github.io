@@ -15,6 +15,7 @@ let storyAutoTimer=0;
 function startStory(){state='story';showScreen(UI.story);const roll=$('#storyRoll');roll.style.animation='none';void roll.offsetWidth;roll.style.animation='storyScroll 36s linear forwards';clearTimeout(storyAutoTimer);storyAutoTimer=setTimeout(()=>{if(state==='story')beginGame()},35000)}
 function beginGame(){if(state==='game'&&running)return;clearTimeout(storyAutoTimer);storyAutoTimer=0;const roll=$('#storyRoll');if(roll)roll.style.animation='none';reset();state='game';document.querySelectorAll('.screen').forEach(s=>s.classList.add('hidden'));UI.hud.classList.remove('hidden');UI.timerPanel.classList.remove('hidden');UI.touch.classList.remove('hidden');setSystemMenuVisible(true);running=true;paused=false;last=performance.now();refreshMouseCursorState?.();if(!touchDevice&&uiPrefs?.controlMode==='mouse'){requestMouseBattleLock?.();setTimeout(()=>{if(document.pointerLockElement!==canvas&&state==='game')toast('点击战场启用鼠标控制')},120)}requestAnimationFrame(loop);setTimeout(()=>showBarrierTutorial?.(),420)}
 function reset(){
+ runGeneration++;
  player={
  x:W/2,
  y:H-SAFE_BOTTOM-75,
@@ -752,6 +753,7 @@ function hardSanitizeCombatState(){
  player.x=clamp(player.x,24,W-24,W/2);player.y=clamp(player.y,55,H-SAFE_BOTTOM-35,H-SAFE_BOTTOM-90);
 }
 function update(dt){
+ IWStability?.watchdog?.();
  hardSanitizeCombatState();
  trimEntityPools();
  elapsed+=dt;const threat=threatLevel();battleEventSystem.update(dt);
@@ -793,8 +795,11 @@ function update(dt){
  const responseX=(!hasInput||reversingX?player.brake:player.accel)*touchResponse;
  const responseY=(!hasInput||reversingY?player.brake:player.accel)*touchResponse;
  if(usingMouse){
-  const sensitivity=uiPrefs?.touchSensitivity||1.5;
-  const moveX=mouseDeltaX*sensitivity,moveY=mouseDeltaY*sensitivity;
+  // 鼠标采用一比一位置控制，不再复用触控灵敏度，也不经过加速/制动曲线。
+  // 保留极小的异常输入上限，只拦截锁屏恢复或浏览器产生的巨大跳变。
+  const maxMouseStep=Math.max(W,H)*.22;
+  const moveX=Math.max(-maxMouseStep,Math.min(maxMouseStep,mouseDeltaX));
+  const moveY=Math.max(-maxMouseStep,Math.min(maxMouseStep,mouseDeltaY));
   const safeDt=Math.max(dt,1/240);
   player.vx=moveX/safeDt;player.vy=moveY/safeDt;
   player.targetVx=player.vx;player.targetVy=player.vy;

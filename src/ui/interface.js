@@ -88,8 +88,9 @@ function releaseMouseLock(){
 function requestMouseBattleLock(){
  if(!isMouseBattleMode())return;
  if(document.pointerLockElement!==canvas){
-  const result=canvas.requestPointerLock?.();
-  if(result&&typeof result.catch==='function')result.catch(()=>{});
+  let result;
+  try{result=canvas.requestPointerLock?.({unadjustedMovement:true})}catch(_){result=canvas.requestPointerLock?.()}
+  if(result&&typeof result.catch==='function')result.catch(()=>{try{canvas.requestPointerLock?.()}catch(_){}});
  }else refreshMouseCursorState();
 }
 document.addEventListener('pointerlockchange',()=>{
@@ -137,7 +138,11 @@ function recoverFrameState(error){
 function loop(t){
  if(!running)return;
  requestAnimationFrame(loop);
- const rawDt=Math.max(0,(t-last)/1000||0),dt=Math.min(.028,rawDt);last=t;
+ const rawDt=Math.max(0,(t-last)/1000||0);last=t;
+ // Safari/iPad may resume with a multi-second frame. The stability layer
+ // discards the gap plus a few settling frames before simulation continues.
+ const lifecycleGap=IWStability?.consumeFrameGuard?.(rawDt)??(rawDt>.12);
+ const dt=lifecycleGap?0:Math.min(.028,rawDt);
  if(typeof mobilePerf!=='undefined'&&mobilePerf.enabled){
   mobilePerf.frameMs=mobilePerf.frameMs*.9+rawDt*1000*.1;mobilePerf.sampleFrames++;
   const sampleAge=t-mobilePerf.lastSample;
@@ -149,9 +154,10 @@ function loop(t){
   }
  }
  try{
-  const battleUpdating=(state==='game'&&!paused)||(state==='dying'&&dying);
-  if(battleUpdating)update(dt);
-  if(state==='game'&&!paused)updateBarrierDangerHint(dt);
+  const battleUpdating=!lifecycleGap&&((state==='game'&&!paused)||(state==='dying'&&dying));
+  if(battleUpdating&&dt>0)update(dt);
+  IWStability?.watchdog?.();
+  if(state==='game'&&!paused&&dt>0)updateBarrierDangerHint(dt);
   draw();
  }catch(error){recoverFrameState(error)}
 }
@@ -281,8 +287,13 @@ const joy=$('#joystick'),knob=$('#knob');
 function updateMouseRelative(e){
  if(!isMouseBattleMode()||document.pointerLockElement!==canvas)return;
  const rect=canvas.getBoundingClientRect();if(!rect.width||!rect.height)return;
- mouseDeltaX+=(Number(e.movementX)||0)*(W/rect.width);
- mouseDeltaY+=(Number(e.movementY)||0)*(H/rect.height);
+ // X/Y 使用同一个缩放比例，避免桌面窗口比例变化时产生方向手感不一致。
+ const displayScale=Math.min(W/rect.width,H/rect.height);
+ const samples=typeof e.getCoalescedEvents==='function'?e.getCoalescedEvents():[e];
+ for(const sample of samples){
+  mouseDeltaX+=(Number(sample.movementX)||0)*displayScale;
+  mouseDeltaY+=(Number(sample.movementY)||0)*displayScale;
+ }
  mouseMoveActive=true;
 }
 canvas.addEventListener('mousedown',e=>{
@@ -290,7 +301,8 @@ canvas.addEventListener('mousedown',e=>{
  if(e.button===2){e.preventDefault();pulse();return}
  if(e.button===0&&document.pointerLockElement!==canvas){e.preventDefault();requestMouseBattleLock()}
 });
-document.addEventListener('mousemove',updateMouseRelative,{passive:true});
+const mouseMotionEvent=('onpointerrawupdate' in window)?'pointerrawupdate':'mousemove';
+document.addEventListener(mouseMotionEvent,updateMouseRelative,{passive:true});
 canvas.addEventListener('contextmenu',e=>{if(!interfaceTouchDevice&&uiPrefs.controlMode==='mouse'&&state==='game')e.preventDefault()});
 
 function endTouchDrive(pointerId=null){
@@ -321,17 +333,42 @@ canvas.addEventListener('lostpointercapture',e=>endTouchDrive(e.pointerId),{pass
 
 const portraitLock=$('#portraitLock');
 const touchDevice=interfaceTouchDevice;
-const phoneDevice=touchDevice&&Math.min(screen.width||innerWidth,screen.height||innerHeight)<=600;
-if(touchDevice){document.body.classList.add('touch-device');UI.bombButton?.classList.add('hidden');UI.bombButton?.setAttribute('aria-hidden','true')}else document.body.classList.add('desktop-device');
+const mobilePortraitDevice=touchDevice;
+if(touchDevice){document.body.classList.add('touch-device','mobile-portrait-device');UI.bombButton?.classList.add('hidden');UI.bombButton?.setAttribute('aria-hidden','true')}else document.body.classList.add('desktop-device');
+function isLandscapeViewport(){
+ const vv=window.visualViewport;
+ const width=vv?.width||innerWidth;
+ const height=vv?.height||innerHeight;
+ return width>height;
+}
+async function requestPortraitOrientation(){
+ if(!mobilePortraitDevice||isLandscapeViewport())return false;
+ try{
+  if(screen.orientation?.lock){await screen.orientation.lock('portrait');return true}
+ }catch{}
+ return false;
+}
 function syncPortraitLock(){
- const blocked=phoneDevice&&innerWidth>innerHeight;
+ const blocked=mobilePortraitDevice&&isLandscapeViewport();
+ document.body.classList.toggle('orientation-blocked',blocked);
  portraitLock?.classList.toggle('hidden',!blocked);
- if(blocked){endTouchDrive();if(running&&!paused){paused=true;document.body.dataset.orientationPaused='1'}}
- else if(document.body.dataset.orientationPaused==='1'){delete document.body.dataset.orientationPaused;if(running&&state==='game'){paused=false;last=performance.now()}}
+ portraitLock?.setAttribute('aria-hidden',String(!blocked));
+ if(blocked){
+  endTouchDrive();
+  if(running&&!paused){paused=true;document.body.dataset.orientationPaused='1'}
+ }else{
+  requestPortraitOrientation();
+  if(document.body.dataset.orientationPaused==='1'){
+   delete document.body.dataset.orientationPaused;
+   if(running&&state==='game'){paused=false;last=performance.now()}
+  }
+ }
 }
 addEventListener('resize',syncPortraitLock,{passive:true});
-addEventListener('orientationchange',()=>setTimeout(syncPortraitLock,120),{passive:true});
-addEventListener('visibilitychange',()=>{if(document.hidden){endTouchDrive();releaseMouseLock();audioSystem?.enterBackground?.();if(running&&!paused)openPauseMenu()}else{audioSystem?.leaveBackground?.()}});
+window.visualViewport?.addEventListener('resize',syncPortraitLock,{passive:true});
+addEventListener('orientationchange',()=>setTimeout(syncPortraitLock,180),{passive:true});
+document.addEventListener('pointerdown',()=>requestPortraitOrientation(),{passive:true,once:true});
+addEventListener('visibilitychange',()=>{if(document.hidden){audioSystem?.enterBackground?.()}else{audioSystem?.leaveBackground?.();IWStability?.resume?.('visibility-ui')}});
 ['gesturestart','gesturechange','gestureend'].forEach(type=>document.addEventListener(type,e=>e.preventDefault(),{passive:false}));
 function isNativeTouchSurface(target){
  if(!(target instanceof Element))return false;

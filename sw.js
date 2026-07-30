@@ -1,4 +1,4 @@
-const CACHE='iw-cache-8.56-menu-assets-v2';
+const CACHE='iw-cache-8.56-mobile-layout-v3';
 const ASSETS=[
   './',
   './index.html',

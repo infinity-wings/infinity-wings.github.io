@@ -1210,3 +1210,64 @@ body.mobile-portrait-device .home-credits{
 #menuScreen .hologram-start small{position:absolute;left:0;right:0;bottom:17%;z-index:2}
 @keyframes menuShipHoverSoft{0%,100%{transform:translate(-50%,0)}50%{transform:translate(-50%,-5px)}}
 @media (max-height:760px){#menuScreen .menu-launch-fighter{bottom:max(4%,calc(env(safe-area-inset-bottom) + 24px));width:min(72vw,400px)}}
+
+/* Alpha 8.56.1: standalone phone/tablet menu viewport corrections */
+@media (display-mode:standalone){
+  body.mobile-portrait-device{
+    position:fixed;
+    inset:0;
+    width:auto;
+    height:auto;
+    min-height:0;
+  }
+  body.mobile-portrait-device #app,
+  body.mobile-portrait-device #gameShell{
+    inset:0;
+    width:auto;
+    height:auto;
+    min-height:0;
+  }
+}
+@supports (-webkit-touch-callout:none){
+  body.mobile-portrait-device.standalone-mode,
+  body.mobile-portrait-device.standalone-mode #app,
+  body.mobile-portrait-device.standalone-mode #gameShell{
+    top:0;
+    right:0;
+    bottom:-1px;
+    left:0;
+    width:auto;
+    height:auto;
+    min-height:0;
+  }
+}
+@media (min-width:600px) and (orientation:portrait){
+  body.mobile-portrait-device #menuScreen.menu-art-preview:before{
+    inset:0;
+    opacity:1;
+    background:url("assets/menu/menu-space-background.webp") center/auto 100% no-repeat;
+  }
+  body.mobile-portrait-device #menuScreen .hologram-actions{
+    left:50%;
+    right:auto;
+    bottom:max(4.2%,calc(env(safe-area-inset-bottom) + 18px));
+    width:min(80vw,680px);
+    gap:12px;
+    transform:translateX(-50%)!important;
+  }
+  body.mobile-portrait-device #menuScreen .hologram-start{
+    height:clamp(138px,10.8vh,168px)!important;
+  }
+  body.mobile-portrait-device #menuScreen .menu-secondary-grid{
+    gap:11px 14px;
+  }
+  body.mobile-portrait-device #menuScreen .hologram-small{
+    height:clamp(70px,5.4vh,84px)!important;
+  }
+  body.mobile-portrait-device #menuScreen .hologram-start>span{
+    font-size:clamp(25px,3.4vw,32px)!important;
+  }
+  body.mobile-portrait-device #menuScreen .hologram-small>span{
+    font-size:clamp(18px,2.8vw,24px);
+  }
+}

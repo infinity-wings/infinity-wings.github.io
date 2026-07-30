@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
-  <title>无限之翼 · Alpha 8.52 Adaptive Fullscreen</title>
+  <title>无限之翼 · Alpha 8.56 Menu Layer Fix</title>
   <meta name="theme-color" content="#050816" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -80,25 +80,43 @@
         <div class="boot-emblem"><img src="assets/icons/icon-512.png" alt="" /><i></i></div><div class="boot-lines" id="bootLines"></div>
       </section>
 
-      <section id="menuScreen" class="screen hidden">
-        <div class="menu-noise"></div>
-        <div class="menu-flight-scene" aria-hidden="true">
-          <div class="menu-source-core"><i></i><i></i><i></i></div>
-          <div class="menu-fighter"><i></i><b></b><span></span></div>
-          <div class="menu-flight-trail"></div>
+      <section id="menuScreen" class="screen hidden menu-art-preview">
+        <div class="menu-space-vignette" aria-hidden="true"></div>
+
+        <header class="menu-title-block" aria-label="游戏标题">
+          <img src="assets/menu/menu-title-logo.png" alt="无限之翼 INFINITY WINGS" />
+        </header>
+
+        <div class="menu-launch-fighter" aria-hidden="true">
+          <img src="assets/menu/menu-fighter-rear.png" alt="" />
         </div>
-        <div class="logo-wrap">
-          <div class="cn-logo">无限之翼 <small class="home-version">Alpha 8.52</small></div>
-          <div class="en-logo">INFINITY WINGS</div>
-          <div class="tagline">每一次死亡，都会留下记忆。</div>
-        </div>
-        <div class="menu-actions">
-          <button id="startButton" class="primary-action"><span>开始行动</span><small>进入无限裂隙</small></button>
-          <button id="archiveButton" class="menu-button">档案库</button>
-          <button id="settingsButton" class="menu-button">设置</button>
-        </div>
-        <div class="home-credits" aria-label="制作人员">
-          <span>策划与设计</span><b>吴海溶</b><i></i><span>开发制作</span><b>INFINITY WINGS PROJECT</b>
+
+        <div class="menu-actions hologram-actions">
+          <button id="startButton" class="primary-action hologram-start">
+            <img src="assets/menu/ui-start-frame.png" alt="" aria-hidden="true" />
+            <span>开始出击</span><small>START MISSION</small>
+          </button>
+          <div class="menu-secondary-grid">
+            <button id="hangarButton" class="menu-button hologram-small" type="button">
+              <img src="assets/menu/ui-small-frame.png" alt="" aria-hidden="true" />
+              <span>机库</span>
+            </button>
+            <button id="archiveButton" class="menu-button hologram-small">
+              <img src="assets/menu/ui-small-frame.png" alt="" aria-hidden="true" />
+              <span>图鉴</span>
+            </button>
+            <button id="settingsButton" class="menu-button hologram-small">
+              <img src="assets/menu/ui-small-frame.png" alt="" aria-hidden="true" />
+              <span>设置</span>
+            </button>
+            <button id="aboutButton" class="menu-button hologram-small" type="button">
+              <img src="assets/menu/ui-small-frame.png" alt="" aria-hidden="true" />
+              <span>关于游戏</span>
+            </button>
+          </div>
+          <div class="menu-project-mark" aria-hidden="true">
+            <b>ALPHA 8.56</b>
+          </div>
         </div>
       </section>
 

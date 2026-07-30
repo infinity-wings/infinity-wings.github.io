@@ -1,4 +1,4 @@
-## Alpha 8.52 Adaptive Fullscreen
+## Alpha 8.56 Adaptive Fullscreen
 
 - Phones and tablets remain portrait-only.
 - The game now fills the complete available portrait screen.

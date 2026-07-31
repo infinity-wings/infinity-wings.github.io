@@ -7,6 +7,7 @@ class InfinityAudioSystem{
   this.bgmFadeFrame=0;this.bgmTarget=-1;this.bgmFadeMs=3000;this.lastBgmPlayAttempt=0;
   this.bgmSource=null;this.bgmStartedAt=0;this.bgmOffset=0;this.bgmGeneration=0;
   this.backgrounded=document.hidden;this.awaitingForegroundGesture=false;
+  this.lifecycleToken=0;this.backgroundSuspendTimer=0;this.masterLevel=.72;
   this.deviceMix=this.detectDeviceMix();
   if(localStorage.getItem('iwAudioDefaults73')!=='applied'){
    localStorage.setItem('iwMusicVolume','.5');localStorage.setItem('iwSfxVolume','.5');localStorage.setItem('iwAudioDefaults73','applied');
@@ -61,7 +62,7 @@ class InfinityAudioSystem{
   if(!this.ctx){
    const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
    this.ctx=new AC({latencyHint:'interactive'});this.master=this.ctx.createGain();this.musicBus=this.ctx.createGain();this.sfxBus=this.ctx.createGain();
-   this.master.gain.value=.72;this.musicBus.gain.value=0;this.sfxBus.gain.value=this.currentSfxGain();
+   this.master.gain.value=this.masterLevel;this.musicBus.gain.value=0;this.sfxBus.gain.value=this.currentSfxGain();
    this.musicBus.connect(this.master);this.sfxBus.connect(this.master);this.master.connect(this.ctx.destination);this.ready=true;created=true;this.preloadBuffers();
   }
   if(this.ctx.state==='suspended'){
@@ -70,22 +71,55 @@ class InfinityAudioSystem{
   if(created)this.recover();
  }
  currentSfxGain(){return (this.prefs?.sfx?1:0)*.42*(this.prefs?.sfxVolume||0)*this.deviceMix.sfx}
- stopAllSfx(){
-  for(const source of [...this.activeSources]){try{source.stop()}catch(_){}try{source.disconnect()}catch(_){}this.activeSources.delete(source)}
+ setMasterGain(target,duration=0){
+  if(!this.ctx||!this.master)return;
+  target=Math.max(0,Math.min(1,target));duration=Math.max(0,Number(duration)||0);
+  const now=this.ctx.currentTime;
+  try{
+   const gain=this.master.gain,current=Number.isFinite(gain.value)?gain.value:this.masterLevel;
+   gain.cancelScheduledValues(now);gain.setValueAtTime(current,now);
+   if(duration>0)gain.linearRampToValueAtTime(target,now+duration);else gain.setValueAtTime(target,now);
+  }catch(_){this.master.gain.value=target}
+ }
+ stopAllSfx(fadeSeconds=0){
+  const stopAt=this.ctx?this.ctx.currentTime+Math.max(0,fadeSeconds):0;
+  for(const source of [...this.activeSources]){
+   try{
+    if(fadeSeconds>0){
+     const previous=source.onended;
+     source.onended=event=>{try{previous?.call(source,event)}catch(_){}try{source.disconnect()}catch(_){}};
+     source.stop(stopAt);
+    }else{source.stop();source.disconnect()}
+   }catch(_){}
+   this.activeSources.delete(source);
+  }
  }
  enterBackground(){
+  if(this.backgrounded)return;
   this.backgrounded=true;this.awaitingForegroundGesture=true;
-  this.stopBgm(true);this.stopAllSfx();
+  const token=++this.lifecycleToken,fadeSeconds=.09;
+  if(this.backgroundSuspendTimer){clearTimeout(this.backgroundSuspendTimer);this.backgroundSuspendTimer=0}
+  this.setMasterGain(0,fadeSeconds);
+  this.stopBgm(true,fadeSeconds);this.stopAllSfx(fadeSeconds);
   if('mediaSession' in navigator){try{navigator.mediaSession.playbackState='none'}catch(_){}}
-  if(this.ctx&&this.ctx.state==='running'){const suspended=this.ctx.suspend();if(suspended&&typeof suspended.catch==='function')suspended.catch(()=>{})}
+  this.backgroundSuspendTimer=setTimeout(()=>{
+   this.backgroundSuspendTimer=0;
+   if(token!==this.lifecycleToken||!this.backgrounded||!this.ctx||this.ctx.state!=='running')return;
+   const suspended=this.ctx.suspend();if(suspended&&typeof suspended.catch==='function')suspended.catch(()=>{});
+  },125);
  }
- leaveBackground(){if(document.hidden)return;this.backgrounded=false;this.awaitingForegroundGesture=true;this.setMusicGain(0,true)}
+ leaveBackground(){
+  if(document.hidden||!this.backgrounded)return;
+  this.backgrounded=false;this.awaitingForegroundGesture=true;++this.lifecycleToken;
+  if(this.backgroundSuspendTimer){clearTimeout(this.backgroundSuspendTimer);this.backgroundSuspendTimer=0}
+  this.setMasterGain(0,0);this.setMusicGain(0,true);
+ }
  recover(fromGesture=false){
   if(document.hidden||this.backgrounded||(this.awaitingForegroundGesture&&!fromGesture))return;
   if(this.ctx&&this.ctx.state==='suspended'){
-   const resumed=this.ctx.resume();if(resumed&&typeof resumed.then==='function')resumed.then(()=>this.syncState(true)).catch(()=>{});return;
+   const resumed=this.ctx.resume();if(resumed&&typeof resumed.then==='function')resumed.then(()=>{this.setMasterGain(this.masterLevel,.12);this.syncState(true)}).catch(()=>{});return;
   }
-  this.syncState(true);
+  this.setMasterGain(this.masterLevel,.12);this.syncState(true);
  }
  setEnabled(kind,value){this.prefs[kind]=Boolean(value);localStorage.setItem(kind==='music'?'iwMusic':'iwSfx',value?'on':'off');if(kind==='sfx'&&!value)this.stopAllSfx();if(kind==='music'&&!value)this.stopBgm(true);this.unlock();this.syncState(true)}
  setVolume(kind,value){
@@ -111,14 +145,21 @@ class InfinityAudioSystem{
   src.onended=()=>{if(this.bgmSource===src)this.bgmSource=null;if(generation!==this.bgmGeneration)return;this.bgmOffset=0;if(this.shouldMusicPlay())this.startBgm(true)};
   try{src.start(0,offset);this.setMusicGain(this.musicTargetVolume())}catch(_){if(this.bgmSource===src)this.bgmSource=null}
  }
- stopBgm(rememberPosition=true){
+ stopBgm(rememberPosition=true,fadeSeconds=0){
   if(this.bgmSource){
    if(rememberPosition&&this.ctx&&this.buffers.has('bgm')){const d=this.buffers.get('bgm').duration;this.bgmOffset=((this.ctx.currentTime-this.bgmStartedAt)%d+d)%d}
-   const src=this.bgmSource;this.bgmSource=null;++this.bgmGeneration;try{src.onended=null;src.stop()}catch(_){}try{src.disconnect()}catch(_){}
+   const src=this.bgmSource;this.bgmSource=null;++this.bgmGeneration;
+   try{
+    if(fadeSeconds>0){
+     src.onended=()=>{try{src.disconnect()}catch(_){}};
+     src.stop(this.ctx.currentTime+fadeSeconds);
+    }else{src.onended=null;src.stop();src.disconnect()}
+   }catch(_){}
   }
-  this.setMusicGain(0,true);
+  this.setMusicGain(0,fadeSeconds<=0);
  }
  syncState(force=false){
+  if(document.hidden||this.backgrounded)return;
   if(this.ready&&this.ctx)this.sfxBus.gain.setTargetAtTime(this.currentSfxGain(),this.ctx.currentTime,.05);
   if(this.shouldMusicPlay())this.startBgm(false);else this.stopBgm(true);
  }

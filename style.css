@@ -1322,38 +1322,6 @@ body.mobile-portrait-device .home-credits{
   50%{opacity:1;filter:drop-shadow(0 0 9px rgba(113,226,255,1))}
 }
 
-#menuScreen .menu-engine-flame{
-  position:absolute;
-  z-index:1;
-  top:73.5%;
-  width:15%;
-  height:48%;
-  transform:translateX(-50%);
-  transform-origin:50% 0;
-  background-image:var(--engine-flame-image);
-  background-position:50% 0;
-  background-repeat:no-repeat;
-  background-size:100% 100%;
-  mix-blend-mode:screen;
-  filter:drop-shadow(0 0 6px rgba(105,194,255,.8)) drop-shadow(0 0 14px rgba(112,81,255,.5));
-  opacity:.94;
-  pointer-events:none;
-  animation:menuEngineThrustV3 .24s ease-in-out infinite alternate;
-}
-#menuScreen .menu-engine-flame.engine-left{
-  --engine-flame-image:url("assets/menu/menu-engine-flame-left.png");
-  left:36.4%;
-}
-#menuScreen .menu-engine-flame.engine-right{
-  --engine-flame-image:url("assets/menu/menu-engine-flame-right.png");
-  left:63.6%;
-  animation-delay:-.12s;
-  animation-duration:.28s;
-}
-@keyframes menuEngineThrustV3{
-  from{transform:translateX(-50%) scaleX(.92) scaleY(.94);opacity:.78}
-  to{transform:translateX(-50%) scaleX(1.04) scaleY(1.08);opacity:1}
-}
 @media(max-width:460px){
   #menuScreen .menu-title-block{
     top:max(5.2%,calc(env(safe-area-inset-top) + 16px));
@@ -1366,7 +1334,6 @@ body.mobile-portrait-device .home-credits{
   }
 }
 @media (prefers-reduced-motion:reduce){
-  #menuScreen .menu-engine-flame{animation:none;opacity:.9}
   #menuScreen .menu-title-en{animation:none;opacity:.88}
 }
 
@@ -1385,7 +1352,7 @@ body.mobile-portrait-device .home-credits{
   filter:drop-shadow(0 1px 1px rgba(4,7,28,.95));
 }
 
-/* Alpha 8.57: iPad home-screen safe top and stable bottom anchoring */
+/* Alpha 8.58: iPad safe top, stable bottom anchoring and cleaned menu art */
 @media (display-mode:standalone) and (orientation:portrait){
   body.mobile-portrait-device.standalone-mode{
     background:#01030a;

@@ -1,9 +1,9 @@
-const CACHE='iw-cache-8.57-safe-area-preload-v11';
+const CACHE='iw-cache-8.58-audio-cleanup-v12';
 const ASSETS=[
   './',
   './index.html',
   './style.css',
-  './game.js?v=8.57.0',
+  './game.js?v=8.58.0',
   './manifest.webmanifest',
   './apple-touch-icon.png',
   './favicon.png',
@@ -14,8 +14,6 @@ const ASSETS=[
   './assets/menu/menu-space-background-phone.jpg',
   './assets/menu/menu-title-logo.PNG',
   './assets/menu/menu-fighter-rear-v2.png',
-  './assets/menu/menu-engine-flame-left.png',
-  './assets/menu/menu-engine-flame-right.png',
   './assets/menu/ui-start-frame.png',
   './assets/menu/ui-small-frame.png'
 ];

@@ -370,7 +370,6 @@ addEventListener('resize',syncPortraitLock,{passive:true});
 window.visualViewport?.addEventListener('resize',syncPortraitLock,{passive:true});
 addEventListener('orientationchange',()=>setTimeout(syncPortraitLock,180),{passive:true});
 document.addEventListener('pointerdown',()=>requestPortraitOrientation(),{passive:true,once:true});
-addEventListener('visibilitychange',()=>{if(document.hidden)audioSystem?.enterBackground?.();else audioSystem?.leaveBackground?.()});
 ['gesturestart','gesturechange','gestureend'].forEach(type=>document.addEventListener(type,e=>e.preventDefault(),{passive:false}));
 function isNativeTouchSurface(target){
  if(!(target instanceof Element))return false;

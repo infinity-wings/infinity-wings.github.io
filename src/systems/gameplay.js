@@ -10,7 +10,7 @@ function preloadMenuAssets(){
  const touch=navigator.maxTouchPoints>0||matchMedia('(pointer: coarse)').matches;
  const portraitWidth=Math.min(innerWidth||540,innerHeight||960);
  const background=touch?(portraitWidth<600?'assets/menu/menu-space-background-phone.jpg':'assets/menu/menu-space-background-tablet.jpg'):'assets/menu/menu-space-background-desktop.jpg';
- const sources=[background,'assets/menu/menu-title-logo.PNG','assets/menu/menu-fighter-rear-v2.png','assets/menu/menu-engine-flame-left.png','assets/menu/menu-engine-flame-right.png','assets/menu/ui-start-frame.png','assets/menu/ui-small-frame.png'];
+ const sources=[background,'assets/menu/menu-title-logo.PNG','assets/menu/menu-fighter-rear-v2.png','assets/menu/ui-start-frame.png','assets/menu/ui-small-frame.png'];
  const load=src=>new Promise(resolve=>{
   const image=new Image(),done=()=>resolve(src);
   image.onload=()=>{if(typeof image.decode==='function')image.decode().catch(()=>{}).finally(done);else done()};

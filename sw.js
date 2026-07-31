@@ -1,9 +1,9 @@
-const CACHE='iw-cache-8.56-lock-resume-render-fix-v10';
+const CACHE='iw-cache-8.57-safe-area-preload-v11';
 const ASSETS=[
   './',
   './index.html',
   './style.css',
-  './game.js?v=8.56.10',
+  './game.js?v=8.57.0',
   './manifest.webmanifest',
   './apple-touch-icon.png',
   './favicon.png',

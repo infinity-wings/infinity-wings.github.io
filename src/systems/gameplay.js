@@ -4,10 +4,28 @@ function openPauseMenu(){if(!running||dying||state==='core'||state==='awakening'
 function closePauseMenu(){if(!running||dying)return;IWStability?.prepareGameplayResume?.();UI.pause.classList.add('hidden');state='game';paused=false;last=performance.now();setSystemMenuVisible(true);refreshMouseCursorState?.();if(!touchDevice&&uiPrefs?.controlMode==='mouse')setTimeout(()=>requestMouseBattleLock?.(),0)}
 function restartCurrentRun(){reset();state='game';UI.pause.classList.add('hidden');UI.hud.classList.remove('hidden');UI.timerPanel.classList.remove('hidden');UI.touch.classList.remove('hidden');paused=false;running=true;last=performance.now();setSystemMenuVisible(true);toast('新的作战记录已建立')}
 function returnToTitle(){running=false;paused=false;dying=false;state='menu';UI.hud.classList.add('hidden');UI.timerPanel.classList.add('hidden');UI.touch.classList.add('hidden');setSystemMenuVisible(false);showScreen(UI.menu)}
+let menuAssetsReady=null;
+function preloadMenuAssets(){
+ if(menuAssetsReady)return menuAssetsReady;
+ const touch=navigator.maxTouchPoints>0||matchMedia('(pointer: coarse)').matches;
+ const portraitWidth=Math.min(innerWidth||540,innerHeight||960);
+ const background=touch?(portraitWidth<600?'assets/menu/menu-space-background-phone.jpg':'assets/menu/menu-space-background-tablet.jpg'):'assets/menu/menu-space-background-desktop.jpg';
+ const sources=[background,'assets/menu/menu-title-logo.PNG','assets/menu/menu-fighter-rear-v2.png','assets/menu/menu-engine-flame-left.png','assets/menu/menu-engine-flame-right.png','assets/menu/ui-start-frame.png','assets/menu/ui-small-frame.png'];
+ const load=src=>new Promise(resolve=>{
+  const image=new Image(),done=()=>resolve(src);
+  image.onload=()=>{if(typeof image.decode==='function')image.decode().catch(()=>{}).finally(done);else done()};
+  image.onerror=done;
+  image.src=src;
+  if(image.complete&&image.naturalWidth)done();
+ });
+ menuAssetsReady=Promise.all(sources.map(load));
+ return menuAssetsReady;
+}
 function boot(){
  const lines=['正在建立加密连接……','正在读取驾驶员档案……','意识备份：可用','源核网络：异常','欢迎回来，驾驶员。'];
+ const assets=preloadMenuAssets();
  const box=$('#bootLines');box.innerHTML='';let i=0,finished=false;
- const finish=()=>{if(finished)return;finished=true;clearInterval(timer);state='menu';showScreen(UI.menu)};
+ const finish=()=>{if(finished)return;finished=true;clearInterval(timer);Promise.race([assets,new Promise(resolve=>setTimeout(resolve,1500))]).finally(()=>{state='menu';showScreen(UI.menu)})};
  const timer=setInterval(()=>{if(i>=lines.length)return finish();const d=document.createElement('div');d.className='boot-line '+(i===2?'ok':i===3?'warn':'');d.textContent=lines[i];box.appendChild(d);i++;if(i===lines.length)setTimeout(finish,420)},360);
  setTimeout(finish,4000);
 }

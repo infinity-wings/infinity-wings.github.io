@@ -214,18 +214,17 @@ function die(){
  setTimeout(()=>{const timer=setInterval(()=>{sub.innerHTML+=`<div>${lines[i]}</div>`;i++;if(i===lines.length){clearInterval(timer);stats.innerHTML=`本次行动分数：<b>${score}</b><br>生存时间：<b>${formatRunTime(elapsed)}</b><br>到达等级：<b>${level}</b><br>最高危险等级：<b>${THREAT_ROMAN[threatLevel()]}</b>`;stats.classList.remove('hidden');actions.classList.remove('hidden')}},850)},1150)
 }
 
-let barrierTutorialActive=false,barrierDangerHintCd=0;
+let barrierTutorialActive=false,barrierTutorialShownThisLaunch=false,barrierDangerHintCd=0;
 function barrierControlText(){if(touchDevice)return '点击右下角“亚空间屏障”按钮';return uiPrefs?.controlMode==='mouse'?'按鼠标右键':'按 B 键'}
 function dismissBarrierTutorial(remember=true){
  const tip=$('#barrierTutorial');if(!tip)return;
  tip.classList.add('hidden');UI.barrierBox?.classList.remove('tutorial-focus');barrierTutorialActive=false;
- if(remember)localStorage.setItem('iwBarrierTutorialSeenV1','1');
  if(running&&state==='game'&&!dying){paused=false;last=performance.now()}
 }
 function showBarrierTutorial(){
- if(!running||state!=='game'||dying||localStorage.getItem('iwBarrierTutorialSeenV1')==='1')return;
+ if(!running||state!=='game'||dying||barrierTutorialShownThisLaunch)return;
  const tip=$('#barrierTutorial'),copy=$('#barrierTutorialText');if(!tip||!copy)return;
- barrierTutorialActive=true;paused=true;copy.textContent=`${barrierControlText()}启动屏障，可立即吸收并清除画面中的全部敌方子弹。`;
+ barrierTutorialShownThisLaunch=true;barrierTutorialActive=true;paused=true;copy.textContent=`${barrierControlText()}启动屏障，可立即吸收并清除画面中的全部敌方子弹。`;
  tip.classList.remove('hidden');UI.barrierBox?.classList.add('tutorial-focus');releaseMouseLock?.();refreshMouseCursorState?.();
 }
 $('#barrierTutorialClose')?.addEventListener('click',()=>dismissBarrierTutorial(true));

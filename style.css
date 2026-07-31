@@ -1369,3 +1369,56 @@ body.mobile-portrait-device .home-credits{
   #menuScreen .menu-engine-flame{animation:none;opacity:.9}
   #menuScreen .menu-title-en{animation:none;opacity:.88}
 }
+
+/* Alpha 8.56.4: menu labels matched to the blue-violet hologram frames */
+#menuScreen .hologram-start>span,
+#menuScreen .hologram-small>span{
+  color:#8eb9ff;
+  background:linear-gradient(180deg,#d6f7ff 0%,#8cc9ff 38%,#8176ff 70%,#bd83ff 100%);
+  -webkit-background-clip:text;
+  background-clip:text;
+  -webkit-text-fill-color:transparent;
+  text-shadow:
+    0 0 5px rgba(121,213,255,.78),
+    0 0 12px rgba(105,102,255,.74),
+    0 0 22px rgba(171,90,255,.4);
+  filter:drop-shadow(0 1px 1px rgba(4,7,28,.95));
+}
+
+/* Alpha 8.57: iPad home-screen safe top and stable bottom anchoring */
+@media (display-mode:standalone) and (orientation:portrait){
+  body.mobile-portrait-device.standalone-mode{
+    background:#01030a;
+  }
+  body.mobile-portrait-device.standalone-mode #app{
+    top:env(safe-area-inset-top);
+    right:0;
+    bottom:0;
+    left:0;
+    width:auto;
+    height:auto;
+    min-height:0;
+    padding:0;
+  }
+  body.mobile-portrait-device.standalone-mode #gameShell{
+    top:0;
+    right:0;
+    bottom:0;
+    left:0;
+    width:auto;
+    height:auto;
+    min-height:0;
+  }
+}
+@supports (-webkit-touch-callout:none){
+  @media (orientation:portrait){
+    body.mobile-portrait-device.standalone-mode #app{
+      top:env(safe-area-inset-top);
+      bottom:0;
+    }
+    body.mobile-portrait-device.standalone-mode #gameShell{
+      top:0;
+      bottom:0;
+    }
+  }
+}

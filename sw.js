@@ -1,4 +1,4 @@
-const CACHE='iw-cache-8.56-mobile-layout-v3';
+const CACHE='iw-cache-8.56-laser-title-flames-v7';
 const ASSETS=[
   './',
   './index.html',
@@ -9,9 +9,13 @@ const ASSETS=[
   './favicon.png',
   './assets/icons/icon-192.png',
   './assets/icons/icon-512.png',
-  './assets/menu/menu-space-background.webp',
+  './assets/menu/menu-space-background-desktop.jpg',
+  './assets/menu/menu-space-background-tablet.jpg',
+  './assets/menu/menu-space-background-phone.jpg',
   './assets/menu/menu-title-logo.PNG',
-  './assets/menu/menu-fighter-rear.png',
+  './assets/menu/menu-fighter-rear-v2.png',
+  './assets/menu/menu-engine-flame-left.png',
+  './assets/menu/menu-engine-flame-right.png',
   './assets/menu/ui-start-frame.png',
   './assets/menu/ui-small-frame.png'
 ];

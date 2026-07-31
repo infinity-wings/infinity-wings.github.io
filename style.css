@@ -946,7 +946,7 @@ body.mobile-portrait-device .home-credits{
   display:block;
   padding:0;
   overflow:hidden;
-  background:#020316 url("assets/menu/menu-space-background.webp") center center/cover no-repeat;
+  background:#020316 url("assets/menu/menu-space-background-desktop.jpg") center center/cover no-repeat;
   isolation:isolate;
 }
 #menuScreen.menu-art-preview.hidden{display:none}
@@ -1241,11 +1241,18 @@ body.mobile-portrait-device .home-credits{
     min-height:0;
   }
 }
+@media (max-width:599px) and (orientation:portrait){
+  body.mobile-portrait-device #menuScreen.menu-art-preview{
+    background-image:url("assets/menu/menu-space-background-phone.jpg");
+    background-position:center;
+    background-size:cover;
+  }
+}
 @media (min-width:600px) and (orientation:portrait){
-  body.mobile-portrait-device #menuScreen.menu-art-preview:before{
-    inset:0;
-    opacity:1;
-    background:url("assets/menu/menu-space-background.webp") center/auto 100% no-repeat;
+  body.mobile-portrait-device #menuScreen.menu-art-preview{
+    background-image:url("assets/menu/menu-space-background-tablet.jpg");
+    background-position:center;
+    background-size:cover;
   }
   body.mobile-portrait-device #menuScreen .hologram-actions{
     left:50%;
@@ -1270,4 +1277,95 @@ body.mobile-portrait-device .home-credits{
   body.mobile-portrait-device #menuScreen .hologram-small>span{
     font-size:clamp(18px,2.8vw,24px);
   }
+}
+
+/* Alpha 8.56.3: generated plasma sprites and laser subtitle */
+#menuScreen .menu-title-block{
+  top:max(6.2%,calc(env(safe-area-inset-top) + 22px));
+}
+#menuScreen .menu-title-en{
+  position:absolute;
+  left:50%;
+  bottom:-10px;
+  display:block;
+  width:max-content;
+  color:#e8fdff;
+  font:800 clamp(8px,1.65vw,12px)/1 ui-monospace,SFMono-Regular,Menlo,monospace;
+  letter-spacing:.5em;
+  text-indent:.5em;
+  text-shadow:
+    0 0 2px #fff,
+    0 0 7px rgba(105,224,255,.95),
+    0 0 17px rgba(92,112,255,.9);
+  filter:drop-shadow(0 0 5px rgba(84,190,255,.8));
+  transform:translateX(-50%);
+  animation:menuTitleLaserPulse 2.8s ease-in-out infinite;
+}
+#menuScreen .menu-title-en:before,
+#menuScreen .menu-title-en:after{
+  content:"";
+  position:absolute;
+  top:50%;
+  width:clamp(28px,7vw,54px);
+  height:1px;
+  background:linear-gradient(90deg,transparent,#71eaff 42%,#fff 76%,#8a78ff);
+  box-shadow:0 0 4px #65dcff,0 0 10px rgba(91,102,255,.9);
+  transform:translateY(-50%);
+}
+#menuScreen .menu-title-en:before{
+  right:calc(100% + 12px);
+  transform:translateY(-50%) scaleX(-1);
+}
+#menuScreen .menu-title-en:after{left:calc(100% + 12px)}
+@keyframes menuTitleLaserPulse{
+  0%,100%{opacity:.72;filter:drop-shadow(0 0 4px rgba(84,190,255,.65))}
+  50%{opacity:1;filter:drop-shadow(0 0 9px rgba(113,226,255,1))}
+}
+
+#menuScreen .menu-engine-flame{
+  position:absolute;
+  z-index:1;
+  top:73.5%;
+  width:15%;
+  height:48%;
+  transform:translateX(-50%);
+  transform-origin:50% 0;
+  background-image:var(--engine-flame-image);
+  background-position:50% 0;
+  background-repeat:no-repeat;
+  background-size:100% 100%;
+  mix-blend-mode:screen;
+  filter:drop-shadow(0 0 6px rgba(105,194,255,.8)) drop-shadow(0 0 14px rgba(112,81,255,.5));
+  opacity:.94;
+  pointer-events:none;
+  animation:menuEngineThrustV3 .24s ease-in-out infinite alternate;
+}
+#menuScreen .menu-engine-flame.engine-left{
+  --engine-flame-image:url("assets/menu/menu-engine-flame-left.png");
+  left:36.4%;
+}
+#menuScreen .menu-engine-flame.engine-right{
+  --engine-flame-image:url("assets/menu/menu-engine-flame-right.png");
+  left:63.6%;
+  animation-delay:-.12s;
+  animation-duration:.28s;
+}
+@keyframes menuEngineThrustV3{
+  from{transform:translateX(-50%) scaleX(.92) scaleY(.94);opacity:.78}
+  to{transform:translateX(-50%) scaleX(1.04) scaleY(1.08);opacity:1}
+}
+@media(max-width:460px){
+  #menuScreen .menu-title-block{
+    top:max(5.2%,calc(env(safe-area-inset-top) + 16px));
+  }
+  #menuScreen .menu-title-en{bottom:-8px}
+}
+@media(max-height:720px){
+  #menuScreen .menu-title-block{
+    top:max(4%,calc(env(safe-area-inset-top) + 10px));
+  }
+}
+@media (prefers-reduced-motion:reduce){
+  #menuScreen .menu-engine-flame{animation:none;opacity:.9}
+  #menuScreen .menu-title-en{animation:none;opacity:.88}
 }

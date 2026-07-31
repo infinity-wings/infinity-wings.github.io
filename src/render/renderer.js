@@ -1,12 +1,15 @@
 
 function withRenderState(label,fn){
+ const baseTransform=ctx.getTransform?.();
  ctx.save();
  try{
   ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.shadowBlur=0;ctx.shadowColor='transparent';ctx.filter='none';ctx.setLineDash([]);ctx.lineCap='butt';ctx.lineJoin='miter';
   fn();
- }catch(error){console.warn(label+' 绘制已隔离',error)}
+ }catch(error){console.warn(label+' 绘制已隔离',error);IWStability?.requestCanvasReset?.()}
  finally{
   ctx.restore();
+  if(baseTransform)ctx.setTransform(baseTransform);
+  else ctx.setTransform(1,0,0,1,0,0);
   ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.shadowBlur=0;ctx.shadowColor='transparent';ctx.filter='none';ctx.setLineDash([]);
  }
 }
@@ -20,7 +23,6 @@ function drawParticleSafe(p,lowFx){
  });
 }
 function draw(){
- ctx.save();
  try{
   ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.shadowBlur=0;ctx.shadowColor='transparent';ctx.setLineDash([]);
   const finite=(v,f=0)=>Number.isFinite(v)?v:f;
@@ -28,6 +30,12 @@ function draw(){
   bullets=(Array.isArray(bullets)?bullets:[]).filter(b=>b&&Number.isFinite(b.x)&&Number.isFinite(b.y)).map(b=>{b.vx=finite(b.vx);b.vy=finite(b.vy);b.r=Math.max(.5,finite(b.r,3));b.w=Math.max(.5,finite(b.w,4));b.h=Math.max(1,finite(b.h,14));return b});
   enemies=(Array.isArray(enemies)?enemies:[]).filter(e=>e&&Number.isFinite(e.x)&&Number.isFinite(e.y));
   particles=(Array.isArray(particles)?particles:[]).filter(p=>p&&Number.isFinite(p.x)&&Number.isFinite(p.y)&&Number.isFinite(p.r)&&p.r>=0);
+  missiles=Array.isArray(missiles)?missiles:[];
+  enemyLasers=Array.isArray(enemyLasers)?enemyLasers:[];
+  blastWaves=Array.isArray(blastWaves)?blastWaves:[];
+  lightningArcs=Array.isArray(lightningArcs)?lightningArcs:[];
+  drones=Array.isArray(drones)?drones:[];
+  pickups=Array.isArray(pickups)?pickups:[];
  const renderLoad=enemies.length+enemyBullets.length*.08+bullets.length*.035+particles.length*.02+(pickups?.length||0)*.07;
  const perfQ=(typeof mobilePerf!=='undefined'&&mobilePerf.enabled)?mobilePerf.quality:1;
  const lowFx=renderLoad>(24+8*perfQ)||(pickups?.length||0)>(45+25*perfQ)||perfQ<.82;
@@ -38,7 +46,7 @@ function draw(){
  withRenderState('冲击波层',()=>{for(const wave of blastWaves||[])withRenderState('单个冲击波',()=>drawBarrierWave(wave))});
  withRenderState('闪电层',()=>{for(const arc of lightningArcs||[])withRenderState('单条闪电',()=>drawLightningArc(arc))});
  withRenderState('激光蓄力层',()=>drawLaserChargeEffect());
- withRenderState('核心防御层',()=>drawCoreDefenseEffects());
+ withRenderState('核心防御层',()=>drawCoreDefenseEffects(lowFx));
  for(const b of bullets){
   if(b.laser){ctx.save();ctx.globalCompositeOperation='lighter';ctx.shadowBlur=24+(b.level||1)*7;ctx.shadowColor=b.level===3?'#8d6cff':'#55eaff';ctx.fillStyle='rgba(68,196,255,.13)';ctx.fillRect(b.x-b.w*2.7,0,b.w*5.4,b.h);ctx.fillStyle='rgba(110,232,255,.48)';ctx.fillRect(b.x-b.w,0,b.w*2,b.h);ctx.fillStyle='rgba(239,255,255,.98)';ctx.fillRect(b.x-b.w*.34,0,b.w*.68,b.h);ctx.restore()}
   else if(b.source==='drone'){
@@ -99,7 +107,7 @@ function draw(){
   for(const e of Array.isArray(enemies)?enemies:[])if(e&&Number.isFinite(e.x)&&Number.isFinite(e.y))withRenderState('恢复敌机模型',()=>drawEnemyShip(e));
   for(const d of Array.isArray(drones)?drones:[])if(d&&Number.isFinite(d.x)&&Number.isFinite(d.y))withRenderState('恢复无人机模型',()=>drawDrone(d));
   if(!dying&&player&&Number.isFinite(player.x)&&Number.isFinite(player.y))withRenderState('恢复玩家模型',()=>drawShip(player.x,player.y,'#5ce1ff'));
- }finally{ctx.restore();ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.shadowBlur=0;ctx.shadowColor='transparent';ctx.filter='none';ctx.setLineDash([])}
+ }finally{ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.shadowBlur=0;ctx.shadowColor='transparent';ctx.filter='none';ctx.setLineDash([])}
 }
 
 function drawLaserChargeEffect(){
@@ -309,7 +317,7 @@ function drawEnemyShip(e,targetCtx=null){
  enemyModelCtx.shadowBlur=0;enemyModelCtx.restore();
  enemyModelCtx=previousEnemyModelCtx;
 }
-function drawCoreDefenseEffects(){
+function drawCoreDefenseEffects(lowFx=false){
  const shieldLayers=build?.shieldLayers||0;
  if(shieldLayers>0&&!dying){
   ctx.save();ctx.translate(player.x,player.y+(player.visualY||0));ctx.globalCompositeOperation='lighter';

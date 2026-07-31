@@ -3,6 +3,7 @@
 (() => {
   if (window.__IW_MODULE_LOADER_STARTED__) return;
   window.__IW_MODULE_LOADER_STARTED__ = true;
+  const version = '8.56.10';
   const files = [
     './src/bootstrap.js',
     './src/core/coreDefinitions.js',
@@ -23,7 +24,7 @@
   const loadNext = index => {
     if (index >= files.length) return;
     const script = document.createElement('script');
-    script.src = files[index];
+    script.src = `${files[index]}?v=${version}`;
     script.async = false;
     script.onload = () => loadNext(index + 1);
     script.onerror = () => console.error('模块加载失败：' + files[index]);

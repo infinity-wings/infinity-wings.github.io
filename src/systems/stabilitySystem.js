@@ -14,6 +14,9 @@ const IWStability={
  watchdogInterval:.4,
  recoveryCount:0,
  faultCount:0,
+ canvasResetCount:0,
+ canvasResetRequested:false,
+ lastCanvasResetAt:0,
  resetCanvas(){
   if(typeof ctx==='undefined'||!ctx)return;
   try{
@@ -29,6 +32,60 @@ const IWStability={
    ctx.lineJoin='miter';
   }catch(_){}
  },
+ hardResetCanvas(reason='lifecycle'){
+  if(typeof canvas==='undefined'||!canvas||typeof ctx==='undefined'||!ctx)return;
+  const now=performance.now();
+  if(now-this.lastCanvasResetAt<80){
+   this.resetCanvas();
+   return;
+  }
+  this.lastCanvasResetAt=now;
+  try{
+   // iPad Safari may keep a stale GPU-backed rotation matrix after the app
+   // returns from the lock screen. Reassigning the backing-store dimensions
+   // clears the complete state stack, not only the current transform.
+   const width=canvas.width,height=canvas.height;
+   canvas.width=width;
+   canvas.height=height;
+   this.canvasResetCount++;
+   this.canvasResetRequested=false;
+   this.resetCanvas();
+   ctx.clearRect(0,0,width,height);
+   ctx.fillStyle='#020712';
+   ctx.fillRect(0,0,width,height);
+   if(typeof enemyModelCtx!=='undefined')enemyModelCtx=ctx;
+  }catch(error){
+   this.faultCount++;
+   console.warn('画布恢复已降级',reason,error);
+   this.resetCanvas();
+  }
+ },
+ requestCanvasReset(){
+  this.canvasResetRequested=true;
+ },
+ beforeRender(){
+  if(this.canvasResetRequested)this.hardResetCanvas('render-fault');
+  this.resetCanvas();
+ },
+ sanitizePlayerPose(){
+  if(typeof player==='undefined'||!player)return;
+  const finite=(value,fallback=0)=>Number.isFinite(value)?value:fallback;
+  const clamp=(value,min,max,fallback=0)=>Math.max(min,Math.min(max,finite(value,fallback)));
+  player.x=clamp(player.x,24,W-24,W/2);
+  player.y=clamp(player.y,55,H-SAFE_BOTTOM-35,H-SAFE_BOTTOM-90);
+  player.r=clamp(player.r,4,28,10);
+  player.vx=clamp(player.vx,-1200,1200,0);
+  player.vy=clamp(player.vy,-1200,1200,0);
+  player.targetVx=clamp(player.targetVx,-1200,1200,0);
+  player.targetVy=clamp(player.targetVy,-1200,1200,0);
+  player.tilt=clamp(player.tilt,-1,1,0);
+  player.pitch=clamp(player.pitch,-1,1,0);
+  player.thrust=clamp(player.thrust,0,1.35,.28);
+  player.visualY=clamp(player.visualY,-30,30,0);
+  player.recoil=clamp(player.recoil,0,2.5,0);
+  player.inv=clamp(player.inv,0,999,0);
+  player.slowTimer=clamp(player.slowTimer,0,12,0);
+ },
  resetInput(){
   if(typeof joyX!=='undefined')joyX=0;
   if(typeof joyY!=='undefined')joyY=0;
@@ -40,9 +97,7 @@ const IWStability={
   if(typeof keys!=='undefined'&&keys)for(const key of Object.keys(keys))keys[key]=false;
   if(typeof player!=='undefined'&&player){
    player.vx=0;player.vy=0;player.targetVx=0;player.targetVy=0;
-   player.tilt=Number.isFinite(player.tilt)?Math.max(-1,Math.min(1,player.tilt)):0;
-   player.pitch=Number.isFinite(player.pitch)?Math.max(-1,Math.min(1,player.pitch)):0;
-   player.visualY=Number.isFinite(player.visualY)?Math.max(-30,Math.min(30,player.visualY)):0;
+   this.sanitizePlayerPose();
   }
  },
  clearTransientEffects(){
@@ -73,18 +128,33 @@ const IWStability={
  },
  resume(reason='foreground'){
   if(document.hidden)return;
+  const returningFromBackground=this.suspended;
   this.lifecycleEpoch++;
   this.lastLifecycleAt=performance.now();
   this.suspended=false;
   this.resumePending=true;
-  this.resumeGraceFrames=3;
-  this.resetInput();this.resetCanvas();this.clearTransientEffects();
+  this.resumeGraceFrames=Math.max(this.resumeGraceFrames,4);
+  this.resetInput();
+  if(returningFromBackground)this.hardResetCanvas(reason);
+  else this.resetCanvas();
+  this.clearTransientEffects();
   if(typeof last!=='undefined')last=performance.now();
   if(typeof mobilePerf!=='undefined'){
    mobilePerf.lastSample=performance.now();mobilePerf.sampleFrames=0;mobilePerf.frameMs=16.7;
    mobilePerf.slowFrames=0;mobilePerf.fastFrames=0;
   }
   this.watchdog(true);
+ },
+ prepareGameplayResume(){
+  this.suspended=false;
+  this.resumePending=true;
+  this.resumeGraceFrames=Math.max(this.resumeGraceFrames,4);
+  this.resetInput();
+  this.clearTransientEffects();
+  this.hardResetCanvas('continue-game');
+  this.watchdog(true);
+  this.autoPaused=false;
+  if(typeof last!=='undefined')last=performance.now();
  },
  consumeFrameGuard(rawDt){
   if(this.suspended||document.hidden)return true;
@@ -150,6 +220,8 @@ const IWStability={
    player.tilt=0;player.pitch=0;player.visualY=0;
    this.recoveryCount++;
   }
+  this.sanitizePlayerPose();
+  if(typeof shake!=='undefined')shake=Number.isFinite(shake)?Math.max(0,Math.min(32,shake)):0;
   if(typeof hardSanitizeCombatState==='function'){
    try{hardSanitizeCombatState()}catch(error){this.faultCount++;console.warn('稳定性清理已降级',error)}
   }
@@ -177,12 +249,14 @@ const IWStability={
 };
 window.IWStability=IWStability;
 
-const suspendIW=()=>IWStability.suspend('lifecycle');
-const resumeIW=()=>IWStability.resume('lifecycle');
-document.addEventListener('visibilitychange',()=>document.hidden?suspendIW():resumeIW(),{passive:true});
+const suspendIW=event=>IWStability.suspend(event?.type||'lifecycle');
+const resumeIW=event=>IWStability.resume(event?.type||'lifecycle');
+document.addEventListener('visibilitychange',event=>document.hidden?suspendIW(event):resumeIW(event),{passive:true});
 window.addEventListener('pagehide',suspendIW,{passive:true});
 window.addEventListener('pageshow',resumeIW,{passive:true});
 window.addEventListener('freeze',suspendIW,{passive:true});
 window.addEventListener('resume',resumeIW,{passive:true});
 window.addEventListener('blur',()=>{if(document.hidden) suspendIW()},{passive:true});
-window.addEventListener('focus',()=>{if(!document.hidden) resumeIW()},{passive:true});
+window.addEventListener('focus',()=>{if(!document.hidden&&IWStability.suspended) resumeIW()},{passive:true});
+canvas?.addEventListener?.('contextlost',event=>{event.preventDefault?.();IWStability.suspend('context-lost')},{passive:false});
+canvas?.addEventListener?.('contextrestored',()=>IWStability.resume('context-restored'),{passive:true});

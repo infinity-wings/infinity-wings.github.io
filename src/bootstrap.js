@@ -15,7 +15,7 @@ let runGeneration=0;
 let touchMoveActive=false,touchMovePointerId=null,touchTargetX=0,touchTargetY=0;
 let mouseMoveActive=false,mouseTargetX=W/2,mouseTargetY=H-SAFE_BOTTOM-75,mouseDeltaX=0,mouseDeltaY=0;
 let dying=false,deathTimer=0,deathFade=0,coreSelection=0,currentCorePool=[];
-let player,bullets,missiles,enemies,enemyBullets,particles,blastWaves,lightningArcs,drones,pickups,score,level,xp,nextXp,bombs,build,rewindHistory,pilotId;
+let player,bullets,missiles,enemies,enemyBullets,enemyLasers,particles,blastWaves,lightningArcs,drones,pickups,score,level,xp,nextXp,bombs,build,rewindHistory,projectionHistory,pilotId;
 // 驾驶员编号使用独立的新存档键，避免旧版 Clone/测试计数污染编号。
 pilotId=Math.max(1,Number(localStorage.getItem('infinityWingsPilotIdV2'))||1);
 const stars=Array.from({length:110},()=>({x:Math.random()*W,y:Math.random()*H,s:.4+Math.random()*1.8,v:18+Math.random()*65}));
@@ -35,4 +35,3 @@ const CORES=[
  {id:'echo',name:'意识回响',tag:'时间系',desc:'周期性召唤一架战术投影。投影短时复制主角的主炮射速、伤害与武器能力。',can:()=>!build.echo,apply:()=>{build.echo=1;build.echoCd=4}},
  {id:'repair',name:'战地维修',tag:'生存',desc:'恢复 35 点生命，并提高 10 点生命上限。',can:()=>true,apply:()=>{player.maxHp+=10;player.hp=Math.min(player.maxHp,player.hp+35)}}
 ];
-

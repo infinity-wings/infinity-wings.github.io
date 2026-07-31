@@ -158,7 +158,10 @@ function loop(t){
   if(battleUpdating&&dt>0)update(dt);
   IWStability?.watchdog?.();
   if(state==='game'&&!paused&&dt>0)updateBarrierDangerHint(dt);
-  draw();
+  if(!lifecycleGap){
+   IWStability?.beforeRender?.();
+   draw();
+  }
  }catch(error){recoverFrameState(error)}
 }
 function renderCoreSelection(){
@@ -368,7 +371,7 @@ addEventListener('resize',syncPortraitLock,{passive:true});
 window.visualViewport?.addEventListener('resize',syncPortraitLock,{passive:true});
 addEventListener('orientationchange',()=>setTimeout(syncPortraitLock,180),{passive:true});
 document.addEventListener('pointerdown',()=>requestPortraitOrientation(),{passive:true,once:true});
-addEventListener('visibilitychange',()=>{if(document.hidden){audioSystem?.enterBackground?.()}else{audioSystem?.leaveBackground?.();IWStability?.resume?.('visibility-ui')}});
+addEventListener('visibilitychange',()=>{if(document.hidden)audioSystem?.enterBackground?.();else audioSystem?.leaveBackground?.()});
 ['gesturestart','gesturechange','gestureend'].forEach(type=>document.addEventListener(type,e=>e.preventDefault(),{passive:false}));
 function isNativeTouchSurface(target){
  if(!(target instanceof Element))return false;

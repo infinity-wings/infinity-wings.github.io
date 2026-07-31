@@ -1,7 +1,7 @@
 function showScreen(el){document.querySelectorAll('.screen').forEach(s=>s.classList.add('hidden'));el.classList.remove('hidden')}
 function setSystemMenuVisible(visible){UI.systemMenuButton.classList.toggle('hidden',!visible)}
 function openPauseMenu(){if(!running||dying||state==='core'||state==='awakening'||state==='fusion')return;dismissBarrierTutorial?.(false);releaseMouseLock?.();paused=true;state='pause';showScreen(UI.pause);setSystemMenuVisible(false);$('#controlsPanel')?.classList.add('hidden');refreshMouseCursorState?.();last=performance.now()}
-function closePauseMenu(){if(!running||dying)return;UI.pause.classList.add('hidden');state='game';paused=false;last=performance.now();setSystemMenuVisible(true);refreshMouseCursorState?.();if(!touchDevice&&uiPrefs?.controlMode==='mouse')setTimeout(()=>requestMouseBattleLock?.(),0)}
+function closePauseMenu(){if(!running||dying)return;IWStability?.prepareGameplayResume?.();UI.pause.classList.add('hidden');state='game';paused=false;last=performance.now();setSystemMenuVisible(true);refreshMouseCursorState?.();if(!touchDevice&&uiPrefs?.controlMode==='mouse')setTimeout(()=>requestMouseBattleLock?.(),0)}
 function restartCurrentRun(){reset();state='game';UI.pause.classList.add('hidden');UI.hud.classList.remove('hidden');UI.timerPanel.classList.remove('hidden');UI.touch.classList.remove('hidden');paused=false;running=true;last=performance.now();setSystemMenuVisible(true);toast('新的作战记录已建立')}
 function returnToTitle(){running=false;paused=false;dying=false;state='menu';UI.hud.classList.add('hidden');UI.timerPanel.classList.add('hidden');UI.touch.classList.add('hidden');setSystemMenuVisible(false);showScreen(UI.menu)}
 function boot(){
@@ -732,7 +732,7 @@ function hardSanitizeCombatState(){
   }
   if(pool.length>max)pool.splice(0,pool.length-max);
  };
- sanitizePool(enemies,72,e=>{e.x=clamp(e.x,-120,W+120);e.y=clamp(e.y,-180,H+180);e.r=clamp(e.r,4,90,18);e.hp=finite(e.hp,1);e.max=Math.max(1,finite(e.max,e.hp));e.age=clamp(e.age,0,1e6,0)});
+ sanitizePool(enemies,72,e=>{e.x=clamp(e.x,-120,W+120);e.y=clamp(e.y,-180,H+180);e.r=clamp(e.r,4,90,18);e.hp=finite(e.hp,1);e.max=Math.max(1,finite(e.max,e.hp));e.age=clamp(e.age,0,1e6,0);e.dir=finite(e.dir,1)>=0?1:-1;e.shield=clamp(e.shield,0,1e7,0);e.fuse=clamp(e.fuse,-1,30,0)});
  sanitizePool(enemyBullets,Math.round(190*(.68+.32*((typeof mobilePerf!=='undefined'&&mobilePerf.enabled)?mobilePerf.quality:1))),b=>{b.x=clamp(b.x,-80,W+80);b.y=clamp(b.y,-100,H+100);b.vx=clamp(b.vx,-1600,1600);b.vy=clamp(b.vy,-1600,1600);b.r=clamp(b.r,1,18,5);b.damage=clamp(b.damage,0,250,8)});
  sanitizePool(bullets,Math.round(230*(.72+.28*((typeof mobilePerf!=='undefined'&&mobilePerf.enabled)?mobilePerf.quality:1))),b=>{b.x=clamp(b.x,-80,W+80);b.y=clamp(b.y,-120,H+120);b.vx=clamp(b.vx,-2200,2200);b.vy=clamp(b.vy,-2200,2200);b.r=clamp(b.r,.5,18,3);b.w=clamp(b.w,.5,36,4);b.h=clamp(b.h,1,H+80,14);b.life=clamp(b.life,-1,12,2)});
  sanitizePool(missiles,36,m=>{m.x=clamp(m.x,-100,W+100);m.y=clamp(m.y,-120,H+120);m.vx=clamp(m.vx,-1300,1300);m.vy=clamp(m.vy,-1300,1300);m.life=clamp(m.life,0,12,3)});
@@ -751,6 +751,11 @@ function hardSanitizeCombatState(){
  build.awakeFrontShieldActive=clamp(build.awakeFrontShieldActive,0,8,0);
  if(!Number.isFinite(player.x)||!Number.isFinite(player.y)){player.x=W/2;player.y=H-SAFE_BOTTOM-90}
  player.x=clamp(player.x,24,W-24,W/2);player.y=clamp(player.y,55,H-SAFE_BOTTOM-35,H-SAFE_BOTTOM-90);
+ player.r=clamp(player.r,4,28,10);player.vx=clamp(player.vx,-1200,1200,0);player.vy=clamp(player.vy,-1200,1200,0);
+ player.targetVx=clamp(player.targetVx,-1200,1200,0);player.targetVy=clamp(player.targetVy,-1200,1200,0);
+ player.tilt=clamp(player.tilt,-1,1,0);player.pitch=clamp(player.pitch,-1,1,0);player.thrust=clamp(player.thrust,0,1.35,.28);
+ player.visualY=clamp(player.visualY,-30,30,0);player.recoil=clamp(player.recoil,0,2.5,0);
+ shake=clamp(shake,0,32,0);
 }
 function update(dt){
  IWStability?.watchdog?.();

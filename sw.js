@@ -1,9 +1,9 @@
-const CACHE='iw-cache-8.56-laser-title-flames-v7';
+const CACHE='iw-cache-8.56-lock-resume-render-fix-v10';
 const ASSETS=[
   './',
   './index.html',
   './style.css',
-  './game.js',
+  './game.js?v=8.56.10',
   './manifest.webmanifest',
   './apple-touch-icon.png',
   './favicon.png',

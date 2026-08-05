@@ -101,7 +101,7 @@ const IWStability={
   }
  },
  clearTransientEffects(){
-  if(typeof particles!=='undefined'&&Array.isArray(particles))particles.length=0;
+  if(typeof particles!=='undefined'&&Array.isArray(particles))clearEntityArray(particles);
   if(typeof blastWaves!=='undefined'&&Array.isArray(blastWaves))blastWaves.length=0;
   if(typeof lightningArcs!=='undefined'&&Array.isArray(lightningArcs))lightningArcs.length=0;
   if(typeof coreEffects!=='undefined'&&coreEffects?.init){try{coreEffects.init()}catch(_){}}

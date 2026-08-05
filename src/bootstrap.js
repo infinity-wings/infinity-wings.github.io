@@ -16,6 +16,34 @@ let touchMoveActive=false,touchMovePointerId=null,touchTargetX=0,touchTargetY=0;
 let mouseMoveActive=false,mouseTargetX=W/2,mouseTargetY=H-SAFE_BOTTOM-75,mouseDeltaX=0,mouseDeltaY=0;
 let dying=false,deathTimer=0,deathFade=0,coreSelection=0,currentCorePool=[];
 let player,bullets,missiles,enemies,enemyBullets,enemyLasers,particles,blastWaves,lightningArcs,drones,pickups,score,level,xp,nextXp,bombs,build,rewindHistory,projectionHistory,pilotId;
+
+class EntityObjectPool{
+ constructor(name,{initial=0,growBy=16,maxFree=512}={}){this.name=name;this.growBy=growBy;this.maxFree=maxFree;this.free=[];this.created=0;this.reused=0;this.grow(initial)}
+ grow(count=this.growBy){const amount=Math.max(1,Number(count)||this.growBy);for(let i=0;i<amount;i++){this.free.push({});this.created++}}
+ acquire(data){if(!this.free.length)this.grow();const item=this.free.pop();for(const key of Object.keys(item))delete item[key];Object.assign(item,data);item._iwPool=this.name;item._iwRun=runGeneration;item._iwAlive=true;item._iwInPool=false;this.reused++;return item}
+ release(item){if(!item||item._iwPool!==this.name||item._iwInPool)return;item._iwAlive=false;item._iwInPool=true;item.target=null;item.owner=null;if(this.free.length<this.maxFree)this.free.push(item)}
+}
+class PooledEntityArray extends Array{
+ static get [Symbol.species](){return Array}
+ constructor(pool){super();this.pool=pool}
+ push(...items){return super.push(...items.map(item=>this.pool.acquire(item)))}
+ unshift(...items){return super.unshift(...items.map(item=>this.pool.acquire(item)))}
+ splice(start,deleteCount,...items){const inserts=items.map(item=>this.pool.acquire(item));const removed=arguments.length===1?super.splice(start):super.splice(start,deleteCount,...inserts);removed.forEach(item=>this.pool.release(item));return removed}
+ pop(){const item=super.pop();this.pool.release(item);return item}
+ shift(){const item=super.shift();this.pool.release(item);return item}
+ clear(){if(this.length)this.splice(0,this.length)}
+}
+const IW_ENTITY_POOLS={
+ bullets:new EntityObjectPool('bullets',{initial:96,growBy:24,maxFree:300}),
+ enemyBullets:new EntityObjectPool('enemyBullets',{initial:128,growBy:32,maxFree:260}),
+ missiles:new EntityObjectPool('missiles',{initial:24,growBy:8,maxFree:48}),
+ particles:new EntityObjectPool('particles',{initial:160,growBy:40,maxFree:420}),
+ pickups:new EntityObjectPool('pickups',{initial:48,growBy:16,maxFree:140})
+};
+function resetEntityArray(name,current){if(current instanceof PooledEntityArray){current.clear();return current}return new PooledEntityArray(IW_ENTITY_POOLS[name])}
+function clearEntityArray(array){if(array?.clear)array.clear();else if(Array.isArray(array))array.length=0}
+function ensureEntityArray(name,current){if(current instanceof PooledEntityArray)return current;const next=new PooledEntityArray(IW_ENTITY_POOLS[name]);if(Array.isArray(current)&&current.length)next.push(...current);return next}
+window.IWEntityPools=IW_ENTITY_POOLS;
 // 驾驶员编号使用独立的新存档键，避免旧版 Clone/测试计数污染编号。
 pilotId=Math.max(1,Number(localStorage.getItem('infinityWingsPilotIdV2'))||1);
 const stars=Array.from({length:110},()=>({x:Math.random()*W,y:Math.random()*H,s:.4+Math.random()*1.8,v:18+Math.random()*65}));

@@ -1,9 +1,9 @@
-const CACHE='iw-cache-8.58-audio-cleanup-v12';
+const CACHE='iw-cache-8.59-p0-fixes-v1';
 const ASSETS=[
   './',
   './index.html',
   './style.css',
-  './game.js?v=8.58.0',
+  './game.js?v=8.59.0',
   './manifest.webmanifest',
   './apple-touch-icon.png',
   './favicon.png',

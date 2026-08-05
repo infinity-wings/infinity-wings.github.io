@@ -26,22 +26,18 @@ function draw(){
  try{
   ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.shadowBlur=0;ctx.shadowColor='transparent';ctx.setLineDash([]);
   const finite=(v,f=0)=>Number.isFinite(v)?v:f;
-  enemyBullets=(Array.isArray(enemyBullets)?enemyBullets:[]).filter(b=>b&&Number.isFinite(b.x)&&Number.isFinite(b.y)).map(b=>{b.vx=finite(b.vx);b.vy=finite(b.vy);b.r=Math.max(.5,finite(b.r,5));b.damage=Math.max(0,finite(b.damage,8));return b});
-  bullets=(Array.isArray(bullets)?bullets:[]).filter(b=>b&&Number.isFinite(b.x)&&Number.isFinite(b.y)).map(b=>{b.vx=finite(b.vx);b.vy=finite(b.vy);b.r=Math.max(.5,finite(b.r,3));b.w=Math.max(.5,finite(b.w,4));b.h=Math.max(1,finite(b.h,14));return b});
-  enemies=(Array.isArray(enemies)?enemies:[]).filter(e=>e&&Number.isFinite(e.x)&&Number.isFinite(e.y));
-  particles=(Array.isArray(particles)?particles:[]).filter(p=>p&&Number.isFinite(p.x)&&Number.isFinite(p.y)&&Number.isFinite(p.r)&&p.r>=0);
-  missiles=Array.isArray(missiles)?missiles:[];
+  enemyBullets=ensureEntityArray('enemyBullets',enemyBullets);bullets=ensureEntityArray('bullets',bullets);particles=ensureEntityArray('particles',particles);missiles=ensureEntityArray('missiles',missiles);pickups=ensureEntityArray('pickups',pickups);
+  enemies=Array.isArray(enemies)?enemies:[];
   enemyLasers=Array.isArray(enemyLasers)?enemyLasers:[];
   blastWaves=Array.isArray(blastWaves)?blastWaves:[];
   lightningArcs=Array.isArray(lightningArcs)?lightningArcs:[];
   drones=Array.isArray(drones)?drones:[];
-  pickups=Array.isArray(pickups)?pickups:[];
  const renderLoad=enemies.length+enemyBullets.length*.08+bullets.length*.035+particles.length*.02+(pickups?.length||0)*.07;
  const perfQ=(typeof mobilePerf!=='undefined'&&mobilePerf.enabled)?mobilePerf.quality:1;
  const lowFx=renderLoad>(24+8*perfQ)||(pickups?.length||0)>(45+25*perfQ)||perfQ<.82;
  if(shake&&uiPrefs.shake){ctx.translate((Math.random()-.5)*shake,(Math.random()-.5)*shake);shake*=.85}ctx.clearRect(0,0,W,H);ctx.fillStyle='#020712';ctx.fillRect(0,0,W,H);
  for(const s of stars){ctx.globalAlpha=.35+s.s/3;ctx.fillStyle='#85ddff';ctx.fillRect(s.x,s.y,s.s,s.s)}ctx.globalAlpha=1;
- if(!Array.isArray(particles))particles=[];
+ if(!(particles instanceof PooledEntityArray))particles=ensureEntityArray('particles',particles);
  for(const p of particles)drawParticleSafe(p,lowFx);
  withRenderState('冲击波层',()=>{for(const wave of blastWaves||[])withRenderState('单个冲击波',()=>drawBarrierWave(wave))});
  withRenderState('闪电层',()=>{for(const arc of lightningArcs||[])withRenderState('单条闪电',()=>drawLightningArc(arc))});

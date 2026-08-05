@@ -10,7 +10,7 @@ const ENEMY_ARCHIVE_DATA={
  raider:{name:'侧翼突袭机',baseHp:36,attack:'高速横穿连射',damage:'连射弹 7 / 接触 16',xp:12,desc:'从左右两侧进入战场，快速穿越交战区域。'},
  carrier:{name:'分裂母机',baseHp:165,attack:'射击并在击毁后释放3架小型机',damage:'子弹 10 / 接触 16',xp:26,desc:'大型载机，死亡后仍会制造新的威胁。'},
  jammer:{name:'干扰机',baseHp:62,attack:'紫色减速干扰弹',damage:'干扰弹 10 / 接触 16',xp:17,desc:'命中后暂时降低玩家移动速度，不影响武器。'},
- boss:{name:'阶段Boss',baseHp:1150,attack:'连射、扇形/环形弹幕、定点与扫射激光',damage:'子弹 10–20 / 激光 24–28 / 接触 30',xp:210,desc:'高危大型单位，拥有更高耐久与时间抗性。'}
+ boss:{name:'阶段Boss',baseHp:2800,attack:'连射、扇形/环形弹幕、定点与扫射激光',damage:'子弹 10–20 / 激光 24–28 / 接触 30',xp:210,desc:'高危大型单位，拥有更高耐久与时间抗性。'}
 };
 function readArchiveSet(key){try{return new Set(JSON.parse(localStorage.getItem(key)||'[]'))}catch{return new Set()}}
 function writeArchiveSet(key,set){localStorage.setItem(key,JSON.stringify([...set]))}
@@ -66,6 +66,20 @@ function renderArchiveView(view){
 }
 
 const interfaceTouchDevice=('ontouchstart' in window)||(navigator.maxTouchPoints>0);
+const pointerActivationSeen=new WeakMap(),syntheticPenActivation=new WeakMap();
+document.addEventListener('click',event=>{
+ const control=event.target instanceof Element?event.target.closest('button,[role="button"]'):null;if(!control)return;
+ const syntheticAt=syntheticPenActivation.get(control)||0;
+ if(event.isTrusted&&performance.now()-syntheticAt<450){event.preventDefault();event.stopImmediatePropagation();return}
+ pointerActivationSeen.set(control,performance.now());
+},true);
+document.addEventListener('pointerup',event=>{
+ if(event.pointerType!=='pen')return;
+ const control=event.target instanceof Element?event.target.closest('button,[role="button"]'):null;
+ if(!control||control.disabled||control.getAttribute('aria-disabled')==='true')return;
+ const stamp=performance.now();
+ setTimeout(()=>{if((pointerActivationSeen.get(control)||0)>=stamp)return;syntheticPenActivation.set(control,performance.now());control.click()},0);
+},true);
 const uiPrefs={
  shake:true,
  scan:true,
@@ -130,8 +144,9 @@ function recoverFrameState(error){
   const defaults={x:W/2,y:H-SAFE_BOTTOM-75,vx:0,vy:0,targetVx:0,targetVy:0,tilt:0,pitch:0,thrust:.28,visualY:0,recoil:0};
   for(const [key,value] of Object.entries(defaults))if(!Number.isFinite(player[key]))player[key]=value;
  }
- const clean=pool=>Array.isArray(pool)?pool.filter(item=>item&&Number.isFinite(item.x)&&Number.isFinite(item.y)):[];
- bullets=clean(bullets);missiles=clean(missiles);enemies=clean(enemies);enemyBullets=clean(enemyBullets);particles=clean(particles);pickups=clean(pickups);
+ const cleanInPlace=pool=>{if(!Array.isArray(pool))return;for(let i=pool.length-1;i>=0;i--)if(!pool[i]||!Number.isFinite(pool[i].x)||!Number.isFinite(pool[i].y))pool.splice(i,1)};
+ bullets=ensureEntityArray('bullets',bullets);missiles=ensureEntityArray('missiles',missiles);enemyBullets=ensureEntityArray('enemyBullets',enemyBullets);particles=ensureEntityArray('particles',particles);pickups=ensureEntityArray('pickups',pickups);enemies=Array.isArray(enemies)?enemies:[];
+ [bullets,missiles,enemies,enemyBullets,particles,pickups].forEach(cleanInPlace);
  if(typeof enemyLasers!=='undefined'&&!Array.isArray(enemyLasers))enemyLasers=[];
  last=performance.now();
 }
@@ -215,7 +230,7 @@ function die(){
 }
 
 let barrierTutorialActive=false,barrierTutorialShownThisLaunch=false,barrierDangerHintCd=0;
-function barrierControlText(){if(touchDevice)return '点击右下角“亚空间屏障”按钮';return uiPrefs?.controlMode==='mouse'?'按鼠标右键':'按 B 键'}
+function barrierControlText(){if(touchDevice)return '点击“亚空间屏障”按钮';return uiPrefs?.controlMode==='mouse'?'按鼠标右键':'按 B 键'}
 function dismissBarrierTutorial(remember=true){
  const tip=$('#barrierTutorial');if(!tip)return;
  tip.classList.add('hidden');UI.barrierBox?.classList.remove('tutorial-focus');barrierTutorialActive=false;

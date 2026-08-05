@@ -1,7 +1,21 @@
 const shipSpriteAssets={
  player:Object.assign(new Image(),{src:'assets/ships/player-fighter-v4.png'}),
- enemy:Object.assign(new Image(),{src:'assets/ships/enemy-fighter-v2.png'}),
- boss:Object.assign(new Image(),{src:'assets/ships/boss-dreadnought-v2.png'})
+ enemies:{
+  scout:Object.assign(new Image(),{src:'assets/ships/enemy-scout-v3.png'}),
+  heavy:Object.assign(new Image(),{src:'assets/ships/enemy-heavy-v1.png'}),
+  suicide:Object.assign(new Image(),{src:'assets/ships/enemy-suicide-v1.png'}),
+  sniper:Object.assign(new Image(),{src:'assets/ships/enemy-sniper-v1.png'}),
+  support:Object.assign(new Image(),{src:'assets/ships/enemy-support-v1.png'}),
+  barrage:Object.assign(new Image(),{src:'assets/ships/enemy-barrage-v1.png'}),
+  raider:Object.assign(new Image(),{src:'assets/ships/enemy-raider-v1.png'}),
+  carrier:Object.assign(new Image(),{src:'assets/ships/enemy-carrier-v1.png'}),
+  jammer:Object.assign(new Image(),{src:'assets/ships/enemy-jammer-v1.png'})
+ },
+ boss:Object.assign(new Image(),{src:'assets/ships/boss-dreadnought-wide-v3.png'})
+};
+const enemySpriteSizes={
+ scout:[76,80],heavy:[100,92],suicide:[72,80],sniper:[82,92],support:[90,84],
+ barrage:[102,90],raider:[82,78],carrier:[112,92],jammer:[90,84]
 };
 function shipSpriteReady(image){return image?.complete&&image.naturalWidth>0}
 function drawPlayerSpriteGlow(color='#69efff',alpha=1){
@@ -299,11 +313,11 @@ function enemyEngineFlame(x,y,color,size=1,phase=0){
 function enemyPanelLine(points,color='rgba(255,255,255,.25)',width=1){enemyModelCtx.strokeStyle=color;enemyModelCtx.lineWidth=width;enemyModelCtx.beginPath();enemyModelCtx.moveTo(points[0][0],points[0][1]);for(let i=1;i<points.length;i++)enemyModelCtx.lineTo(points[i][0],points[i][1]);enemyModelCtx.stroke();}
 function enemyCore(x,y,r,color,pulse=1){enemyModelCtx.save();enemyModelCtx.globalCompositeOperation='lighter';enemyModelCtx.shadowBlur=18;enemyModelCtx.shadowColor=color;enemyModelCtx.fillStyle='rgba(245,255,255,.96)';enemyModelCtx.beginPath();enemyModelCtx.arc(x,y,r,0,Math.PI*2);enemyModelCtx.fill();enemyModelCtx.globalAlpha=.72+.28*pulse;enemyModelCtx.fillStyle=color;enemyModelCtx.beginPath();enemyModelCtx.arc(x,y,r*.62,0,Math.PI*2);enemyModelCtx.fill();enemyModelCtx.restore();}
 function drawTexturedEnemyOnly(e,pulse,hpRatio){
- const image=e.boss?shipSpriteAssets.boss:shipSpriteAssets.enemy;if(e.bossGuard||!shipSpriteReady(image))return false;
+ const image=e.boss?shipSpriteAssets.boss:(shipSpriteAssets.enemies[e.type]||shipSpriteAssets.enemies.scout);if(e.bossGuard||!shipSpriteReady(image))return false;
  if(e.shield>0){enemyModelCtx.save();enemyModelCtx.globalCompositeOperation='lighter';enemyModelCtx.strokeStyle='rgba(91,224,255,.8)';enemyModelCtx.lineWidth=2.5;enemyModelCtx.shadowBlur=13;enemyModelCtx.shadowColor='#57ddff';enemyModelCtx.beginPath();enemyModelCtx.arc(0,0,e.r+7+Math.sin(e.age*5)*2,0,Math.PI*2);enemyModelCtx.stroke();enemyModelCtx.restore()}
  if(hpRatio<.38){enemyModelCtx.save();enemyModelCtx.globalAlpha=.28+(1-hpRatio)*.35;enemyModelCtx.fillStyle='#8794a2';for(let i=0;i<3;i++){const ox=Math.sin(e.age*2+i*2.3)*5,oy=15-i*8-(e.age*18+i*7)%30;enemyModelCtx.beginPath();enemyModelCtx.arc(ox,oy,4+i*1.4,0,Math.PI*2);enemyModelCtx.fill()}enemyModelCtx.restore()}
- const sizes={scout:52,heavy:67,suicide:48,sniper:55,support:57,barrage:66,raider:49,carrier:76,jammer:58},width=e.boss?116:(sizes[e.type]||54),height=e.boss?176:width;
- enemyModelCtx.save();enemyModelCtx.scale(1,-1);enemyModelCtx.globalAlpha=.98;enemyModelCtx.drawImage(image,-width/2,-height/2,width,height);enemyModelCtx.restore();
+ const [width,height]=e.boss?[196,144]:(enemySpriteSizes[e.type]||enemySpriteSizes.scout);
+ enemyModelCtx.save();enemyModelCtx.scale(1,-1);enemyModelCtx.globalAlpha=.99;enemyModelCtx.imageSmoothingEnabled=true;enemyModelCtx.imageSmoothingQuality='high';enemyModelCtx.drawImage(image,-width/2,-height/2,width,height);enemyModelCtx.restore();
  const coreColor=e.boss?(e.awakenedBoss?'#ff5fd7':'#9b72ff'):e.type==='support'?'#5deaff':e.type==='sniper'||e.type==='raider'?'#ffe171':e.type==='carrier'||e.type==='jammer'?'#c477ff':e.type==='heavy'||e.type==='barrage'?'#ff9b45':'#ff526f';enemyCore(0,e.boss?-4:-3,e.boss?8:Math.max(3.2,width*.075),coreColor,pulse);return true;
 }
 function drawEnemyShip(e,targetCtx=null){

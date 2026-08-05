@@ -1,9 +1,9 @@
-const CACHE='iw-cache-8.65-white-player-v1';
+const CACHE='iw-cache-8.66-unique-enemy-models-v1';
 const ASSETS=[
   './',
   './index.html',
-  './style.css?v=8.65.0',
-  './game.js?v=8.65.0',
+  './style.css?v=8.66.0',
+  './game.js?v=8.66.0',
   './manifest.webmanifest',
   './apple-touch-icon.png',
   './favicon.png',
@@ -17,8 +17,16 @@ const ASSETS=[
   './assets/menu/ui-start-frame.png',
   './assets/menu/ui-small-frame.png',
   './assets/ships/player-fighter-v4.png',
-  './assets/ships/enemy-fighter-v2.png',
-  './assets/ships/boss-dreadnought-v2.png'
+  './assets/ships/enemy-scout-v3.png',
+  './assets/ships/enemy-heavy-v1.png',
+  './assets/ships/enemy-suicide-v1.png',
+  './assets/ships/enemy-sniper-v1.png',
+  './assets/ships/enemy-support-v1.png',
+  './assets/ships/enemy-barrage-v1.png',
+  './assets/ships/enemy-raider-v1.png',
+  './assets/ships/enemy-carrier-v1.png',
+  './assets/ships/enemy-jammer-v1.png',
+  './assets/ships/boss-dreadnought-wide-v3.png'
 ];
 
 self.addEventListener('install',event=>{

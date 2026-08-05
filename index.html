@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
-  <title>无限之翼 · Alpha 8.61</title>
+  <title>无限之翼 · Alpha 8.62</title>
   <meta name="theme-color" content="#050816" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black" />
@@ -50,12 +50,9 @@
           </div>
           <div class="hud-block compact">等级 <strong id="levelText">1</strong></div>
           <div class="hud-block compact">分数 <strong id="scoreText">0</strong></div>
+          <div class="threat-box"><span class="threat-label">危险等级</span><strong id="threatText">Ⅰ</strong></div>
         </div>
         <div class="hud-row minor">
-          <div class="hud-block grow">
-            <div class="hud-label">经验</div>
-            <div class="bar"><div id="xpFill" class="fill xp"></div></div>
-          </div>
           <div class="barrier-box" id="barrierBox" aria-label="亚空间屏障剩余次数">
             <span class="barrier-key"><i></i><b>B</b></span>
             <span class="barrier-info">
@@ -68,7 +65,10 @@
               <strong id="barrierCount" class="sr-only">剩余 3 次</strong>
             </span>
           </div>
-          <div class="threat-box"><span class="threat-label">危险等级</span><strong id="threatText">Ⅰ</strong></div>
+          <div class="hud-block grow">
+            <div class="hud-label">经验</div>
+            <div class="bar"><div id="xpFill" class="fill xp"></div></div>
+          </div>
         </div>
       </div>
 
@@ -126,7 +126,7 @@
             </button>
           </div>
           <div class="menu-project-mark" aria-hidden="true">
-            <b>ALPHA 8.61</b>
+            <b>ALPHA 8.62</b>
           </div>
         </div>
       </section>
@@ -219,7 +219,7 @@
             <div><kbd>ESC / P</kbd><span>打开或关闭系统菜单</span></div>
             <div><kbd>1 / 2 / 3</kbd><span>选择源核</span></div>
           </div>
-          <div class="pause-footer"><span>INFINITY WINGS · RIFT OS</span><b>ALPHA 8.61</b></div>
+          <div class="pause-footer"><span>INFINITY WINGS · RIFT OS</span><b>ALPHA 8.62</b></div>
         </div>
       </section>
 
@@ -263,7 +263,7 @@
       document.documentElement.style.setProperty('--iw-world-height', String(logicalHeight));
     })();
   </script>
-  <script src="game.js?v=8.61.0"></script>
+  <script src="game.js?v=8.62.0"></script>
   <script>if('serviceWorker' in navigator){addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));}</script>
 </body>
 </html>

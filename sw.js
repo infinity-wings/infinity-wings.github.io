@@ -1,9 +1,9 @@
-const CACHE='iw-cache-8.61-p1-render-performance-v1';
+const CACHE='iw-cache-8.62-mobile-hud-v1';
 const ASSETS=[
   './',
   './index.html',
   './style.css',
-  './game.js?v=8.61.0',
+  './game.js?v=8.62.0',
   './manifest.webmanifest',
   './apple-touch-icon.png',
   './favicon.png',

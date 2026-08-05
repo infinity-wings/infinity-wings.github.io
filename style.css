@@ -1231,6 +1231,59 @@ body.mobile-portrait-device .home-credits{
     min-height:0;
   }
 }
+
+/* Alpha 8.62: deterministic mobile HUD placement.  Earlier grid overrides made
+   flex order ineffective, so the two HUD rows now own their layout directly. */
+#hud{
+  display:block;
+}
+#hud .hud-row{
+  display:flex;
+  width:100%;
+  gap:8px;
+  align-items:center;
+}
+#hud .hud-row:first-child > .hud-block.grow{
+  flex:1 1 auto;
+  min-width:0;
+}
+#hud .hud-row:first-child > .hud-block.compact{
+  flex:0 0 58px;
+  width:58px;
+  margin:0;
+  align-self:stretch;
+}
+#hud .hud-row:first-child > .threat-box{
+  flex:0 0 76px;
+  width:76px;
+  align-self:stretch;
+}
+#hud .hud-row.minor{
+  margin-top:7px;
+}
+#hud .hud-row.minor > .barrier-box{
+  order:0;
+  flex:0 0 190px;
+  width:190px;
+  min-width:0;
+  align-self:center;
+}
+#hud .hud-row.minor > .hud-block.grow{
+  order:1;
+  flex:1 1 auto;
+  min-width:0;
+}
+body.mobile-portrait-device .system-menu-button,
+body.touch-device .system-menu-button{
+  top:8px;
+  left:8px;
+}
+@media(max-width:460px){
+  #hud .hud-row{gap:5px}
+  #hud .hud-row:first-child > .hud-block.compact{flex-basis:48px;width:48px}
+  #hud .hud-row:first-child > .threat-box{flex-basis:68px;width:68px}
+  #hud .hud-row.minor > .barrier-box{flex-basis:154px;width:154px}
+}
 @supports (-webkit-touch-callout:none){
   body.mobile-portrait-device.standalone-mode,
   body.mobile-portrait-device.standalone-mode #app,

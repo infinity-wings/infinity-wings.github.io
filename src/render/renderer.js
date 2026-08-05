@@ -1,9 +1,19 @@
 const shipSpriteAssets={
- player:Object.assign(new Image(),{src:'assets/ships/player-fighter-v2.png'}),
+ player:Object.assign(new Image(),{src:'assets/ships/player-fighter-v4.png'}),
  enemy:Object.assign(new Image(),{src:'assets/ships/enemy-fighter-v2.png'}),
  boss:Object.assign(new Image(),{src:'assets/ships/boss-dreadnought-v2.png'})
 };
 function shipSpriteReady(image){return image?.complete&&image.naturalWidth>0}
+function drawPlayerSpriteGlow(color='#69efff',alpha=1){
+ const pulse=.76+.24*Math.sin(elapsed*6.4),enginePulse=.8+.2*Math.sin(elapsed*18);
+ ctx.save();ctx.globalCompositeOperation='lighter';ctx.globalAlpha=alpha;
+ ctx.shadowBlur=13;ctx.shadowColor=color;ctx.strokeStyle=color;ctx.lineWidth=1.35;
+ ctx.beginPath();ctx.moveTo(0,-32);ctx.lineTo(0,8);ctx.moveTo(-8,-8);ctx.lineTo(-15,10);ctx.lineTo(-31,18);ctx.moveTo(8,-8);ctx.lineTo(15,10);ctx.lineTo(31,18);ctx.stroke();
+ ctx.globalAlpha=alpha*pulse;ctx.fillStyle='#eaffff';ctx.beginPath();ctx.ellipse(0,-18,3.8,10,0,0,Math.PI*2);ctx.fill();
+ ctx.shadowBlur=18;ctx.fillStyle=color;for(const x of [-27,27]){ctx.beginPath();ctx.arc(x,15,2.1,0,Math.PI*2);ctx.fill()}
+ ctx.globalAlpha=alpha*enginePulse;ctx.shadowBlur=22;for(const x of [-9,9]){ctx.fillStyle='#efffff';ctx.fillRect(x-2,31,4,4);ctx.fillStyle=color;ctx.fillRect(x-1.2,35,2.4,8+enginePulse*4)}
+ ctx.restore();
+}
 
 function withRenderState(label,fn){
  const baseTransform=ctx.getTransform?.();
@@ -288,12 +298,21 @@ function enemyEngineFlame(x,y,color,size=1,phase=0){
 }
 function enemyPanelLine(points,color='rgba(255,255,255,.25)',width=1){enemyModelCtx.strokeStyle=color;enemyModelCtx.lineWidth=width;enemyModelCtx.beginPath();enemyModelCtx.moveTo(points[0][0],points[0][1]);for(let i=1;i<points.length;i++)enemyModelCtx.lineTo(points[i][0],points[i][1]);enemyModelCtx.stroke();}
 function enemyCore(x,y,r,color,pulse=1){enemyModelCtx.save();enemyModelCtx.globalCompositeOperation='lighter';enemyModelCtx.shadowBlur=18;enemyModelCtx.shadowColor=color;enemyModelCtx.fillStyle='rgba(245,255,255,.96)';enemyModelCtx.beginPath();enemyModelCtx.arc(x,y,r,0,Math.PI*2);enemyModelCtx.fill();enemyModelCtx.globalAlpha=.72+.28*pulse;enemyModelCtx.fillStyle=color;enemyModelCtx.beginPath();enemyModelCtx.arc(x,y,r*.62,0,Math.PI*2);enemyModelCtx.fill();enemyModelCtx.restore();}
+function drawTexturedEnemyOnly(e,pulse,hpRatio){
+ const image=e.boss?shipSpriteAssets.boss:shipSpriteAssets.enemy;if(e.bossGuard||!shipSpriteReady(image))return false;
+ if(e.shield>0){enemyModelCtx.save();enemyModelCtx.globalCompositeOperation='lighter';enemyModelCtx.strokeStyle='rgba(91,224,255,.8)';enemyModelCtx.lineWidth=2.5;enemyModelCtx.shadowBlur=13;enemyModelCtx.shadowColor='#57ddff';enemyModelCtx.beginPath();enemyModelCtx.arc(0,0,e.r+7+Math.sin(e.age*5)*2,0,Math.PI*2);enemyModelCtx.stroke();enemyModelCtx.restore()}
+ if(hpRatio<.38){enemyModelCtx.save();enemyModelCtx.globalAlpha=.28+(1-hpRatio)*.35;enemyModelCtx.fillStyle='#8794a2';for(let i=0;i<3;i++){const ox=Math.sin(e.age*2+i*2.3)*5,oy=15-i*8-(e.age*18+i*7)%30;enemyModelCtx.beginPath();enemyModelCtx.arc(ox,oy,4+i*1.4,0,Math.PI*2);enemyModelCtx.fill()}enemyModelCtx.restore()}
+ const sizes={scout:52,heavy:67,suicide:48,sniper:55,support:57,barrage:66,raider:49,carrier:76,jammer:58},width=e.boss?116:(sizes[e.type]||54),height=e.boss?176:width;
+ enemyModelCtx.save();enemyModelCtx.scale(1,-1);enemyModelCtx.globalAlpha=.98;enemyModelCtx.drawImage(image,-width/2,-height/2,width,height);enemyModelCtx.restore();
+ const coreColor=e.boss?(e.awakenedBoss?'#ff5fd7':'#9b72ff'):e.type==='support'?'#5deaff':e.type==='sniper'||e.type==='raider'?'#ffe171':e.type==='carrier'||e.type==='jammer'?'#c477ff':e.type==='heavy'||e.type==='barrage'?'#ff9b45':'#ff526f';enemyCore(0,e.boss?-4:-3,e.boss?8:Math.max(3.2,width*.075),coreColor,pulse);return true;
+}
 function drawEnemyShip(e,targetCtx=null){
  const previousEnemyModelCtx=enemyModelCtx;if(targetCtx)enemyModelCtx=targetCtx;
  if(e.eventMeteor){enemyModelCtx.save();enemyModelCtx.translate(e.x,e.y);enemyModelCtx.rotate(elapsed*.35);enemyModelCtx.globalCompositeOperation='lighter';enemyModelCtx.shadowBlur=30;enemyModelCtx.shadowColor='#b78cff';const g=enemyModelCtx.createRadialGradient(0,0,2,0,0,e.r);g.addColorStop(0,'#ffffff');g.addColorStop(.18,'#9ff5ff');g.addColorStop(.52,'#9d69ff');g.addColorStop(1,'rgba(84,32,145,.15)');enemyModelCtx.fillStyle=g;enemyModelCtx.beginPath();for(let i=0;i<10;i++){const a=i*Math.PI/5,r=e.r*(i%2?0.66:1);const x=Math.cos(a)*r,y=Math.sin(a)*r;i?enemyModelCtx.lineTo(x,y):enemyModelCtx.moveTo(x,y)}enemyModelCtx.closePath();enemyModelCtx.fill();enemyModelCtx.strokeStyle='rgba(222,246,255,.8)';enemyModelCtx.lineWidth=2;enemyModelCtx.beginPath();enemyModelCtx.arc(0,0,e.r+9,elapsed,-elapsed+Math.PI*1.55);enemyModelCtx.stroke();enemyModelCtx.restore();enemyModelCtx=previousEnemyModelCtx;return}
  enemyModelCtx.save();enemyModelCtx.translate(e.x,e.y);enemyModelCtx.scale(1,-1);if(e.boss){const bossVisualScale=Math.max(1.18,Math.min(1.55,(e.r||70)/58));enemyModelCtx.scale(bossVisualScale,bossVisualScale)}if(e.eventMirror){enemyModelCtx.save();enemyModelCtx.globalCompositeOperation='lighter';enemyModelCtx.strokeStyle='rgba(120,103,255,.82)';enemyModelCtx.shadowBlur=17;enemyModelCtx.shadowColor='#7060ff';enemyModelCtx.lineWidth=2;enemyModelCtx.setLineDash([7,5]);enemyModelCtx.beginPath();enemyModelCtx.arc(0,0,(e.r||22)+9+Math.sin(e.age*6)*2,0,Math.PI*2);enemyModelCtx.stroke();enemyModelCtx.setLineDash([]);enemyModelCtx.restore();}if(e.huntTarget){const bountyScale=1.18;enemyModelCtx.scale(bountyScale,bountyScale);enemyModelCtx.save();enemyModelCtx.globalCompositeOperation='lighter';enemyModelCtx.strokeStyle=e.enraged?'rgba(255,178,55,.8)':'rgba(255,53,92,.72)';enemyModelCtx.lineWidth=2;enemyModelCtx.shadowBlur=18;enemyModelCtx.shadowColor=e.enraged?'#ffb13b':'#ff355c';enemyModelCtx.beginPath();enemyModelCtx.arc(0,0,(e.r||28)+7+Math.sin(elapsed*5)*2,0,Math.PI*2);enemyModelCtx.stroke();enemyModelCtx.restore();}const pulse=.72+.28*Math.sin(e.age*7);const hpRatio=Math.max(0,e.hp/e.max);
  if(e.bossGuard){enemyModelCtx.shadowBlur=18;enemyModelCtx.shadowColor='#7c8dff';enemyModelCtx.fillStyle='#29345f';enemyModelCtx.beginPath();enemyModelCtx.moveTo(0,-28);enemyModelCtx.lineTo(32,-5);enemyModelCtx.lineTo(24,24);enemyModelCtx.lineTo(-24,24);enemyModelCtx.lineTo(-32,-5);enemyModelCtx.closePath();enemyModelCtx.fill();enemyCore(0,0,7,'#9bb5ff',pulse);enemyModelCtx.restore();enemyModelCtx=previousEnemyModelCtx;return;}
- else if(e.boss){
+ if(drawTexturedEnemyOnly(e,pulse,hpRatio)){enemyModelCtx.restore();enemyModelCtx=previousEnemyModelCtx;return;}
+ if(e.boss){
   const bossKind=e.bossKind||'rift';const bossColor=bossKind==='fortress'?'#ff6248':bossKind==='seraph'?'#d06cff':bossKind==='omega'?'#ffb43b':'#8e62ff';const bossLight=bossKind==='fortress'?'#ffd0bd':bossKind==='seraph'?'#f0d0ff':bossKind==='omega'?'#fff0a6':'#d7ccff';
   enemyEngineFlame(-27,34,bossColor,1.25,0);enemyEngineFlame(0,42,bossLight,1.45,1);enemyEngineFlame(27,34,bossColor,1.25,2);
   enemyModelCtx.shadowBlur=25;enemyModelCtx.shadowColor=bossColor;let g=enemyModelCtx.createLinearGradient(0,-52,0,50);g.addColorStop(0,bossLight);g.addColorStop(.34,bossColor);g.addColorStop(1,'#241735');enemyModelCtx.fillStyle=g;
@@ -338,12 +357,6 @@ function drawEnemyShip(e,targetCtx=null){
   enemyEngineFlame(-9,19,'#b76cff',.9,0);enemyEngineFlame(9,19,'#b76cff',.9,2);enemyModelCtx.shadowBlur=17;enemyModelCtx.shadowColor='#b76cff';enemyModelCtx.fillStyle='#301b43';enemyModelCtx.beginPath();enemyModelCtx.moveTo(0,-27);enemyModelCtx.lineTo(-18,-14);enemyModelCtx.lineTo(-27,7);enemyModelCtx.lineTo(-12,22);enemyModelCtx.lineTo(0,14);enemyModelCtx.lineTo(12,22);enemyModelCtx.lineTo(27,7);enemyModelCtx.lineTo(18,-14);enemyModelCtx.closePath();enemyModelCtx.fill();enemyModelCtx.fillStyle='#654084';enemyModelCtx.beginPath();enemyModelCtx.moveTo(0,-21);enemyModelCtx.lineTo(-8,-3);enemyModelCtx.lineTo(0,15);enemyModelCtx.lineTo(8,-3);enemyModelCtx.closePath();enemyModelCtx.fill();enemyModelCtx.strokeStyle='#e5c8ff';enemyModelCtx.lineWidth=2;enemyModelCtx.beginPath();enemyModelCtx.arc(0,-3,11+Math.sin(e.age*7)*2,0,Math.PI*2);enemyModelCtx.stroke();for(const a of [0,Math.PI*2/3,Math.PI*4/3]){enemyModelCtx.beginPath();enemyModelCtx.moveTo(Math.cos(a)*12,-3+Math.sin(a)*12);enemyModelCtx.lineTo(Math.cos(a)*20,-3+Math.sin(a)*20);enemyModelCtx.stroke()}enemyCore(0,-3,4.5,'#c477ff',pulse);
  }else{
   enemyEngineFlame(-7,17,'#ff6f8b',.8,0);enemyEngineFlame(7,17,'#ff6f8b',.8,2);enemyModelCtx.shadowBlur=10;enemyModelCtx.shadowColor='#ff5c78';enemyModelCtx.fillStyle='#4a1525';enemyModelCtx.beginPath();enemyModelCtx.moveTo(0,-25);enemyModelCtx.lineTo(-9,-14);enemyModelCtx.lineTo(-24,1);enemyModelCtx.lineTo(-17,13);enemyModelCtx.lineTo(-7,9);enemyModelCtx.lineTo(-4,21);enemyModelCtx.lineTo(0,16);enemyModelCtx.lineTo(4,21);enemyModelCtx.lineTo(7,9);enemyModelCtx.lineTo(17,13);enemyModelCtx.lineTo(24,1);enemyModelCtx.lineTo(9,-14);enemyModelCtx.closePath();enemyModelCtx.fill();enemyModelCtx.fillStyle='#a82d48';enemyModelCtx.beginPath();enemyModelCtx.moveTo(0,-20);enemyModelCtx.lineTo(-7,3);enemyModelCtx.lineTo(0,15);enemyModelCtx.lineTo(7,3);enemyModelCtx.closePath();enemyModelCtx.fill();enemyModelCtx.fillStyle='#ff8295';enemyModelCtx.beginPath();enemyModelCtx.moveTo(0,-18);enemyModelCtx.lineTo(-2,-3);enemyModelCtx.lineTo(0,4);enemyModelCtx.lineTo(2,-3);enemyModelCtx.closePath();enemyModelCtx.fill();enemyPanelLine([[-20,2],[-9,-8],[-5,8]],'rgba(255,180,195,.3)');enemyPanelLine([[20,2],[9,-8],[5,8]],'rgba(255,180,195,.3)');enemyCore(0,-5,3.5,'#ff6f8b',pulse);
- }
- if(shipSpriteReady(shipSpriteAssets.enemy)){
-  const sizes={scout:52,heavy:67,suicide:48,sniper:55,support:57,barrage:66,raider:49,carrier:76,jammer:58};
-  const size=sizes[e.type]||54;
-  enemyModelCtx.save();enemyModelCtx.scale(1,-1);enemyModelCtx.globalAlpha=.94;enemyModelCtx.drawImage(shipSpriteAssets.enemy,-size/2,-size/2,size,size);enemyModelCtx.restore();
-  const coreColor=e.type==='support'?'#5deaff':e.type==='sniper'||e.type==='raider'?'#ffe171':e.type==='carrier'||e.type==='jammer'?'#c477ff':e.type==='heavy'||e.type==='barrage'?'#ff9b45':'#ff526f';enemyCore(0,-4,Math.max(3.2,size*.075),coreColor,pulse);
  }
  enemyModelCtx.shadowBlur=0;enemyModelCtx.restore();
  enemyModelCtx=previousEnemyModelCtx;
@@ -412,6 +425,10 @@ function drawShip(x,y,color,pose=null){
   ctx.fillStyle=g;ctx.beginPath();ctx.moveTo(ex-2.1*power,ey);ctx.lineTo(ex+2.1*power,ey);ctx.lineTo(ex,ey+flame);ctx.closePath();ctx.fill();
  }
  ctx.restore();
+
+ if(shipSpriteReady(shipSpriteAssets.player)){
+  const spriteAlpha=pose?.alpha??.99;ctx.save();ctx.globalAlpha=spriteAlpha;ctx.drawImage(shipSpriteAssets.player,-39,-46,78,88);if(pose?.bodyColor){ctx.globalCompositeOperation='source-atop';ctx.globalAlpha=.22;ctx.fillStyle=pose.bodyColor;ctx.fillRect(-39,-46,78,88)}ctx.restore();drawPlayerSpriteGlow(pose?.color||color,spriteAlpha);ctx.restore();return;
+ }
 
  // 横滚透视：压低的一侧更宽、更暗并稍向下；抬高的一侧更窄、更亮并稍向上。
  // 翼根始终重叠中央机身，杜绝“机翼掉落”的视觉断裂。
@@ -482,9 +499,6 @@ function drawShip(x,y,color,pose=null){
  ctx.fillStyle='#3c586d';ctx.fillRect(-5,-43,2.2,14);ctx.fillRect(2.8,-43,2.2,14);ctx.fillStyle='#e9fbff';ctx.fillRect(-4.5,-44,1.2,10);ctx.fillRect(3.3,-44,1.2,10);
  // 收回机身局部横滚变换。
  ctx.restore();
- if(shipSpriteReady(shipSpriteAssets.player)){
-  ctx.save();ctx.globalAlpha=pose?.alpha??.98;ctx.drawImage(shipSpriteAssets.player,-31,-49,62,93);ctx.restore();
- }
  // 投影机体使用独立半透明色板，不再沿用玩家的白色机身。
  if(pose&&pose.bodyColor){
   ctx.save();ctx.globalCompositeOperation='source-over';ctx.globalAlpha=.68;ctx.fillStyle=pose.bodyColor;ctx.shadowBlur=12;ctx.shadowColor=pose.color||pose.bodyColor;

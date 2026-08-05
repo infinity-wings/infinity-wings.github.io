@@ -11,7 +11,7 @@ const IWStability={
  lifecycleEpoch:0,
  lastLifecycleAt:performance.now(),
  lastWatchdog:0,
- watchdogInterval:.4,
+ watchdogInterval:.75,
  recoveryCount:0,
  faultCount:0,
  canvasResetCount:0,
@@ -142,6 +142,7 @@ const IWStability={
   if(typeof mobilePerf!=='undefined'){
    mobilePerf.lastSample=performance.now();mobilePerf.sampleFrames=0;mobilePerf.frameMs=16.7;
    mobilePerf.slowFrames=0;mobilePerf.fastFrames=0;
+   mobilePerf.quality=Math.max(.9,Number(mobilePerf.quality)||1);
   }
   this.watchdog(true);
  },
@@ -228,7 +229,7 @@ const IWStability={
   enemies=this.cleanPool(enemies,{margin:260,max:72});
   bullets=this.cleanPool(bullets,{margin:260,max:260});
   missiles=this.cleanPool(missiles,{margin:320,max:40});
-  enemyBullets=this.cleanPool(enemyBullets,{margin:240,max:220});
+  enemyBullets=this.cleanPool(enemyBullets,{margin:240,max:typeof enemyBulletLimit==='function'?enemyBulletLimit():220});
   particles=this.cleanPool(particles,{margin:360,max:360,requireLife:true});
   pickups=this.cleanPool(pickups,{margin:180,max:120});
   drones=this.cleanPool(drones,{margin:180,max:8});

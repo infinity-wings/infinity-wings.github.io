@@ -1,5 +1,5 @@
 
-const ARCHIVE_KEYS={cores:'iwArchiveCoreLevelsV2',legacyCores:'iwArchiveCoresV1',enemies:'iwArchiveEnemiesV1',records:'iwRunRecordsV1'};
+const ARCHIVE_KEYS={cores:'iwArchiveCoreLevelsV2',legacyCores:'iwArchiveCoresV1',enemies:'iwArchiveEnemiesV1',defeated:'iwArchiveEnemyDefeatedV1',records:'iwRunRecordsV1'};
 const ENEMY_ARCHIVE_DATA={
  scout:{name:'侦察战机',baseHp:25,attack:'直线等离子弹',damage:'子弹 10 / 接触 16',xp:7,desc:'基础敌军单位，速度较快，装甲薄弱。'},
  heavy:{name:'重甲战机',baseHp:95,attack:'低速高亮重弹',damage:'重弹 18 / 接触 16',xp:17,desc:'缓慢推进的高耐久单位，射击间隔较长。'},
@@ -10,11 +10,22 @@ const ENEMY_ARCHIVE_DATA={
  raider:{name:'侧翼突袭机',baseHp:36,attack:'高速横穿连射',damage:'连射弹 7 / 接触 16',xp:12,desc:'从左右两侧进入战场，快速穿越交战区域。'},
  carrier:{name:'分裂母机',baseHp:165,attack:'射击并在击毁后释放3架小型机',damage:'子弹 10 / 接触 16',xp:26,desc:'大型载机，死亡后仍会制造新的威胁。'},
  jammer:{name:'干扰机',baseHp:62,attack:'紫色减速干扰弹',damage:'干扰弹 10 / 接触 16',xp:17,desc:'命中后暂时降低玩家移动速度，不影响武器。'},
- boss:{name:'阶段Boss',baseHp:2800,attack:'连射、扇形/环形弹幕、定点与扫射激光',damage:'子弹 10–20 / 激光 24–28 / 接触 30',xp:210,desc:'高危大型单位，拥有更高耐久与时间抗性。'}
+ boss:{name:'序列Boss总览',baseHp:'2400+',attack:'多阶段弹幕与激光武装',damage:'子弹 13–20 / 激光 24–28',xp:'260–1800+',desc:'共十个强度递增的高危单位；详细记录将在各编号 Boss 首次遭遇后解锁。'},
+ 'boss-1':{name:'#1 裂隙先锋',baseHp:2400,attack:'扇形弹幕、环形弹幕',damage:'13–20',xp:260,desc:'2分30秒出现的首个限时目标，30秒后撤离。'},
+ 'boss-2':{name:'#2 赤钢破城者',baseHp:'3120+',attack:'强化扇形、强化环形',damage:'13–20',xp:380,desc:'装甲强化的第二序列目标，限时30秒。'},
+ 'boss-3':{name:'#3 紫电裁决者',baseHp:'3840+',attack:'高速扇形、环形压制',damage:'13–20',xp:500,desc:'以高密度交叉区域压迫走位的限时目标。'},
+ 'boss-4':{name:'#4 虚空母舰',baseHp:'4560+',attack:'强化扇形、强化环形',damage:'13–20',xp:620,desc:'最后一个限时序列 Boss，撤离后不会留下奖励。'},
+ 'boss-5':{name:'#5 觉醒核心·涅槃',baseHp:'8184+',attack:'强化扇形、环形、召唤战机',damage:'13–28',xp:'1100+',desc:'固定觉醒 Boss，持续存在至击毁并掉落觉醒原核。'},
+ 'boss-6':{name:'#6 时蚀君王',baseHp:'6000+',attack:'瞄准弹、定点激光、召唤战机',damage:'17–28',xp:'1100+',desc:'高阶常驻 Boss；本局可能成为额外觉醒目标。'},
+ 'boss-7':{name:'#7 星渊吞噬者',baseHp:'6720+',attack:'强化扇形、交叉火力、召唤战机',damage:'18–20',xp:'1220+',desc:'以交叉方向火力封锁安全区域。'},
+ 'boss-8':{name:'#8 因果审判者',baseHp:'7440+',attack:'强化环形、弹雨、召唤战机',damage:'16–20',xp:'1340+',desc:'从战场上方释放连续弹雨的常驻目标。'},
+ 'boss-9':{name:'#9 Ω 前哨',baseHp:'8160+',attack:'双层新星、扫射激光、召唤战机',damage:'18–28',xp:'1460+',desc:'最终战前的前哨核心；本局可能成为额外觉醒目标。'},
+ 'boss-10':{name:'#10 终焉核心 Ω',baseHp:'11988+',attack:'强化扇形、强化环形、激光、召唤、终焉齐射',damage:'17–28',xp:'1800+',desc:'第16分钟抵达的最终 Boss，拥有五种攻击方式。'}
 };
 function readArchiveSet(key){try{return new Set(JSON.parse(localStorage.getItem(key)||'[]'))}catch{return new Set()}}
 function writeArchiveSet(key,set){localStorage.setItem(key,JSON.stringify([...set]))}
 function markEnemyEncounter(type){const set=readArchiveSet(ARCHIVE_KEYS.enemies);if(!set.has(type)){set.add(type);writeArchiveSet(ARCHIVE_KEYS.enemies,set)}}
+function markEnemyDefeated(type){const set=readArchiveSet(ARCHIVE_KEYS.defeated);if(!set.has(type)){set.add(type);writeArchiveSet(ARCHIVE_KEYS.defeated,set)}}
 function readCoreArchive(){
  try{
   const raw=JSON.parse(localStorage.getItem(ARCHIVE_KEYS.cores)||'{}');
@@ -35,11 +46,12 @@ function formatRunTime(seconds){seconds=Math.max(0,Math.floor(seconds||0));retur
 function renderArchiveHome(){document.querySelector('#archiveHome').classList.remove('hidden');document.querySelector('#archiveDetail').classList.add('hidden');}
 function drawEnemyArchivePreview(canvas,type){
  const c=canvas?.getContext?.('2d');if(!c||typeof drawEnemyShip!=='function')return;
- const w=canvas.width||132,h=canvas.height||96,isBoss=type==='boss';
+ const w=canvas.width||132,h=canvas.height||96,isBoss=type==='boss'||type.startsWith('boss-');
  const scale=isBoss?.68:(type==='carrier'||type==='heavy'||type==='barrage')?.82:.98;
  c.save();c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,w,h);c.globalAlpha=1;c.globalCompositeOperation='source-over';
  c.translate(w/2,h/2+4);c.scale(scale,scale);
- const model={type:isBoss?'scout':type,boss:isBoss,eventMeteor:false,x:0,y:0,r:isBoss?45:28,age:Math.max(1,Number(elapsed)||1),dir:1,hp:100,max:100,maxHp:100,shield:0,fuse:2.2};
+ const bossNumber=isBoss?Math.max(1,Number(type.split('-')[1])||1):0,kinds=['rift','fortress','seraph','omega','seraph','rift','fortress','seraph','omega','omega'];
+ const model={type:isBoss?'boss':type,boss:isBoss,bossNumber,bossKind:isBoss?kinds[bossNumber-1]:'',eventMeteor:false,x:0,y:0,r:isBoss?70:28,age:Math.max(1,Number(elapsed)||1),dir:1,hp:100,max:100,maxHp:100,shield:0,fuse:2.2};
  drawEnemyShip(model,c);c.restore();
 }
 function renderArchiveView(view){
@@ -54,9 +66,9 @@ function renderArchiveView(view){
    }
    content.appendChild(card)});
  }else if(view==='enemies'){
-  title.textContent='敌人资料';code.textContent='HOSTILE ARCHIVE';const met=readArchiveSet(ARCHIVE_KEYS.enemies);
-  Object.entries(ENEMY_ARCHIVE_DATA).forEach(([id,data])=>{const known=met.has(id);const card=document.createElement('article');card.className='archive-entry enemy-entry '+(known?'':'locked');
-   card.innerHTML=known?`<div class="enemy-archive-layout"><div class="enemy-preview"><canvas width="132" height="96" aria-label="${data.name}模型演示"></canvas><i>MODEL PREVIEW</i></div><div class="enemy-archive-info"><header><b>${data.name}</b><span>已遭遇</span></header><div class="enemy-data-grid"><span>基础耐久<strong>${data.baseHp}</strong></span><span>经验值<strong>${data.xp}</strong></span><span>攻击伤害<strong>${data.damage}</strong></span></div><p>${data.desc}</p><small>攻击方式：${data.attack}</small></div></div>`:`<div class="enemy-archive-layout"><div class="enemy-preview unknown"><b>?</b><i>NO SIGNAL</i></div><div class="enemy-archive-info"><header><b>未知敌军</b><span>UNSEEN</span></header><p>首次遭遇后自动记录模型与完整资料。</p></div></div>`;
+  title.textContent='敌人资料';code.textContent='HOSTILE ARCHIVE';const met=readArchiveSet(ARCHIVE_KEYS.enemies),defeated=readArchiveSet(ARCHIVE_KEYS.defeated);
+  Object.entries(ENEMY_ARCHIVE_DATA).forEach(([id,data])=>{const known=met.has(id),cleared=defeated.has(id);const card=document.createElement('article');card.className='archive-entry enemy-entry '+(known?'':'locked');
+   card.innerHTML=known?`<div class="enemy-archive-layout"><div class="enemy-preview"><canvas width="132" height="96" aria-label="${data.name}模型演示"></canvas><i>MODEL PREVIEW</i></div><div class="enemy-archive-info"><header><b>${data.name}</b><span>${cleared?'已击毁':'已遭遇'}</span></header>${cleared?`<div class="enemy-data-grid"><span>基础耐久<strong>${data.baseHp}</strong></span><span>经验值<strong>${data.xp}</strong></span><span>攻击伤害<strong>${data.damage}</strong></span></div><p>${data.desc}</p><small>攻击方式：${data.attack}</small>`:'<p>目标数据已捕获。击毁一次后解锁完整耐久、经验与攻击资料。</p>'}</div></div>`:`<div class="enemy-archive-layout"><div class="enemy-preview unknown"><b>?</b><i>NO SIGNAL</i></div><div class="enemy-archive-info"><header><b>未知敌军</b><span>UNSEEN</span></header><p>首次遭遇后解锁名称与模型，击毁后解锁完整资料。</p></div></div>`;
    content.appendChild(card);if(known){const preview=card.querySelector('canvas');drawEnemyArchivePreview(preview,id);requestAnimationFrame(()=>drawEnemyArchivePreview(preview,id))}});
  }else{
   title.textContent='同步记录';code.textContent='RUN HISTORY';const records=getRunRecords();
@@ -163,9 +175,9 @@ function loop(t){
   const sampleAge=t-mobilePerf.lastSample;
   if(sampleAge>=1000){
    mobilePerf.avgFps=Math.max(1,Math.round(mobilePerf.sampleFrames*1000/sampleAge));mobilePerf.sampleFrames=0;mobilePerf.lastSample=t;
-   if(mobilePerf.avgFps<48){mobilePerf.slowFrames++;mobilePerf.fastFrames=0}else if(mobilePerf.avgFps>57){mobilePerf.fastFrames++;mobilePerf.slowFrames=Math.max(0,mobilePerf.slowFrames-1)}else{mobilePerf.slowFrames=Math.max(0,mobilePerf.slowFrames-1);mobilePerf.fastFrames=0}
-   if(mobilePerf.slowFrames>=2){mobilePerf.quality=Math.max(.55,mobilePerf.quality-.15);mobilePerf.slowFrames=0}
-   if(mobilePerf.fastFrames>=7){mobilePerf.quality=Math.min(1,mobilePerf.quality+.1);mobilePerf.fastFrames=0}
+   if(mobilePerf.avgFps<38){mobilePerf.slowFrames++;mobilePerf.fastFrames=0}else if(mobilePerf.avgFps>50){mobilePerf.fastFrames++;mobilePerf.slowFrames=Math.max(0,mobilePerf.slowFrames-1)}else{mobilePerf.slowFrames=Math.max(0,mobilePerf.slowFrames-1);mobilePerf.fastFrames=Math.max(0,mobilePerf.fastFrames-1)}
+   if(mobilePerf.slowFrames>=4){mobilePerf.quality=Math.max(.70,mobilePerf.quality-.10);mobilePerf.slowFrames=0}
+   if(mobilePerf.fastFrames>=3){mobilePerf.quality=Math.min(1,mobilePerf.quality+.10);mobilePerf.fastFrames=0}
   }
  }
  try{

@@ -1,9 +1,9 @@
-const CACHE='iw-cache-8.62-mobile-hud-v1';
+const CACHE='iw-cache-8.63-tablet-render-v1';
 const ASSETS=[
   './',
   './index.html',
-  './style.css',
-  './game.js?v=8.62.0',
+  './style.css?v=8.63.0',
+  './game.js?v=8.63.0',
   './manifest.webmanifest',
   './apple-touch-icon.png',
   './favicon.png',
@@ -15,7 +15,10 @@ const ASSETS=[
   './assets/menu/menu-title-logo.PNG',
   './assets/menu/menu-fighter-rear-v2.png',
   './assets/menu/ui-start-frame.png',
-  './assets/menu/ui-small-frame.png'
+  './assets/menu/ui-small-frame.png',
+  './assets/ships/player-fighter-v2.png',
+  './assets/ships/enemy-fighter-v2.png',
+  './assets/ships/boss-dreadnought-v2.png'
 ];
 
 self.addEventListener('install',event=>{

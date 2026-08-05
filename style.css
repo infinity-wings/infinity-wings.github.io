@@ -1284,6 +1284,29 @@ body.touch-device .system-menu-button{
   #hud .hud-row:first-child > .threat-box{flex-basis:68px;width:68px}
   #hud .hud-row.minor > .barrier-box{flex-basis:154px;width:154px}
 }
+
+/* Alpha 8.63: iPad/tablet uses an explicit left-to-right second row. */
+@media (min-width:461px) and (max-width:1200px){
+  body.mobile-portrait-device #hud .hud-row.minor,
+  body.touch-device #hud .hud-row.minor{
+    display:flex!important;
+    flex-direction:row!important;
+  }
+  body.mobile-portrait-device #hud .hud-row.minor > #barrierBox,
+  body.touch-device #hud .hud-row.minor > #barrierBox{
+    order:-100!important;
+    flex:0 0 clamp(180px,34%,230px)!important;
+    width:clamp(180px,34%,230px)!important;
+    margin-left:0!important;
+    margin-right:0!important;
+  }
+  body.mobile-portrait-device #hud .hud-row.minor > .hud-block.grow,
+  body.touch-device #hud .hud-row.minor > .hud-block.grow{
+    order:0!important;
+    flex:1 1 auto!important;
+    width:auto!important;
+  }
+}
 @supports (-webkit-touch-callout:none){
   body.mobile-portrait-device.standalone-mode,
   body.mobile-portrait-device.standalone-mode #app,

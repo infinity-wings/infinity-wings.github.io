@@ -564,8 +564,8 @@ function explodeMissile(m){
  for(let i=0;i<22;i++){const a=Math.random()*Math.PI*2,s=70+Math.random()*250;particles.push({x:m.x,y:m.y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:.25+Math.random()*.35,max:.6,r:1.8+Math.random()*3.8,type:'missile'})}
  shake=Math.max(shake,m.awakening==='missile_hunter'?19:m.awakening==='missile_cluster'?14:12);
 }
-function enemyBulletLimit(){const quality=(typeof mobilePerf!=='undefined'&&mobilePerf.enabled)?mobilePerf.quality:1;return (typeof mobilePerf!=='undefined'&&mobilePerf.enabled)?Math.round(210*(.88+.12*quality)):320}
-function pushEnemyBullet(x,y,vx,vy,r,type,damage){if(enemyBullets.length>=enemyBulletLimit())return false;enemyBullets.push({x,y,vx,vy,r,type,damage});return true}
+function enemyBulletLimit(){const quality=(typeof mobilePerf!=='undefined'&&mobilePerf.enabled)?mobilePerf.quality:1;return (typeof mobilePerf!=='undefined'&&mobilePerf.enabled)?Math.round(120+90*quality):320}
+function pushEnemyBullet(x,y,vx,vy,r,type,damage){if(enemyBullets.length>=enemyBulletLimit())return false;enemyBullets.push({x,y,vx,vy,r,type,damage,angle:Math.atan2(vy,vx)});return true}
 function bossPhase(e){const ratio=e.hp/e.max;return ratio<=.3?3:ratio<=.6?2:1}
 function bossModes(e,phase){
  const number=Math.max(1,e.bossNumber||e.bossStage||1);

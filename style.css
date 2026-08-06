@@ -830,6 +830,172 @@ body{padding:0;overscroll-behavior:none;-webkit-user-select:none;user-select:non
 @supports (-webkit-touch-callout:none){
   body.standalone-mode #app{height:100dvh;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
 }
+
+/* Alpha 8.67: frameless cinematic main menu */
+#menuScreen .hologram-actions{
+  left:7%;
+  right:7%;
+  bottom:max(2.4%,calc(env(safe-area-inset-bottom) + 10px));
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+#menuScreen .menu-secondary-grid{
+  order:1;
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:0;
+  padding:0 2%;
+}
+#menuScreen .hologram-small{
+  height:64px!important;
+  min-width:0;
+  display:flex!important;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  border:0!important;
+  background:none!important;
+  box-shadow:none!important;
+  clip-path:none!important;
+  color:rgba(205,231,243,.68);
+  opacity:.82;
+  transition:opacity .2s ease,color .2s ease,transform .2s ease!important;
+}
+#menuScreen .hologram-small:before{content:none!important}
+#menuScreen .hologram-small:after{content:"";z-index:-1;left:50%;right:auto;top:50%;bottom:auto;width:48px;height:48px;border-radius:50%;background:radial-gradient(circle,rgba(91,216,255,.12),transparent 70%);opacity:0;transform:translate(-50%,-50%) scale(.75);transition:.2s}
+#menuScreen .hologram-small>img{display:none!important}
+#menuScreen .menu-nav-icon{display:block;width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.35;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 5px rgba(100,221,255,.18))}
+#menuScreen .hologram-small>span{
+  position:static;
+  display:block;
+  width:auto;
+  height:auto;
+  padding:0;
+  color:currentColor;
+  background:none;
+  -webkit-background-clip:border-box;
+  background-clip:border-box;
+  -webkit-text-fill-color:currentColor;
+  text-shadow:none;
+  filter:none;
+  font:500 12px/1 system-ui,-apple-system,"PingFang SC",sans-serif;
+  letter-spacing:.12em;
+}
+#menuScreen .hologram-small:hover,
+#menuScreen .hologram-small:focus-visible,
+#menuScreen .hologram-small:active{color:#e9fcff;opacity:1;filter:none!important;transform:translateY(-2px)!important;outline:none}
+#menuScreen .hologram-small:hover:after,
+#menuScreen .hologram-small:focus-visible:after,
+#menuScreen .hologram-small:active:after{opacity:1;transform:translate(-50%,-50%) scale(1)}
+#menuScreen .hologram-start{
+  order:2;
+  position:relative!important;
+  height:72px!important;
+  min-height:72px!important;
+  display:flex!important;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  border:0!important;
+  background:none!important;
+  box-shadow:none!important;
+  clip-path:none!important;
+  color:#f3fdff;
+  isolation:isolate;
+}
+#menuScreen .hologram-start>img{display:none!important}
+#menuScreen .hologram-start:before{
+  content:"";
+  position:absolute;
+  left:18%;
+  right:18%;
+  bottom:8px;
+  height:1px;
+  background:linear-gradient(90deg,transparent,rgba(126,225,255,.68) 34%,#efffff 50%,rgba(126,225,255,.68) 66%,transparent);
+  box-shadow:0 0 7px rgba(81,207,255,.5);
+  transform:none;
+  animation:menuStartLine 2.4s ease-in-out infinite;
+}
+#menuScreen .hologram-start:after{
+  content:"";
+  position:absolute;
+  z-index:-1;
+  inset:8px 15%;
+  background:radial-gradient(ellipse,rgba(66,193,233,.1),transparent 70%);
+  opacity:.65;
+}
+#menuScreen .hologram-start>span{
+  position:static;
+  display:block;
+  width:auto;
+  height:auto;
+  color:#f4fdff;
+  background:none;
+  -webkit-background-clip:border-box;
+  background-clip:border-box;
+  -webkit-text-fill-color:currentColor;
+  text-shadow:0 0 12px rgba(118,222,255,.38);
+  filter:none;
+  font:600 clamp(18px,4.4vw,25px)/1.1 system-ui,-apple-system,"PingFang SC",sans-serif!important;
+  letter-spacing:.16em;
+}
+#menuScreen .hologram-start>small{
+  position:static;
+  margin:0!important;
+  color:rgba(143,191,210,.58)!important;
+  font:600 7px/1 ui-monospace,SFMono-Regular,Menlo,monospace!important;
+  letter-spacing:.34em!important;
+}
+#menuScreen .hologram-start:hover,
+#menuScreen .hologram-start:focus-visible,
+#menuScreen .hologram-start:active{filter:none!important;transform:scale(1.025)!important;outline:none}
+#menuScreen .menu-project-mark{order:3;margin:0;gap:0;opacity:.5;text-shadow:none}
+#menuScreen .menu-project-mark b{padding:0;border:0;background:none;clip-path:none;color:#7995a5;font:600 7px/1 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.22em}
+#menuScreen .menu-launch-fighter{bottom:max(16%,calc(env(safe-area-inset-bottom) + 138px));width:min(72vw,420px);opacity:.94}
+@keyframes menuStartLine{0%,100%{opacity:.45;transform:scaleX(.82)}50%{opacity:1;transform:scaleX(1)}}
+@media(max-width:460px){
+  #menuScreen .hologram-actions{left:5%;right:5%;bottom:max(1.8%,calc(env(safe-area-inset-bottom) + 7px));gap:3px}
+  #menuScreen .hologram-small{height:58px!important;gap:6px}
+  #menuScreen .menu-nav-icon{width:21px;height:21px}
+  #menuScreen .hologram-start{height:68px!important;min-height:68px!important}
+  #menuScreen .menu-launch-fighter{bottom:max(15%,calc(env(safe-area-inset-bottom) + 128px));width:min(75vw,380px)}
+}
+@media (min-width:600px) and (orientation:portrait){
+  body.mobile-portrait-device #menuScreen .hologram-actions{left:50%;right:auto;bottom:max(2.5%,calc(env(safe-area-inset-bottom) + 12px));width:min(76vw,650px);gap:8px;transform:translateX(-50%)!important}
+  body.mobile-portrait-device #menuScreen .hologram-start{height:88px!important;min-height:88px!important}
+  body.mobile-portrait-device #menuScreen .hologram-small{height:72px!important}
+  body.mobile-portrait-device #menuScreen .hologram-start>span{font-size:28px!important}
+  body.mobile-portrait-device #menuScreen .hologram-small>span{font-size:14px}
+  body.mobile-portrait-device #menuScreen .menu-nav-icon{width:27px;height:27px}
+  body.mobile-portrait-device #menuScreen .menu-launch-fighter{bottom:max(17%,calc(env(safe-area-inset-bottom) + 172px));width:min(65vw,500px)}
+}
+
+/* Alpha 8.67: compact combat timer anchored outside the central sightline. */
+.top-run-timer{
+  top:12px;
+  left:auto;
+  right:12px;
+  transform:none;
+  min-width:88px;
+  padding:5px 10px 6px;
+  border-color:rgba(101,218,242,.28);
+  background:linear-gradient(180deg,rgba(4,18,34,.78),rgba(2,8,18,.84));
+  box-shadow:0 0 14px rgba(39,190,238,.08),inset 0 1px rgba(210,250,255,.05);
+  backdrop-filter:blur(3px);
+}
+.top-run-timer span{font-size:7px;letter-spacing:.14em;color:rgba(136,177,193,.76)}
+.top-run-timer strong{margin-top:3px;font-size:16px;letter-spacing:.02em;text-shadow:0 0 7px rgba(96,225,255,.32)}
+body.mobile-portrait-device .top-run-timer,
+body.touch-device .top-run-timer{
+  top:max(8px,calc(env(safe-area-inset-top) + 6px));
+  left:auto;
+  right:max(8px,calc(env(safe-area-inset-right) + 6px));
+  transform:none;
+}
+@media (prefers-reduced-motion:reduce){#menuScreen .hologram-start:before{animation:none}}
 @media(max-width:700px){.home-credits{left:12px;right:12px;bottom:10px;gap:5px;font-size:7px;letter-spacing:.07em}.home-credits i{margin:0 1px}}
 
 
@@ -1467,4 +1633,45 @@ body.touch-device .system-menu-button{
       bottom:0;
     }
   }
+}
+
+/* Alpha 8.67 final cascade guard: keep the main menu frameless on every viewport. */
+#menuScreen .hologram-actions{
+  left:7%;right:7%;bottom:max(2.4%,calc(env(safe-area-inset-bottom) + 10px));
+  width:auto;display:flex;flex-direction:column;gap:6px;transform:none!important;
+}
+#menuScreen .menu-secondary-grid{order:1;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;padding:0 2%}
+#menuScreen .hologram-small{height:64px!important;display:flex!important;flex-direction:column;gap:7px;border:0!important;background:none!important;box-shadow:none!important;clip-path:none!important}
+#menuScreen .hologram-small>span{
+  position:static;display:block;width:auto;height:auto;padding:0;color:currentColor;
+  background:none;-webkit-background-clip:border-box;background-clip:border-box;-webkit-text-fill-color:currentColor;
+  text-shadow:none;filter:none;font:500 12px/1 system-ui,-apple-system,"PingFang SC",sans-serif;letter-spacing:.12em;
+}
+#menuScreen .hologram-start{
+  order:2;height:72px!important;min-height:72px!important;display:flex!important;flex-direction:column;gap:7px;
+  border:0!important;background:none!important;box-shadow:none!important;clip-path:none!important;
+}
+#menuScreen .hologram-start>span{
+  position:static;display:block;width:auto;height:auto;color:#f4fdff;background:none;
+  -webkit-background-clip:border-box;background-clip:border-box;-webkit-text-fill-color:currentColor;
+  text-shadow:0 0 12px rgba(118,222,255,.38);filter:none;
+  font:600 clamp(18px,4.4vw,25px)/1.1 system-ui,-apple-system,"PingFang SC",sans-serif!important;letter-spacing:.16em;
+}
+#menuScreen .hologram-start>small{position:static;left:auto;right:auto;bottom:auto;margin:0!important}
+#menuScreen .menu-project-mark{order:3;margin:0;gap:0}
+#menuScreen .menu-project-mark b{padding:0;border:0;background:none;clip-path:none}
+#menuScreen .menu-launch-fighter{bottom:max(16%,calc(env(safe-area-inset-bottom) + 138px));width:min(72vw,420px)}
+@media(max-width:460px){
+  #menuScreen .hologram-actions{left:5%;right:5%;bottom:max(1.8%,calc(env(safe-area-inset-bottom) + 7px));gap:3px}
+  #menuScreen .hologram-small{height:58px!important}
+  #menuScreen .hologram-start{height:68px!important;min-height:68px!important}
+  #menuScreen .menu-launch-fighter{bottom:max(15%,calc(env(safe-area-inset-bottom) + 128px));width:min(75vw,380px)}
+}
+@media (min-width:600px) and (orientation:portrait){
+  body.mobile-portrait-device #menuScreen .hologram-actions{left:50%;right:auto;bottom:max(2.5%,calc(env(safe-area-inset-bottom) + 12px));width:min(76vw,650px);gap:8px;transform:translateX(-50%)!important}
+  body.mobile-portrait-device #menuScreen .hologram-start{height:88px!important;min-height:88px!important}
+  body.mobile-portrait-device #menuScreen .hologram-small{height:72px!important}
+  body.mobile-portrait-device #menuScreen .hologram-start>span{font-size:28px!important}
+  body.mobile-portrait-device #menuScreen .hologram-small>span{font-size:14px}
+  body.mobile-portrait-device #menuScreen .menu-launch-fighter{bottom:max(17%,calc(env(safe-area-inset-bottom) + 172px));width:min(65vw,500px)}
 }

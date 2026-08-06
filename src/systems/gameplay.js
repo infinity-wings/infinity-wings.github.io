@@ -10,7 +10,7 @@ function preloadMenuAssets(){
  const touch=navigator.maxTouchPoints>0||matchMedia('(pointer: coarse)').matches;
  const portraitWidth=Math.min(innerWidth||540,innerHeight||960);
  const background=touch?(portraitWidth<600?'assets/menu/menu-space-background-phone.jpg':'assets/menu/menu-space-background-tablet.jpg'):'assets/menu/menu-space-background-desktop.jpg';
- const sources=[background,'assets/menu/menu-title-logo.PNG','assets/menu/menu-fighter-rear-v2.png','assets/menu/ui-start-frame.png','assets/menu/ui-small-frame.png'];
+ const sources=[background,'assets/menu/menu-title-logo.PNG','assets/menu/menu-fighter-rear-v2.png'];
  const load=src=>new Promise(resolve=>{
   const image=new Image(),done=()=>resolve(src);
   image.onload=()=>{if(typeof image.decode==='function')image.decode().catch(()=>{}).finally(done);else done()};
@@ -174,6 +174,12 @@ function enemyHitRadius(enemy){
  const byType={scout:25,heavy:32,suicide:23,sniper:31,support:30,barrage:35,raider:23,carrier:41,jammer:30,boss:63};
  return byType[enemy.type]||Math.max(enemy.r||15,25);
 }
+function enemyHitAxes(enemy,padding=0){
+ if(enemy.boss){const scale=Math.max(1.18,Math.min(1.55,(enemy.r||70)/58));return {rx:196*scale*.43+padding,ry:144*scale*.43+padding}}
+ const radius=enemyHitRadius(enemy)+padding;return {rx:radius,ry:radius};
+}
+function enemyHitTest(enemy,x,y,padding=0){const {rx,ry}=enemyHitAxes(enemy,padding),dx=x-enemy.x,dy=y-enemy.y;return dx*dx/(rx*rx)+dy*dy/(ry*ry)<=1}
+function enemyHitHalfWidth(enemy){return enemy.boss?enemyHitAxes(enemy).rx:enemyHitRadius(enemy)}
 
 function spawnEnemy(){
  const bossActive=enemies.some(e=>e.boss);
@@ -223,7 +229,7 @@ function spawnBoss(number=currentStageNumber(),options={}){
  const awakeningScale=awakened?1.55:1;
  const finalScale=number===10?1.35:1;
  const bossHp=Math.round(2400*bossScale*(1+Math.min(.35,power*.018))*awakeningScale*finalScale);
- const boss={type:'boss',boss:true,awakenedBoss:awakened,awakeningBoss:awakened,awakeningReward:awakened?'meteor':null,bossKind:kind,bossName:names[number-1],bossNumber:number,bossStage:number,persistentBoss:persistent,bossTimeLeft:persistent?null:BOSS_TIMED_DURATION,finalBoss:number===BOSS_TOTAL,x:W/2,y:-125,targetY:150,bossEntering:true,r:70+Math.min(18,(number-1)*2),hp:bossHp,max:bossHp,v:awakened?40:32+number,shoot:99999,dir:1,age:0,bossPhase:1,bossModeIndex:0,bossModeTimer:.9,bossActionCd:.65,guardWaveUsed:false};
+ const boss={type:'boss',boss:true,awakenedBoss:awakened,awakeningBoss:awakened,awakeningReward:awakened?'meteor':null,bossKind:kind,bossName:names[number-1],bossNumber:number,bossStage:number,persistentBoss:persistent,bossTimeLeft:persistent?null:BOSS_TIMED_DURATION,finalBoss:number===BOSS_TOTAL,x:W/2,y:-150,entryStartY:-150,targetY:150,bossEntering:true,bossEntryTime:0,bossEntryFxCd:0,r:70+Math.min(18,(number-1)*2),hp:bossHp,max:bossHp,v:awakened?40:32+number,shoot:99999,dir:1,age:0,bossPhase:1,bossModeIndex:0,bossModeTimer:.9,bossActionCd:.65,guardWaveUsed:false};
  enemies.push(boss);
  if(awakened)toast(`第 ${number} 号 · 觉醒Boss反应确认`);
  else if(!persistent)toast(`限时歼灭：${BOSS_TIMED_DURATION} 秒`);
@@ -560,12 +566,18 @@ function explodeMissile(m){
  audioSystem?.play(m.awakening==='missile_hunter'?'explosionLarge':'explosionSmall');
  if(m.cluster&&!m.clusterChild){const liveTargets=enemies.filter(e=>e.hp>0);for(let i=0;i<6;i++){const a=-Math.PI/2+(i-2.5)*.30,target=liveTargets[i%Math.max(1,liveTargets.length)]||null;missiles.push({x:m.x,y:m.y,vx:Math.cos(a)*245,vy:Math.sin(a)*245,target,life:3,level:2,trail:0,damage:22,radius:28,speed:365,turn:9.4,awakening:'missile_cluster',clusterChild:true});}for(let i=0;i<10;i++){const a=Math.PI*2*i/10;particles.push({x:m.x,y:m.y,vx:Math.cos(a)*(90+Math.random()*120),vy:Math.sin(a)*(90+Math.random()*120),life:.28,max:.28,r:2.5,type:'laserCharge'})}}
  lightningArcs.push({x1:m.x,y1:m.y,x2:m.x,y2:m.y,life:m.awakening==='missile_hunter'?.48:.3,maxLife:m.awakening==='missile_hunter'?.48:.3,level:3,burst:true,radius:m.radius,seed:Math.random()*9999,missile:true,awakening:m.awakening});
- for(const enemy of [...enemies])if(Math.hypot(enemy.x-m.x,enemy.y-m.y)<=m.radius){const killed=damageEnemy(enemy,m.damage);if(killed)removeKilledEnemy(enemy,m.damage,coreManager.getLevel('blast'))}
+ for(const enemy of [...enemies])if(enemyHitTest(enemy,m.x,m.y,m.radius)){const killed=damageEnemy(enemy,m.damage);if(killed)removeKilledEnemy(enemy,m.damage,coreManager.getLevel('blast'))}
  for(let i=0;i<22;i++){const a=Math.random()*Math.PI*2,s=70+Math.random()*250;particles.push({x:m.x,y:m.y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:.25+Math.random()*.35,max:.6,r:1.8+Math.random()*3.8,type:'missile'})}
  shake=Math.max(shake,m.awakening==='missile_hunter'?19:m.awakening==='missile_cluster'?14:12);
 }
 function enemyBulletLimit(){const quality=(typeof mobilePerf!=='undefined'&&mobilePerf.enabled)?mobilePerf.quality:1;return (typeof mobilePerf!=='undefined'&&mobilePerf.enabled)?Math.round(120+90*quality):320}
-function pushEnemyBullet(x,y,vx,vy,r,type,damage){if(enemyBullets.length>=enemyBulletLimit())return false;enemyBullets.push({x,y,vx,vy,r,type,damage,angle:Math.atan2(vy,vx)});return true}
+function enemyBulletVisualType(type,damage){
+ if(type==='purple'&&damage<=10)return 'purple';
+ if(damage>=19)return 'red';
+ if(damage>=13)return 'orange';
+ return 'cyan';
+}
+function pushEnemyBullet(x,y,vx,vy,r,type,damage){if(enemyBullets.length>=enemyBulletLimit())return false;const visualType=enemyBulletVisualType(type,damage);enemyBullets.push({x,y,vx,vy,r,type:visualType,damage,angle:Math.atan2(vy,vx)});return true}
 function bossPhase(e){const ratio=e.hp/e.max;return ratio<=.3?3:ratio<=.6?2:1}
 function bossModes(e,phase){
  const number=Math.max(1,e.bossNumber||e.bossStage||1);
@@ -738,17 +750,21 @@ function updateDefenseCores(dt){
  build.chronoActive=Math.max(0,(build.chronoActive||0)-dt);
 }
 
-function nearestLivingEnemy(x,y,exclude=null){let best=null,bestD=Infinity;for(const e of enemies){if(e===exclude||e.hp<=0)continue;const dx=e.x-x,dy=e.y-y,d=dx*dx+dy*dy;if(d<bestD){bestD=d;best=e}}return best}
+function nearestLivingEnemy(x,y,exclude=null){let best=null,bestD=Infinity;for(const e of enemies){if(e===exclude||e.hp<=0||e.bossRetreating)continue;const dx=e.x-x,dy=e.y-y,d=dx*dx+dy*dy;if(d<bestD){bestD=d;best=e}}return best}
 function timeCooldownScale(){return coreManager.getLevel('time')>=2?.82:1;}
 function damageEnemy(e,d,opts={}){
+ if(e.bossRetreating)return false;
  if(e.boss){const guards=enemies.filter(g=>g.bossGuardFor===e&&g.hp>0);e.guardActive=guards.length>0;if(e.guardActive&&!opts.piercing){e.guardFlash=.16;return false}if(e.guardActive&&opts.piercing)d*=.42;}
  if(e.shield>0){const absorbed=Math.min(e.shield,d);e.shield-=absorbed;d-=absorbed;if(d<=0)return false;}
  e.hp-=d;if(e.hp<=0){audioSystem?.play(e.boss||e.type==='carrier'?'explosionLarge':'explosionSmall');const archiveId=e.boss?`boss-${e.bossNumber||e.bossStage}`:e.type;if(typeof markEnemyDefeated==='function')markEnemyDefeated(archiveId);const [points,experience]=enemyReward(e);score+=points;spawnExperienceFragments(e,experience);build.killWindow.push(elapsed);addBarrierCharge(barrierChargeValue(e));maybeDropRepair(e);if(e.type==='carrier')releaseCarrierDrones(e);if(e.type==='suicide')suicideBlast(e);if(e.boss){build.bossesDefeated=(build.bossesDefeated||0)+1;if(e.finalBoss){build.finalBossDefeated=true;toast('最终 Boss 已击毁 · 终焉信号消散')}else toast(`第 ${e.bossNumber||e.bossStage} 号 Boss 已击毁 · 大量经验释放`);for(let burst=0;burst<5;burst++)explode(e.x+(Math.random()-.5)*e.r*1.4,e.y+(Math.random()-.5)*e.r*1.1,18);blastWaves.push({x:e.x,y:e.y,life:.72,maxLife:.72,radius:18,prevRadius:0,maxRadius:e.r*2.8,absorbed:0,temporalCollapse:true});shake=Math.max(shake,22)}awakeningSystem.onEnemyKilled(e,opts);battleEventSystem.onEnemyKilled(e);if(!e.boss)explode(e.x,e.y,e.type==='carrier'?30:18);return true}return false
 }
 function despawnTimedBoss(e){
- for(let i=enemies.length-1;i>=0;i--)if(enemies[i]===e||enemies[i].bossGuardFor===e)enemies.splice(i,1);
+ if(e.bossRetreating)return;
+ e.bossRetreating=true;e.retreatTime=1.6;e.retreatFxCd=0;e.bossTimeLeft=0;
+ for(let i=enemies.length-1;i>=0;i--)if(enemies[i].bossGuardFor===e)enemies.splice(i,1);
  clearEntityArray(enemyBullets);enemyLasers.length=0;
- toast(`第 ${e.bossNumber||e.bossStage} 号 Boss 已撤离 · 未获得奖励`);
+ blastWaves.push({x:e.x,y:e.y,life:.55,maxLife:.55,radius:14,prevRadius:0,maxRadius:e.r*1.8,absorbed:0,temporalCollapse:true});
+ shake=Math.max(shake,9);toast(`第 ${e.bossNumber||e.bossStage} 号 Boss 正在撤离 · 未获得奖励`);
 }
 function damagePlayer(d){
  audioSystem?.play('damage');
@@ -913,7 +929,7 @@ function update(dt){
  if(!build.firstEliteSpawned&&elapsed>=50&&!enemies.some(e=>e.boss)&&!battleEventSystem.active){build.firstEliteSpawned=true;enemies.push(makeEnemy('heavy'));toast('精英反应确认 · 重甲战机进入战区')}
  spawnCd-=dt;if(spawnCd<=0){const bossActive=enemies.some(e=>e.boss);if(!bossActive)spawnEnemy();const gradual=Math.min(.48,elapsed/1800+Math.max(0,level-1)*.012);const pressure=Math.min(.18,combatPower()*.004+recentKillRate()*.03);spawnCd=bossActive?.5:Math.max(.30,1.18-gradual-pressure)}maybeSpawnStageBoss();
  const timeLevel=coreManager.getLevel('time');const slow=(build.awakeTimeStop||0)>0?.015:(build.chronoActive>0?(timeLevel===3?.02:.42):1);
- for(let i=bullets.length-1;i>=0;i--){const b=bullets[i];if(b.laser){b.life-=dt;const emitter=b.source==='clone'?clonePositions()[b.emitterIndex||0]:player;if(emitter){b.x=emitter.x+(b.emitterOffset||0);b.h=emitter.y-20}for(let j=enemies.length-1;j>=0;j--){const e=enemies[j];if(Math.abs(e.x-b.x)<b.w+enemyHitRadius(e)&&e.y<(emitter?emitter.y:player.y)){const killed=damageEnemy(e,b.d*dt,{piercing:true});if(b.awakening==='laser_reflect'&&Math.random()<dt*7){const others=enemies.filter(x=>x!==e&&Math.hypot(x.x-e.x,x.y-e.y)<180).slice(0,4);let from=e;for(const target of others){createLightningArc(from,target,2);if(damageEnemy(target,b.d*dt*.65)){const idx=enemies.indexOf(target);if(idx>=0)enemies.splice(idx,1)}from=target}}if(killed)enemies.splice(j,1)}}if(b.life<=0||!emitter)bullets.splice(i,1);continue}if(b.isSplit){b.life-=dt;if(b.life<=0){bullets.splice(i,1);continue}}if(b.awakening==='blast_chain'){if(!Number.isFinite(b.life)){b.life=1.1;b.maxLife=1.1}if(!b.isSplit){b.life-=dt;if(b.life<=0){bullets.splice(i,1);continue}}if(!b.target||b.target.hp<=0||!enemies.includes(b.target)){b.target=nearestLivingEnemy(b.x,b.y)}if(b.target){const dx=b.target.x-b.x,dy=b.target.y-b.y,len=Math.hypot(dx,dy)||1,speed=Math.hypot(b.vx,b.vy)||500,turn=Math.min(1,(b.seek||7.5)*dt);b.vx+=(dx/len*speed-b.vx)*turn;b.vy+=(dy/len*speed-b.vy)*turn}}b.x+=b.vx*dt;b.y+=b.vy*dt;if(b.y<-30||b.y>H+30||b.x<-30||b.x>W+30){bullets.splice(i,1);continue}for(let j=enemies.length-1;j>=0;j--){const e=enemies[j];if(Math.hypot(b.x-e.x,b.y-e.y)<b.r+enemyHitRadius(e)){const hitX=e.x,hitY=e.y;if(b.awakening==='blast_chain'&&b.splitMark){e.blastAwakeMarks=(e.blastAwakeMarks||0)+1;if(e.blastAwakeMarks>=3){e.blastAwakeMarks=0;blastWaves.push({x:e.x,y:e.y,life:.28,maxLife:.28,radius:6,prevRadius:0,maxRadius:72,absorbed:0,temporalCollapse:true});for(const other of [...enemies])if(other!==e&&Math.hypot(other.x-e.x,other.y-e.y)<72)damageEnemy(other,34)}}const killed=damageEnemy(e,b.d,{piercing:(b.pierce||0)>0});if(killed){enemies.splice(j,1);if(b.blastLevel&&!b.isSplit)spawnSplitBullets(hitX,hitY,b.d,b.blastLevel);if(b.awakening==='blast_chain'&&b.chainDepth<2)awakeningSystem.spawnChainSplit?.(hitX,hitY,b.d,b.chainDepth+1)}if(b.thunderLevel)triggerThunder({x:hitX,y:hitY},b.d,b.thunderLevel,b.blastLevel&&!b.isSplit?b.blastLevel:0,e);if(b.pierce>0){b.pierce--;b.d*=1.08;break}else{bullets.splice(i,1);break}}}}
+ for(let i=bullets.length-1;i>=0;i--){const b=bullets[i];if(b.laser){b.life-=dt;const emitter=b.source==='clone'?clonePositions()[b.emitterIndex||0]:player;if(emitter){b.x=emitter.x+(b.emitterOffset||0);b.h=emitter.y-20}for(let j=enemies.length-1;j>=0;j--){const e=enemies[j];if(Math.abs(e.x-b.x)<b.w+enemyHitHalfWidth(e)&&e.y<(emitter?emitter.y:player.y)){const killed=damageEnemy(e,b.d*dt,{piercing:true});if(b.awakening==='laser_reflect'&&Math.random()<dt*7){const others=enemies.filter(x=>x!==e&&Math.hypot(x.x-e.x,x.y-e.y)<180).slice(0,4);let from=e;for(const target of others){createLightningArc(from,target,2);if(damageEnemy(target,b.d*dt*.65)){const idx=enemies.indexOf(target);if(idx>=0)enemies.splice(idx,1)}from=target}}if(killed)enemies.splice(j,1)}}if(b.life<=0||!emitter)bullets.splice(i,1);continue}if(b.isSplit){b.life-=dt;if(b.life<=0){bullets.splice(i,1);continue}}if(b.awakening==='blast_chain'){if(!Number.isFinite(b.life)){b.life=1.1;b.maxLife=1.1}if(!b.isSplit){b.life-=dt;if(b.life<=0){bullets.splice(i,1);continue}}if(!b.target||b.target.hp<=0||!enemies.includes(b.target)){b.target=nearestLivingEnemy(b.x,b.y)}if(b.target){const dx=b.target.x-b.x,dy=b.target.y-b.y,len=Math.hypot(dx,dy)||1,speed=Math.hypot(b.vx,b.vy)||500,turn=Math.min(1,(b.seek||7.5)*dt);b.vx+=(dx/len*speed-b.vx)*turn;b.vy+=(dy/len*speed-b.vy)*turn}}b.x+=b.vx*dt;b.y+=b.vy*dt;if(b.y<-30||b.y>H+30||b.x<-30||b.x>W+30){bullets.splice(i,1);continue}for(let j=enemies.length-1;j>=0;j--){const e=enemies[j];if(enemyHitTest(e,b.x,b.y,b.r)){const hitX=e.x,hitY=e.y;if(b.awakening==='blast_chain'&&b.splitMark){e.blastAwakeMarks=(e.blastAwakeMarks||0)+1;if(e.blastAwakeMarks>=3){e.blastAwakeMarks=0;blastWaves.push({x:e.x,y:e.y,life:.28,maxLife:.28,radius:6,prevRadius:0,maxRadius:72,absorbed:0,temporalCollapse:true});for(const other of [...enemies])if(other!==e&&Math.hypot(other.x-e.x,other.y-e.y)<72)damageEnemy(other,34)}}const killed=damageEnemy(e,b.d,{piercing:(b.pierce||0)>0});if(killed){enemies.splice(j,1);if(b.blastLevel&&!b.isSplit)spawnSplitBullets(hitX,hitY,b.d,b.blastLevel);if(b.awakening==='blast_chain'&&b.chainDepth<2)awakeningSystem.spawnChainSplit?.(hitX,hitY,b.d,b.chainDepth+1)}if(b.thunderLevel)triggerThunder({x:hitX,y:hitY},b.d,b.thunderLevel,b.blastLevel&&!b.isSplit?b.blastLevel:0,e);if(b.pierce>0){b.pierce--;b.d*=1.08;break}else{bullets.splice(i,1);break}}}}
  for(let i=missiles.length-1;i>=0;i--){
   const m=missiles[i];m.life-=dt;m.trail-=dt;
   if(!m.target||m.target.hp<=0||!enemies.includes(m.target))m.target=nearestLivingEnemy(m.x,m.y);
@@ -921,14 +937,14 @@ function update(dt){
   m.x+=m.vx*dt;m.y+=m.vy*dt;
   if(m.trail<=0){m.trail=particles.length>220?.07:particles.length>150?.045:.03;if(particles.length<280)particles.push({x:m.x,y:m.y,vx:-m.vx*.13+(Math.random()-.5)*22,vy:-m.vy*.13+(Math.random()-.5)*22,life:.18+Math.random()*.16,max:.34,r:1.5+Math.random()*2.2,type:'missileTrail'})}
   let hit=m.life<=0||m.x<-40||m.x>W+40||m.y<-50||m.y>H+50;
-  if(!hit)for(const e of enemies)if(Math.hypot(m.x-e.x,m.y-e.y)<enemyHitRadius(e)+7){hit=true;break}
+  if(!hit)for(const e of enemies)if(enemyHitTest(e,m.x,m.y,7)){hit=true;break}
   if(hit){explodeMissile(m);missiles.splice(i,1)}
  }
  for(let i=enemies.length-1;i>=0;i--){
   const e=enemies[i];e.age+=dt;
-  if(e.boss&&!e.bossEntering&&!e.persistentBoss&&Number.isFinite(e.bossTimeLeft)){e.bossTimeLeft-=dt;if(e.bossTimeLeft<=0){despawnTimedBoss(e);continue}}
+  if(e.boss&&!e.bossEntering&&!e.persistentBoss&&!e.bossRetreating&&Number.isFinite(e.bossTimeLeft)){e.bossTimeLeft-=dt;if(e.bossTimeLeft<=0)despawnTimedBoss(e)}
   if(e.bossGuard&&e.bossGuardFor){const host=e.bossGuardFor;if(!enemies.includes(host)){enemies.splice(i,1);continue}const guards=enemies.filter(g=>g.bossGuardFor===host);const gi=Math.max(0,guards.indexOf(e));const targetX=host.x+(gi-(guards.length-1)/2)*78,targetY=host.y+92;e.x+=(targetX-e.x)*Math.min(1,dt*5);e.y+=(targetY-e.y)*Math.min(1,dt*5);}
-  else if(e.boss){const bossSlow=build.chronoActive>0?(timeLevel===3?.28:slow):1;if(e.bossEntering){e.y+=(e.targetY-e.y)*Math.min(1,dt*3.8);if(Math.abs(e.targetY-e.y)<2){e.y=e.targetY;e.bossEntering=false;shake=Math.max(shake,14);toast(`${e.bossName} · 进入交战状态`)}}else{e.x+=e.dir*90*dt*bossSlow;if(e.x<e.r||e.x>W-e.r)e.dir*=-1;updateBossAttackPattern(e,dt*bossSlow)}}
+  else if(e.boss){const bossSlow=build.chronoActive>0?(timeLevel===3?.28:slow):1;if(e.bossRetreating){e.retreatTime-=dt;e.retreatFxCd-=dt;const retreatProgress=1-Math.max(0,e.retreatTime)/1.6;e.y-=(125+retreatProgress*355)*dt;if(e.retreatFxCd<=0){e.retreatFxCd=.055;for(const offset of [-36,0,36])particles.push({x:e.x+offset,y:e.y+44,vx:(Math.random()-.5)*20,vy:75+Math.random()*55,life:.24,max:.24,r:2.2+Math.random()*2.2,type:'laserCharge'})}if(e.retreatTime<=0||e.y<-190){enemies.splice(i,1);toast(`第 ${e.bossNumber||e.bossStage} 号 Boss 已脱离战区`);continue}}else if(e.bossEntering){e.bossEntryTime=(e.bossEntryTime||0)+dt;e.bossEntryFxCd=(e.bossEntryFxCd||0)-dt;const entryProgress=Math.min(1,e.bossEntryTime/1.7),entryEase=1-Math.pow(1-entryProgress,3);e.y=(e.entryStartY??-150)+((e.targetY??150)-(e.entryStartY??-150))*entryEase;if(e.bossEntryFxCd<=0){e.bossEntryFxCd=.045;for(const offset of [-42,0,42])particles.push({x:e.x+offset,y:e.y+52,vx:(Math.random()-.5)*24,vy:95+Math.random()*75,life:.26,max:.26,r:2.4+Math.random()*2.6,type:'laserCharge'})}if(entryProgress>=1){e.y=e.targetY;e.bossEntering=false;blastWaves.push({x:e.x,y:e.y,life:.62,maxLife:.62,radius:16,prevRadius:0,maxRadius:e.r*2.2,absorbed:0,temporalCollapse:true});shake=Math.max(shake,16);toast(`${e.bossName} · 进入交战状态`)}}else{e.x+=e.dir*90*dt*bossSlow;if(e.x<e.r||e.x>W-e.r)e.dir*=-1;updateBossAttackPattern(e,dt*bossSlow)}}
   else if(e.huntTarget){const targetY=Math.min(145,H*.2);e.y+=(targetY-e.y)*Math.min(1,dt*2.2);e.x+=e.dir*(e.enraged?36:25)*dt*slow;if(e.x<75||e.x>W-75)e.dir*=-1;}
   else if(e.type==='suicide'){
    const distance=Math.hypot(player.x-e.x,player.y-e.y);
@@ -945,7 +961,7 @@ function update(dt){
    }
   }
   e.shoot-=dt*1000*slow;if(e.shoot<=0&&!e.boss&&!['suicide','support'].includes(e.type)){enemyShoot(e);e.shoot=e.huntTarget?(e.enraged?560:760):e.type==='barrage'?Math.max(1250,1950-threat*70):e.type==='heavy'?Math.max(1350,2200-threat*90):Math.max(820,1600-threat*80)}
-  if(Math.hypot(player.x-e.x,player.y-e.y)<player.r+e.r){damagePlayer(e.boss?30:e.type==='suicide'?28:16);if(e.type==='suicide')suicideBlast(e);explode(e.x,e.y);enemies.splice(i,1);if(dying)break;continue}
+  if(!e.bossRetreating&&Math.hypot(player.x-e.x,player.y-e.y)<player.r+e.r){damagePlayer(e.boss?30:e.type==='suicide'?28:16);if(e.type==='suicide')suicideBlast(e);explode(e.x,e.y);enemies.splice(i,1);if(dying)break;continue}
   if(e.y>H+50||e.x<-70||e.x>W+70)enemies.splice(i,1)
  }
  for(let i=enemyLasers.length-1;i>=0;i--){

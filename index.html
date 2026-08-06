@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
-  <title>无限之翼 · Alpha 8.66</title>
+  <title>无限之翼 · Alpha 8.67</title>
   <meta name="theme-color" content="#050816" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black" />
@@ -16,7 +16,7 @@
   <link rel="preload" as="image" href="assets/menu/menu-space-background-desktop.jpg" media="(pointer:fine)" fetchpriority="high" />
   <link rel="preload" as="image" href="assets/menu/menu-title-logo.PNG" />
   <link rel="preload" as="image" href="assets/menu/menu-fighter-rear-v2.png" />
-  <link rel="stylesheet" href="style.css?v=8.66.0" />
+  <link rel="stylesheet" href="style.css?v=8.67.0" />
 </head>
 <body>
   <script>
@@ -103,30 +103,30 @@
         </div>
 
         <div class="menu-actions hologram-actions">
-          <button id="startButton" class="primary-action hologram-start">
-            <img src="assets/menu/ui-start-frame.png" alt="" aria-hidden="true" />
-            <span>开始出击</span>
-          </button>
           <div class="menu-secondary-grid">
             <button id="hangarButton" class="menu-button hologram-small" type="button">
-              <img src="assets/menu/ui-small-frame.png" alt="" aria-hidden="true" />
+              <svg class="menu-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V8l8-4 8 4v11M7 19v-7h10v7M9 9h6"/></svg>
               <span>机库</span>
             </button>
             <button id="archiveButton" class="menu-button hologram-small">
-              <img src="assets/menu/ui-small-frame.png" alt="" aria-hidden="true" />
+              <svg class="menu-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h6v14H5zM13 5h6v14h-6M7.5 9h1M15.5 9h1M7.5 13h1M15.5 13h1"/></svg>
               <span>图鉴</span>
             </button>
             <button id="settingsButton" class="menu-button hologram-small">
-              <img src="assets/menu/ui-small-frame.png" alt="" aria-hidden="true" />
+              <svg class="menu-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></svg>
               <span>设置</span>
             </button>
             <button id="aboutButton" class="menu-button hologram-small" type="button">
-              <img src="assets/menu/ui-small-frame.png" alt="" aria-hidden="true" />
-              <span>关于游戏</span>
+              <svg class="menu-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 10v6M12 7h.01"/></svg>
+              <span>关于</span>
             </button>
           </div>
+          <button id="startButton" class="primary-action hologram-start">
+            <span>点击开始游戏</span>
+            <small>TAP TO DEPLOY</small>
+          </button>
           <div class="menu-project-mark" aria-hidden="true">
-            <b>ALPHA 8.66</b>
+            <b>ALPHA 8.67</b>
           </div>
         </div>
       </section>
@@ -219,7 +219,7 @@
             <div><kbd>ESC / P</kbd><span>打开或关闭系统菜单</span></div>
             <div><kbd>1 / 2 / 3</kbd><span>选择源核</span></div>
           </div>
-          <div class="pause-footer"><span>INFINITY WINGS · RIFT OS</span><b>ALPHA 8.66</b></div>
+          <div class="pause-footer"><span>INFINITY WINGS · RIFT OS</span><b>ALPHA 8.67</b></div>
         </div>
       </section>
 
@@ -263,7 +263,7 @@
       document.documentElement.style.setProperty('--iw-world-height', String(logicalHeight));
     })();
   </script>
-  <script src="game.js?v=8.66.0"></script>
+  <script src="game.js?v=8.67.0"></script>
   <script>if('serviceWorker' in navigator){addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));}</script>
 </body>
 </html>

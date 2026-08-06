@@ -1,9 +1,9 @@
-const CACHE='iw-cache-8.66-unique-enemy-models-v1';
+const CACHE='iw-cache-8.67-minimal-menu-v1';
 const ASSETS=[
   './',
   './index.html',
-  './style.css?v=8.66.0',
-  './game.js?v=8.66.0',
+  './style.css?v=8.67.0',
+  './game.js?v=8.67.0',
   './manifest.webmanifest',
   './apple-touch-icon.png',
   './favicon.png',
@@ -14,9 +14,8 @@ const ASSETS=[
   './assets/menu/menu-space-background-phone.jpg',
   './assets/menu/menu-title-logo.PNG',
   './assets/menu/menu-fighter-rear-v2.png',
-  './assets/menu/ui-start-frame.png',
-  './assets/menu/ui-small-frame.png',
   './assets/ships/player-fighter-v4.png',
+  './assets/ships/player-drone-v1.png',
   './assets/ships/enemy-scout-v3.png',
   './assets/ships/enemy-heavy-v1.png',
   './assets/ships/enemy-suicide-v1.png',
@@ -26,6 +25,7 @@ const ASSETS=[
   './assets/ships/enemy-raider-v1.png',
   './assets/ships/enemy-carrier-v1.png',
   './assets/ships/enemy-jammer-v1.png',
+  './assets/ships/enemy-boss-guard-v1.png',
   './assets/ships/boss-dreadnought-wide-v3.png'
 ];
 

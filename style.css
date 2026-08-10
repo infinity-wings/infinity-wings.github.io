@@ -1675,3 +1675,16 @@ body.touch-device .system-menu-button{
   body.mobile-portrait-device #menuScreen .hologram-small>span{font-size:14px}
   body.mobile-portrait-device #menuScreen .menu-launch-fighter{bottom:max(17%,calc(env(safe-area-inset-bottom) + 172px));width:min(65vw,500px)}
 }
+
+/* Alpha 8.68 final mobile timer override. */
+body.mobile-portrait-device #topTimer.top-run-timer,
+body.touch-device #topTimer.top-run-timer{
+  position:fixed!important;
+  top:max(8px,calc(env(safe-area-inset-top) + 6px))!important;
+  right:max(8px,calc(env(safe-area-inset-right) + 6px))!important;
+  bottom:auto!important;
+  left:auto!important;
+  margin:0!important;
+  transform:none!important;
+  z-index:18;
+}

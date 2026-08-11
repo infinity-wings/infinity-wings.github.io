@@ -843,6 +843,9 @@ function update(dt){
  IWStability?.watchdog?.();
  elapsed+=dt;const threat=threatLevel();battleEventSystem.update(dt);
  for(const s of stars){s.y+=s.v*(1+threat*.08)*dt;if(s.y>H){s.y=0;s.x=Math.random()*W}}
+ for(const d of spaceDust){d.y+=d.v*(1+threat*.025)*dt;d.x+=d.drift*dt;if(d.y>H+8){d.y=-8;d.x=Math.random()*W}if(d.x<-8)d.x=W+8;else if(d.x>W+8)d.x=-8}
+ for(const s of nearSpaceStreaks){s.y+=s.v*(1+threat*.045)*dt;if(s.y>H+s.len){s.y=-s.len-Math.random()*H*.28;s.x=Math.random()*W}}
+ for(const landmark of spaceLandmarks){landmark.y+=landmark.v*dt;if(landmark.y>H+landmark.size*1.6)landmark.y-=H*4.7}
  if(dying){
   deathTimer+=dt;deathFade=Math.min(1,Math.max(0,(deathTimer-.45)/1.45));
  for(let i=particles.length-1;i>=0;i--){const p=particles[i];p.x+=p.vx*dt;p.y+=p.vy*dt;p.vx*=.985;p.vy*=.985;p.life-=dt;if(p.life<=0)particles.splice(i,1)}

@@ -48,6 +48,14 @@ window.IWEntityPools=IW_ENTITY_POOLS;
 pilotId=Math.max(1,Number(localStorage.getItem('infinityWingsPilotIdV2'))||1);
 const stars=Array.from({length:110},()=>({x:Math.random()*W,y:Math.random()*H,s:.4+Math.random()*1.8,v:18+Math.random()*65}));
 const MOBILE_DEVICE=/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)||navigator.maxTouchPoints>1;
+const spaceDust=Array.from({length:MOBILE_DEVICE?32:44},()=>({x:Math.random()*W,y:Math.random()*H,s:.45+Math.random()*1.25,v:12+Math.random()*24,drift:(Math.random()-.5)*5,kind:Math.random()>.78?'debris':'dust'}));
+const nearSpaceStreaks=Array.from({length:MOBILE_DEVICE?9:14},()=>({x:Math.random()*W,y:Math.random()*H,w:.7+Math.random()*1.2,v:260+Math.random()*260,len:8+Math.random()*15,alpha:.34+Math.random()*.42}));
+const spaceLandmarks=[
+ {type:'planet',x:W*.9,y:-H*.15,size:118,v:4.2,alpha:.3},
+ {type:'wreck',x:W*.14,y:-H*1.28,size:72,v:7.2,alpha:.26,rotation:-.24},
+ {type:'asteroids',x:W*.86,y:-H*2.42,size:76,v:9.5,alpha:.28},
+ {type:'vortex',x:W*.12,y:-H*3.55,size:92,v:5.6,alpha:.24,rotation:.18}
+];
 const mobilePerf={enabled:MOBILE_DEVICE,quality:1,avgFps:60,frameMs:16.7,slowFrames:0,fastFrames:0,thermalPressure:0,lastSample:performance.now(),sampleFrames:0};
 window.IWMobilePerf=mobilePerf;
 

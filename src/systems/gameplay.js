@@ -202,16 +202,16 @@ function spawnEnemy(){
 }
 const BOSS_TIMELINE=[90,210,270,350,420,510,580,675,760,870],BOSS_TOTAL=BOSS_TIMELINE.length;
 const BOSS_ENCOUNTERS=[
- {tier:1,role:'mini',kind:'fortress',name:'重甲先锋',sprite:'heavy',duration:30,modes:['fan','ring'],size:[170,134],hit:[73,56]},
- {tier:2,role:'mini',kind:'seraph',name:'弹幕母机',sprite:'barrage',duration:30,modes:['fan','ring'],size:[180,139],hit:[78,59]},
- {tier:3,role:'projection',kind:'rift',name:'裂隙猎手',art:'iii',duration:60,modes:['fan','aimed'],size:[410,280],hit:[178,112]},
- {tier:3,role:'entity',kind:'rift',name:'裂隙猎手',art:'iii',modes:['fanStrong','aimed','beam'],size:[422,288],hit:[184,116]},
- {tier:4,role:'projection',kind:'fortress',name:'赤钢战争堡垒',art:'iv',duration:60,modes:['fanStrong','ring'],size:[414,282],hit:[180,113]},
- {tier:4,role:'entity',kind:'fortress',name:'赤钢战争堡垒',art:'iv',modes:['fanStrong','ringStrong','sweep'],size:[426,290],hit:[186,117]},
- {tier:5,role:'projection',kind:'seraph',name:'虚空航母',art:'v',duration:60,modes:['ringStrong','guard'],size:[410,346],hit:[178,139]},
- {tier:5,role:'entity',kind:'seraph',name:'虚空航母',art:'v',modes:['ringStrong','guard','rain'],size:[422,356],hit:[184,143]},
- {tier:6,role:'projection',kind:'omega',name:'终焉核心 Ω',art:'omega',duration:60,modes:['nova','aimed','beam'],size:[410,342],hit:[178,138]},
- {tier:6,role:'entity',kind:'omega',name:'终焉核心 Ω',art:'omega',modes:['fanStrong','ringStrong','nova','sweep','finalBarrage'],size:[422,352],hit:[184,142],final:true}
+ {tier:1,role:'mini',kind:'fortress',name:'重甲先锋',sprite:'heavy',duration:30,modes:['fan','ring'],size:[170,134],hit:[73,56],hp:2100,expectedCores:2,expectedDps:90},
+ {tier:2,role:'mini',kind:'seraph',name:'弹幕母机',sprite:'barrage',duration:30,modes:['fan','ring'],size:[180,139],hit:[78,59],hp:3500,expectedCores:5,expectedDps:145},
+ {tier:3,role:'projection',kind:'rift',name:'裂隙猎手',art:'iii',duration:60,modes:['fan','aimed'],size:[410,280],hit:[178,112],hp:8200,expectedCores:6,expectedDps:170},
+ {tier:3,role:'entity',kind:'rift',name:'裂隙猎手',art:'iii',modes:['fanStrong','aimed','beam'],size:[422,288],hit:[184,116],hp:12200,expectedCores:8,expectedDps:220},
+ {tier:4,role:'projection',kind:'fortress',name:'赤钢战争堡垒',art:'iv',duration:60,modes:['fanStrong','ring'],size:[414,282],hit:[180,113],hp:13800,expectedCores:9,expectedDps:275},
+ {tier:4,role:'entity',kind:'fortress',name:'赤钢战争堡垒',art:'iv',modes:['fanStrong','ringStrong','sweep'],size:[426,290],hit:[186,117],hp:19800,expectedCores:11,expectedDps:340},
+ {tier:5,role:'projection',kind:'seraph',name:'虚空航母',art:'v',duration:60,modes:['ringStrong','guard'],size:[410,346],hit:[178,139],hp:21000,expectedCores:12,expectedDps:405},
+ {tier:5,role:'entity',kind:'seraph',name:'虚空航母',art:'v',modes:['ringStrong','guard','rain'],size:[422,356],hit:[184,143],hp:31500,expectedCores:14,expectedDps:485},
+ {tier:6,role:'projection',kind:'omega',name:'终焉核心 Ω',art:'omega',duration:60,modes:['nova','aimed','beam'],size:[410,342],hit:[178,138],hp:31500,expectedCores:16,expectedDps:585},
+ {tier:6,role:'entity',kind:'omega',name:'终焉核心 Ω',art:'omega',modes:['fanStrong','ringStrong','nova','sweep','finalBarrage'],size:[422,352],hit:[184,142],hp:60000,expectedCores:18,expectedDps:705,final:true}
 ];
 function bossScheduledAt(number){return BOSS_TIMELINE[Math.max(0,Math.min(BOSS_TOTAL-1,number-1))]??Infinity}
 function currentStageNumber(){return Math.max(1,Math.min(BOSS_TOTAL,build?.nextBossNumber||1))}
@@ -237,12 +237,12 @@ function spawnBoss(number=currentStageNumber(),options={}){
  enemies.length=0;
  if(options.advanceSchedule){build.nextBossNumber=number+1;build.nextBossAt=bossScheduledAt(number+1)}
  const encounter=BOSS_ENCOUNTERS[number-1],kind=encounter.kind;
- const power=combatPower();
+ const ownedCoreLevels=CORE_IDS.reduce((sum,id)=>sum+coreManager.getRawLevel(id),0);
  const projection=encounter.role==='projection',mini=encounter.role==='mini',persistent=!encounter.duration;
- const bossScale=1+(encounter.tier-1)*.38+Math.min(.55,Math.max(0,power-6)*.022);
- // 投影是限时构筑检验，基础主炮不应在 60 秒内接近单独击破高阶投影。
- const roleHpScale=projection?.88:mini?.72:1.12;
- const bossHp=Math.round(2100*1.85*bossScale*(1+Math.min(.35,power*.018))*roleHpScale*(encounter.final?1.55:1));
+ // 每次遭遇的基础血量由该时间点的预计原核数量、标准构筑 DPS 和目标击杀时间反推。
+ // 只有超过阶段预期的强化才追加少量耐久，避免普通玩家因动态缩放受到惩罚。
+ const overbuild=Math.max(0,ownedCoreLevels-(encounter.expectedCores||0)),overbuildScale=1+Math.min(.24,overbuild*.03);
+ const bossHp=Math.round(encounter.hp*overbuildScale);
  const volleyCount=mini?3:Math.min(8,encounter.tier+(projection?1:2));
  const boss={type:'boss',boss:true,projectionBoss:projection,miniBoss:mini,fixedBoss:number>=3,awakenedBoss:encounter.tier>=5&&!projection,awakeningBoss:false,bossKind:kind,bossName:encounter.name,bossNumber:number,bossStage:encounter.tier,bossRole:encounter.role,bossArtKey:encounter.art,bossSpriteType:encounter.sprite,bossModes:encounter.modes,bossRenderSize:encounter.size,hitRx:encounter.hit[0],hitRy:encounter.hit[1],persistentBoss:persistent,bossTimeLeft:persistent?null:encounter.duration,finalBoss:!!encounter.final,x:W/2,y:-180,entryStartY:-180,targetY:number>=3?145:150,bossEntering:true,bossEntryTime:0,bossEntryFxCd:0,r:Math.max(encounter.hit[0],encounter.hit[1]),hp:bossHp,max:bossHp,v:28+encounter.tier*2,shoot:99999,dir:1,age:0,bossPhase:1,bossModeIndex:0,bossModeTimer:.9,bossModeMorph:0,bossVolleyCount:volleyCount,bossVolleyRemaining:volleyCount,bossActionCd:.65,guardWaveUsed:false};
  enemies.push(boss);

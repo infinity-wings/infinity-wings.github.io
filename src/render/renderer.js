@@ -408,7 +408,8 @@ function drawTexturedEnemyOnly(e,pulse,hpRatio){
  const entryProgress=e.bossEntering?Math.min(1,(e.bossEntryTime||0)/1.7):1,entryPulse=.72+.28*Math.sin(elapsed*18);
  const spriteAlpha=e.bossRetreating?Math.max(.14,Math.min(1,(e.retreatTime||0)/1.6))*(.7+.3*Math.sin(elapsed*24)):e.bossEntering?(.22+.77*entryProgress)*entryPulse:.99;
  enemyModelCtx.save();enemyModelCtx.scale(1,-1);if(e.bossEntering){const entryScale=.78+.22*(1-Math.pow(1-entryProgress,3));enemyModelCtx.scale(entryScale,entryScale)}
- enemyModelCtx.globalAlpha=spriteAlpha*(e.projectionBoss?.69+.07*Math.sin(elapsed*3.2):1);
+ // 所有 Boss 投影使用相同的慢速全息闪烁；频率低，但明暗差必须足以和实体区分。
+ enemyModelCtx.globalAlpha=spriteAlpha*(e.projectionBoss?.55+.17*Math.sin(elapsed*3.2+(e.bossStage||0)*.6):1);
  enemyModelCtx.imageSmoothingEnabled=true;enemyModelCtx.imageSmoothingQuality='high';if(contentBounds)enemyModelCtx.drawImage(renderImage,contentBounds.x,contentBounds.y,contentBounds.width,contentBounds.height,-width/2,-height/2,width,height);else enemyModelCtx.drawImage(renderImage,-width/2,-height/2,width,height);enemyModelCtx.restore();
  const coreColor=e.boss?(e.awakenedBoss?'#ff5fd7':bossProfile.core):e.bossGuard?'#ff79dc':e.type==='support'?'#5deaff':e.type==='sniper'||e.type==='raider'?'#ffe171':e.type==='carrier'||e.type==='jammer'?'#c477ff':e.type==='heavy'||e.type==='barrage'?'#ff9b45':'#ff526f';enemyCore(0,e.boss?-4:-3,e.boss?8:Math.max(3.2,width*.075),coreColor,pulse);return true;
 }

@@ -1,9 +1,9 @@
-const CACHE='iw-cache-9.02-boss-health-v1';
+const CACHE='iw-cache-9.03-boss-dps-balance-v1';
 const ASSETS=[
   './',
   './index.html',
-  './style.css?v=9.02.0',
-  './game.js?v=9.02.0',
+  './style.css?v=9.03.0',
+  './game.js?v=9.03.0',
   './manifest.webmanifest',
   './apple-touch-icon.png',
   './favicon.png',

@@ -18,7 +18,7 @@ const shipSpriteAssets={
 const shieldSpriteAssets={
  enemy:Object.assign(new Image(),{src:'assets/effects/enemy-support-shield-v2.png'}),
  player1:Object.assign(new Image(),{src:'assets/effects/player-shield-level1-v3.png'}),
- player2:Object.assign(new Image(),{src:'assets/effects/player-shield-level2-v3.png'}),
+ player2:Object.assign(new Image(),{src:'assets/effects/player-shield-level2-v4.png'}),
  player3:Object.assign(new Image(),{src:'assets/effects/player-shield-level3-v3.png'}),
  escort:Object.assign(new Image(),{src:'assets/effects/escort-front-barrier-v2.png'})
 };
@@ -26,6 +26,7 @@ const deepSpaceBackgroundAsset=Object.assign(new Image(),{src:'assets/background
 for(const image of [shipSpriteAssets.player,shipSpriteAssets.drone,shipSpriteAssets.guard,shipSpriteAssets.boss,...Object.values(shipSpriteAssets.enemies),...Object.values(shieldSpriteAssets),deepSpaceBackgroundAsset])image.decoding='async';
 const tintedShipSpriteCache=new Map();
 const mobileRenderSpriteCache=new WeakMap();
+const playerEnginePlumeSprite=(()=>{const sprite=document.createElement('canvas');sprite.width=32;sprite.height=80;const c=sprite.getContext('2d'),g=c.createLinearGradient(16,2,16,76);g.addColorStop(0,'rgba(255,255,255,.98)');g.addColorStop(.14,'rgba(184,249,255,.96)');g.addColorStop(.42,'rgba(51,205,255,.72)');g.addColorStop(.72,'rgba(67,106,255,.28)');g.addColorStop(1,'rgba(65,61,255,0)');c.fillStyle=g;c.shadowBlur=12;c.shadowColor='#58eaff';c.beginPath();c.moveTo(16,1);c.bezierCurveTo(8,14,7,37,12,73);c.lineTo(16,79);c.lineTo(20,73);c.bezierCurveTo(25,37,24,14,16,1);c.closePath();c.fill();c.fillStyle='rgba(242,255,255,.94)';c.beginPath();c.moveTo(16,2);c.bezierCurveTo(13,17,13,34,16,55);c.bezierCurveTo(19,34,19,17,16,2);c.fill();return sprite})();
 function getMobileRenderSprite(image){
  if(!mobilePerf?.enabled||!image)return image;
  if(mobileRenderSpriteCache.has(image))return mobileRenderSpriteCache.get(image);
@@ -100,7 +101,8 @@ function drawPlayerSpriteGlow(color='#69efff',alpha=1){
  ctx.beginPath();ctx.moveTo(0,-32);ctx.lineTo(0,8);ctx.moveTo(-8,-8);ctx.lineTo(-15,10);ctx.lineTo(-31,18);ctx.moveTo(8,-8);ctx.lineTo(15,10);ctx.lineTo(31,18);ctx.stroke();
  ctx.globalAlpha=alpha*pulse;ctx.fillStyle='#eaffff';ctx.beginPath();ctx.ellipse(0,-18,3.8,10,0,0,Math.PI*2);ctx.fill();
  ctx.shadowBlur=18;ctx.fillStyle=color;for(const x of [-27,27]){ctx.beginPath();ctx.arc(x,15,2.1,0,Math.PI*2);ctx.fill()}
- ctx.globalAlpha=alpha*enginePulse;ctx.shadowBlur=22;for(const x of [-9,9]){ctx.fillStyle='#efffff';ctx.fillRect(x-2,31,4,4);ctx.fillStyle=color;ctx.fillRect(x-1.2,35,2.4,8+enginePulse*4)}
+ const thrustScale=.9+Math.min(.38,(player?.thrust||0)*.22),plumeHeight=(29+enginePulse*8)*thrustScale;
+ ctx.globalAlpha=alpha*(.76+.24*enginePulse);ctx.shadowBlur=0;for(const x of [-9,9]){ctx.drawImage(playerEnginePlumeSprite,x-7,31,14,plumeHeight);ctx.fillStyle='#f3ffff';ctx.shadowBlur=12;ctx.shadowColor='#78efff';ctx.beginPath();ctx.ellipse(x,34,2.4,5.4,0,0,Math.PI*2);ctx.fill()}
  ctx.restore();
 }
 
@@ -452,9 +454,9 @@ function drawEnemyShip(e,targetCtx=null){
 function drawCoreDefenseEffects(lowFx=false){
  const shieldLayers=build?.shieldLayers||0;
  if(shieldLayers>0&&!dying){
-  ctx.save();ctx.translate(player.x,player.y+(player.visualY||0));ctx.globalCompositeOperation='lighter';
+  ctx.save();ctx.translate(player.x,player.y+(player.visualY||0)+6);ctx.globalCompositeOperation='lighter';
   const currentLayer=Math.max(1,Math.min(3,shieldLayers));
-  const textureWidth=136,textureHeight=136;
+  const textureWidth=128,textureHeight=128;
   const layerSprite=shieldSpriteAssets[`player${currentLayer}`];
   drawShieldSprite(ctx,layerSprite,0,0,textureWidth,textureHeight,.76+(currentLayer-1)*.07,(currentLayer-2)*.025);
   ctx.restore();

@@ -768,7 +768,7 @@ function despawnTimedBoss(e){
  blastWaves.push({x:e.x,y:e.y,life:.55,maxLife:.55,radius:14,prevRadius:0,maxRadius:e.r*1.8,absorbed:0,temporalCollapse:true});
  shake=Math.max(shake,9);toast(`第 ${e.bossNumber||e.bossStage} 号 Boss 正在撤离 · 未获得奖励`);
 }
-function playerCombatRadius(){const layers=Math.max(0,Math.min(3,build?.shieldLayers||0));return layers?68:player.r}
+function playerCombatRadius(){const layers=Math.max(0,Math.min(3,build?.shieldLayers||0));return layers?64:player.r}
 function damagePlayer(d){
  audioSystem?.play('damage');
  if(awakeningSystem.onPlayerDamage(d))return;

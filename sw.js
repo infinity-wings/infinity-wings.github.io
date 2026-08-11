@@ -1,9 +1,9 @@
-const CACHE='iw-cache-8.82-render-loop-recovery-v1';
+const CACHE='iw-cache-8.84-engine-plume-v1';
 const ASSETS=[
   './',
   './index.html',
-  './style.css?v=8.82.0',
-  './game.js?v=8.82.0',
+  './style.css?v=8.84.0',
+  './game.js?v=8.84.0',
   './manifest.webmanifest',
   './apple-touch-icon.png',
   './favicon.png',
@@ -30,7 +30,7 @@ const ASSETS=[
   './assets/ships/boss-dreadnought-wide-v3.png',
   './assets/effects/enemy-support-shield-v2.png',
   './assets/effects/player-shield-level1-v3.png',
-  './assets/effects/player-shield-level2-v3.png',
+  './assets/effects/player-shield-level2-v4.png',
   './assets/effects/player-shield-level3-v3.png',
   './assets/effects/escort-front-barrier-v2.png',
   './assets/meteors/meteor-small-v1.png',

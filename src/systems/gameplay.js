@@ -240,7 +240,9 @@ function spawnBoss(number=currentStageNumber(),options={}){
  const power=combatPower();
  const projection=encounter.role==='projection',mini=encounter.role==='mini',persistent=!encounter.duration;
  const bossScale=1+(encounter.tier-1)*.38+Math.min(.55,Math.max(0,power-6)*.022);
- const bossHp=Math.round(2100*1.5*bossScale*(1+Math.min(.35,power*.018))*(projection?.52:mini?.62:1)*(encounter.final?1.55:1));
+ // 投影是限时构筑检验，基础主炮不应在 60 秒内接近单独击破高阶投影。
+ const roleHpScale=projection?.88:mini?.72:1.12;
+ const bossHp=Math.round(2100*1.85*bossScale*(1+Math.min(.35,power*.018))*roleHpScale*(encounter.final?1.55:1));
  const volleyCount=mini?3:Math.min(8,encounter.tier+(projection?1:2));
  const boss={type:'boss',boss:true,projectionBoss:projection,miniBoss:mini,fixedBoss:number>=3,awakenedBoss:encounter.tier>=5&&!projection,awakeningBoss:false,bossKind:kind,bossName:encounter.name,bossNumber:number,bossStage:encounter.tier,bossRole:encounter.role,bossArtKey:encounter.art,bossSpriteType:encounter.sprite,bossModes:encounter.modes,bossRenderSize:encounter.size,hitRx:encounter.hit[0],hitRy:encounter.hit[1],persistentBoss:persistent,bossTimeLeft:persistent?null:encounter.duration,finalBoss:!!encounter.final,x:W/2,y:-180,entryStartY:-180,targetY:number>=3?145:150,bossEntering:true,bossEntryTime:0,bossEntryFxCd:0,r:Math.max(encounter.hit[0],encounter.hit[1]),hp:bossHp,max:bossHp,v:28+encounter.tier*2,shoot:99999,dir:1,age:0,bossPhase:1,bossModeIndex:0,bossModeTimer:.9,bossModeMorph:0,bossVolleyCount:volleyCount,bossVolleyRemaining:volleyCount,bossActionCd:.65,guardWaveUsed:false};
  enemies.push(boss);

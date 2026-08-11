@@ -36,6 +36,12 @@ const spaceLandmarkAssets={
 for(const image of [shipSpriteAssets.player,shipSpriteAssets.drone,shipSpriteAssets.guard,shipSpriteAssets.boss,...Object.values(shipSpriteAssets.bosses),...Object.values(shipSpriteAssets.enemies),...Object.values(shieldSpriteAssets),deepSpaceBackgroundAsset,...Object.values(spaceLandmarkAssets)])image.decoding='async';
 const tintedShipSpriteCache=new Map();
 const mobileRenderSpriteCache=new WeakMap();
+const opaqueSpriteBoundsCache=new WeakMap();
+function getOpaqueSpriteBounds(image){
+ if(!image)return null;if(opaqueSpriteBoundsCache.has(image))return opaqueSpriteBoundsCache.get(image);
+ const width=image.naturalWidth||image.width||0,height=image.naturalHeight||image.height||0;if(!width||!height)return null;
+ try{const sample=document.createElement('canvas'),scale=Math.min(1,384/Math.max(width,height));sample.width=Math.max(1,Math.round(width*scale));sample.height=Math.max(1,Math.round(height*scale));const c=sample.getContext('2d',{willReadFrequently:true});c.drawImage(image,0,0,sample.width,sample.height);const data=c.getImageData(0,0,sample.width,sample.height).data;let left=sample.width,top=sample.height,right=-1,bottom=-1;for(let y=0;y<sample.height;y++)for(let x=0;x<sample.width;x++)if(data[(y*sample.width+x)*4+3]>12){if(x<left)left=x;if(x>right)right=x;if(y<top)top=y;if(y>bottom)bottom=y}const bounds=right>=left?{x:left/scale,y:top/scale,width:(right-left+1)/scale,height:(bottom-top+1)/scale}:{x:0,y:0,width,height};opaqueSpriteBoundsCache.set(image,bounds);return bounds}catch{return{x:0,y:0,width,height}}
+}
 function getMobileRenderSprite(image,maxSide=256){
  if(!mobilePerf?.enabled||!image)return image;
  const cachedVariants=mobileRenderSpriteCache.get(image);if(cachedVariants?.has(maxSide))return cachedVariants.get(maxSide);
@@ -397,14 +403,14 @@ function drawTexturedEnemyOnly(e,pulse,hpRatio){
  const bossProfile=e.boss?bossVisualProfile(e):null;
  const styledImage=e.boss?(e.bossArtKey?(e.projectionBoss?getTintedShipSprite(image,'#5e9dff',.34,512):image):getTintedShipSprite(image,bossProfile.tint,e.awakenedBoss?.27:.17)):e.eventMirror?getTintedShipSprite(image,'#645cff',.42):image;
  const renderImage=getMobileRenderSprite(styledImage,e.bossArtKey?512:256);
- const [width,height]=e.boss?(e.bossRenderSize||[196,144]):e.bossGuard?[78,66]:(enemySpriteSizes[e.type]||enemySpriteSizes.scout);
+ let [width,height]=e.boss?(e.bossRenderSize||[196,144]):e.bossGuard?[78,66]:(enemySpriteSizes[e.type]||enemySpriteSizes.scout);const contentBounds=e.boss&&e.bossArtKey?getOpaqueSpriteBounds(renderImage):null;if(contentBounds){height=width*contentBounds.height/Math.max(1,contentBounds.width)}
  if(e.shield>0){const shieldPulse=1+Math.sin(e.age*6)*.025,shieldAlpha=.48+.28*Math.min(1,e.shield/Math.max(1,e.maxShield||e.shield));enemyModelCtx.save();enemyModelCtx.scale(1,-1);if(!drawShieldSprite(enemyModelCtx,shieldSpriteAssets.enemy,0,0,(width+24)*shieldPulse,(Math.max(width,height)+24)*shieldPulse,shieldAlpha,elapsed*.06)){enemyModelCtx.strokeStyle='rgba(91,224,255,.85)';enemyModelCtx.lineWidth=3;enemyModelCtx.beginPath();enemyModelCtx.arc(0,0,e.r+9,0,Math.PI*2);enemyModelCtx.stroke()}enemyModelCtx.restore()}
  const entryProgress=e.bossEntering?Math.min(1,(e.bossEntryTime||0)/1.7):1,entryPulse=.72+.28*Math.sin(elapsed*18);
  const spriteAlpha=e.bossRetreating?Math.max(.14,Math.min(1,(e.retreatTime||0)/1.6))*(.7+.3*Math.sin(elapsed*24)):e.bossEntering?(.22+.77*entryProgress)*entryPulse:.99;
  enemyModelCtx.save();enemyModelCtx.scale(1,-1);if(e.bossEntering){const entryScale=.78+.22*(1-Math.pow(1-entryProgress,3));enemyModelCtx.scale(entryScale,entryScale)}
  const mirrorProgress=e.eventMirror?Math.min(1,(e.age||0)/.72):1;
  if(e.eventMirror){const phaseScale=.2+.8*(1-Math.pow(1-mirrorProgress,3));enemyModelCtx.scale(phaseScale,1);enemyModelCtx.globalAlpha=(.18+.81*mirrorProgress)*(.84+.16*Math.sin(elapsed*18+(e.mirrorSeed||0)))}else enemyModelCtx.globalAlpha=spriteAlpha*(e.projectionBoss?.69+.07*Math.sin(elapsed*3.2):1);
- enemyModelCtx.imageSmoothingEnabled=true;enemyModelCtx.imageSmoothingQuality='high';enemyModelCtx.drawImage(renderImage,-width/2,-height/2,width,height);enemyModelCtx.restore();
+ enemyModelCtx.imageSmoothingEnabled=true;enemyModelCtx.imageSmoothingQuality='high';if(contentBounds)enemyModelCtx.drawImage(renderImage,contentBounds.x,contentBounds.y,contentBounds.width,contentBounds.height,-width/2,-height/2,width,height);else enemyModelCtx.drawImage(renderImage,-width/2,-height/2,width,height);enemyModelCtx.restore();
  const coreColor=e.boss?(e.awakenedBoss?'#ff5fd7':bossProfile.core):e.bossGuard?'#ff79dc':e.type==='support'?'#5deaff':e.type==='sniper'||e.type==='raider'?'#ffe171':e.type==='carrier'||e.type==='jammer'?'#c477ff':e.type==='heavy'||e.type==='barrage'?'#ff9b45':'#ff526f';enemyCore(0,e.boss?-4:-3,e.boss?8:Math.max(3.2,width*.075),coreColor,pulse);return true;
 }
 function drawEnemyShip(e,targetCtx=null){

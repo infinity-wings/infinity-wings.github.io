@@ -115,7 +115,7 @@ function makeEnemy(type,side=false){
  const fromLeft=side&&Math.random()<.5;
  const base={x:side?(fromLeft?-30:W+30):35+Math.random()*(W-70),y:side?70+Math.random()*Math.min(250,H*.38):-35,type,r:15,hp:25,max:25,v:120,shoot:1200+Math.random()*700,age:0,dir:fromLeft?1:-1,shield:0,maxShield:0};
  if(type==='heavy')Object.assign(base,{r:23,hp:95+t*12,max:95+t*12,v:42,shoot:1550});
- if(type==='suicide')Object.assign(base,{r:14,hp:30+t*6,max:30+t*6,v:122,shoot:99999,warning:0,fuse:null,fuseDuration:2.2});
+ if(type==='suicide')Object.assign(base,{r:14,hp:42+t*8,max:42+t*8,v:175,shoot:99999,warning:0,fuse:null,fuseDuration:2.1});
  if(type==='sniper')Object.assign(base,{r:16,hp:44+t*8,max:44+t*8,v:42,shoot:1350,aim:0});
  if(type==='support')Object.assign(base,{r:18,hp:72+t*10,max:72+t*10,v:48,shoot:99999,supportCd:.4});
  if(type==='barrage')Object.assign(base,{r:22,hp:105+t*14,max:105+t*14,v:38,shoot:1500});
@@ -204,14 +204,14 @@ const BOSS_TIMELINE=[90,210,270,350,420,510,580,675,760,870],BOSS_TOTAL=BOSS_TIM
 const BOSS_ENCOUNTERS=[
  {tier:1,role:'mini',kind:'fortress',name:'重甲先锋',sprite:'heavy',duration:30,modes:['fan','ring'],size:[170,134],hit:[73,56]},
  {tier:2,role:'mini',kind:'seraph',name:'弹幕母机',sprite:'barrage',duration:30,modes:['fan','ring'],size:[180,139],hit:[78,59]},
- {tier:3,role:'projection',kind:'rift',name:'裂隙猎手',art:'iii',duration:60,modes:['fan','aimed'],size:[420,238],hit:[182,94]},
- {tier:3,role:'entity',kind:'rift',name:'裂隙猎手',art:'iii',modes:['fanStrong','aimed','beam'],size:[430,244],hit:[187,97]},
- {tier:4,role:'projection',kind:'fortress',name:'赤钢战争堡垒',art:'iv',duration:60,modes:['fanStrong','ring'],size:[426,228],hit:[186,91]},
- {tier:4,role:'entity',kind:'fortress',name:'赤钢战争堡垒',art:'iv',modes:['fanStrong','ringStrong','sweep'],size:[438,234],hit:[192,94]},
- {tier:5,role:'projection',kind:'seraph',name:'虚空航母',art:'v',duration:60,modes:['ringStrong','guard'],size:[430,242],hit:[187,96]},
- {tier:5,role:'entity',kind:'seraph',name:'虚空航母',art:'v',modes:['ringStrong','guard','rain'],size:[442,250],hit:[194,100]},
- {tier:6,role:'projection',kind:'omega',name:'终焉核心 Ω',art:'omega',duration:60,modes:['nova','aimed','beam'],size:[438,260],hit:[190,104]},
- {tier:6,role:'entity',kind:'omega',name:'终焉核心 Ω',art:'omega',modes:['fanStrong','ringStrong','nova','sweep','finalBarrage'],size:[452,270],hit:[198,108],final:true}
+ {tier:3,role:'projection',kind:'rift',name:'裂隙猎手',art:'iii',duration:60,modes:['fan','aimed'],size:[410,280],hit:[178,112]},
+ {tier:3,role:'entity',kind:'rift',name:'裂隙猎手',art:'iii',modes:['fanStrong','aimed','beam'],size:[422,288],hit:[184,116]},
+ {tier:4,role:'projection',kind:'fortress',name:'赤钢战争堡垒',art:'iv',duration:60,modes:['fanStrong','ring'],size:[414,282],hit:[180,113]},
+ {tier:4,role:'entity',kind:'fortress',name:'赤钢战争堡垒',art:'iv',modes:['fanStrong','ringStrong','sweep'],size:[426,290],hit:[186,117]},
+ {tier:5,role:'projection',kind:'seraph',name:'虚空航母',art:'v',duration:60,modes:['ringStrong','guard'],size:[410,346],hit:[178,139]},
+ {tier:5,role:'entity',kind:'seraph',name:'虚空航母',art:'v',modes:['ringStrong','guard','rain'],size:[422,356],hit:[184,143]},
+ {tier:6,role:'projection',kind:'omega',name:'终焉核心 Ω',art:'omega',duration:60,modes:['nova','aimed','beam'],size:[410,342],hit:[178,138]},
+ {tier:6,role:'entity',kind:'omega',name:'终焉核心 Ω',art:'omega',modes:['fanStrong','ringStrong','nova','sweep','finalBarrage'],size:[422,352],hit:[184,142],final:true}
 ];
 function bossScheduledAt(number){return BOSS_TIMELINE[Math.max(0,Math.min(BOSS_TOTAL-1,number-1))]??Infinity}
 function currentStageNumber(){return Math.max(1,Math.min(BOSS_TOTAL,build?.nextBossNumber||1))}
@@ -982,8 +982,8 @@ function update(dt){
   else if(e.huntTarget){const targetY=Math.min(145,H*.2);e.y+=(targetY-e.y)*Math.min(1,dt*2.2);e.x+=e.dir*(e.enraged?36:25)*dt*slow;if(e.x<75||e.x>W-75)e.dir*=-1;}
   else if(e.type==='suicide'){
    const distance=Math.hypot(player.x-e.x,player.y-e.y);
-   if(e.fuse==null&&distance<220){e.fuse=e.fuseDuration||2.2;e.warning=1}
-   if(e.fuse!=null){e.fuse-=dt;const urgency=Math.max(0,1-e.fuse/(e.fuseDuration||2.2));const a=Math.atan2(player.y-e.y,player.x-e.x);const chargeSpeed=e.v+threat*8+urgency*72;e.x+=Math.cos(a)*chargeSpeed*dt*slow;e.y+=Math.sin(a)*chargeSpeed*dt*slow;if(e.fuse<=0){if(distance<105)damagePlayer(24);suicideBlast(e);explode(e.x,e.y);enemies.splice(i,1);if(dying)break;continue}}
+   if(e.fuse==null&&distance<250){e.fuse=e.fuseDuration||2.1;e.warning=1}
+   if(e.fuse!=null){e.fuse-=dt;const urgency=Math.max(0,1-e.fuse/(e.fuseDuration||2.1));const a=Math.atan2(player.y-e.y,player.x-e.x);const chargeSpeed=e.v+threat*10+urgency*130;e.x+=Math.cos(a)*chargeSpeed*dt*slow;e.y+=Math.sin(a)*chargeSpeed*dt*slow;if(e.fuse<=0){if(distance<105)damagePlayer(24);suicideBlast(e);explode(e.x,e.y);enemies.splice(i,1);if(dying)break;continue}}
    else{const a=Math.atan2(player.y-e.y,player.x-e.x);e.x+=Math.cos(a)*(e.v+threat*7)*dt*slow;e.y+=Math.sin(a)*(e.v+threat*7)*dt*slow}
   }else if(e.type==='raider'){
    e.x+=e.dir*e.v*dt*slow;e.y+=34*dt*slow;

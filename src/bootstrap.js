@@ -50,13 +50,20 @@ const stars=Array.from({length:110},()=>({x:Math.random()*W,y:Math.random()*H,s:
 const MOBILE_DEVICE=/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)||navigator.maxTouchPoints>1;
 const spaceDust=Array.from({length:MOBILE_DEVICE?32:44},()=>({x:Math.random()*W,y:Math.random()*H,s:.45+Math.random()*1.25,v:12+Math.random()*24,drift:(Math.random()-.5)*5,kind:Math.random()>.78?'debris':'dust'}));
 const nearSpaceStreaks=Array.from({length:MOBILE_DEVICE?9:14},()=>({x:Math.random()*W,y:Math.random()*H,w:.7+Math.random()*1.2,v:260+Math.random()*260,len:8+Math.random()*15,alpha:.34+Math.random()*.42}));
-const spaceLandmarks=[
- // 行星开局即可从右上方看到；残骸约十几秒后从左上方进入。
- {type:'planetTexture',x:W*.88,y:H*.1,size:126,v:4.2,alpha:.3,rotation:0},
- {type:'wreckTexture',x:W*.18,y:-H*.18,size:88,v:8.5,alpha:.25,rotation:-.18},
- {type:'asteroids',x:W*.86,y:-H*2.5,size:64,v:7.4,alpha:.18,rotation:.18},
- {type:'asteroids',x:W*.16,y:-H*3.6,size:52,v:6.2,alpha:.14,rotation:-.31}
-];
+const spaceLandmarks=[];
+const THREAT_LANDMARK_PROFILES=Object.freeze([
+ {type:'planetTexture',x:.88,size:126,v:15,alpha:.3,rotation:0},
+ {type:'wreckTexture',x:.18,size:90,v:18,alpha:.26,rotation:-.18},
+ {type:'asteroids',x:.72,size:78,v:20,alpha:.23,rotation:.22},
+ {type:'planetTexture',x:.08,size:142,v:16,alpha:.27,rotation:Math.PI},
+ {type:'wreckTexture',x:.76,size:112,v:19,alpha:.24,rotation:.2},
+ {type:'asteroids',x:.42,size:108,v:22,alpha:.25,rotation:-.28}
+]);
+function spawnThreatLandmark(tier,{initial=false}={}){
+ const profile=THREAT_LANDMARK_PROFILES[Math.max(0,Math.min(5,tier))];if(!profile)return;
+ spaceLandmarks.push({...profile,tier,x:W*profile.x,y:initial?H*.08:-profile.size*1.5});
+ if(spaceLandmarks.length>3)spaceLandmarks.splice(0,spaceLandmarks.length-3);
+}
 const mobilePerf={enabled:MOBILE_DEVICE,quality:1,avgFps:60,frameMs:16.7,slowFrames:0,fastFrames:0,thermalPressure:0,lastSample:performance.now(),sampleFrames:0};
 window.IWMobilePerf=mobilePerf;
 

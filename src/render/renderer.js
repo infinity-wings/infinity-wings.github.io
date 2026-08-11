@@ -22,7 +22,8 @@ const shieldSpriteAssets={
  player3:Object.assign(new Image(),{src:'assets/effects/player-shield-level3-v3.png'}),
  escort:Object.assign(new Image(),{src:'assets/effects/escort-front-barrier-v2.png'})
 };
-for(const image of [shipSpriteAssets.player,shipSpriteAssets.drone,shipSpriteAssets.guard,shipSpriteAssets.boss,...Object.values(shipSpriteAssets.enemies),...Object.values(shieldSpriteAssets)])image.decoding='async';
+const deepSpaceBackgroundAsset=Object.assign(new Image(),{src:'assets/backgrounds/deep-space-flight-v1.jpg'});
+for(const image of [shipSpriteAssets.player,shipSpriteAssets.drone,shipSpriteAssets.guard,shipSpriteAssets.boss,...Object.values(shipSpriteAssets.enemies),...Object.values(shieldSpriteAssets),deepSpaceBackgroundAsset])image.decoding='async';
 const tintedShipSpriteCache=new Map();
 const mobileRenderSpriteCache=new WeakMap();
 function getMobileRenderSprite(image){
@@ -57,6 +58,14 @@ const enemySpriteSizes={
  barrage:[102,90],raider:[82,78],carrier:[112,92],jammer:[90,84]
 };
 function shipSpriteReady(image){return image?.complete&&image.naturalWidth>0}
+function drawDeepSpaceBackground(){
+ ctx.fillStyle='#01040c';ctx.fillRect(0,0,W,H);
+ if(!shipSpriteReady(deepSpaceBackgroundAsset))return;
+ const iw=deepSpaceBackgroundAsset.naturalWidth,ih=deepSpaceBackgroundAsset.naturalHeight,targetRatio=W/H,imageRatio=iw/ih;
+ let sx=0,sy=0,sw=iw,sh=ih;if(imageRatio>targetRatio){sw=ih*targetRatio;sx=(iw-sw)/2}else{sh=iw/targetRatio;sy=(ih-sh)/2}
+ const drift=Math.sin(elapsed*.045)*Math.min(12,sh*.012);sy=Math.max(0,Math.min(ih-sh,sy+drift));
+ ctx.globalAlpha=.84;ctx.drawImage(deepSpaceBackgroundAsset,sx,sy,sw,sh,0,0,W,H);ctx.globalAlpha=1;
+}
 function drawShieldSprite(targetCtx,image,x,y,width,height,alpha=1,rotation=0){
  if(!shipSpriteReady(image))return false;
  const sprite=getMobileRenderSprite(image);targetCtx.save();targetCtx.translate(x,y);targetCtx.rotate(rotation);targetCtx.globalCompositeOperation='lighter';targetCtx.globalAlpha=alpha;targetCtx.imageSmoothingEnabled=true;targetCtx.imageSmoothingQuality='high';targetCtx.drawImage(sprite,-width/2,-height/2,width,height);targetCtx.restore();return true;
@@ -130,8 +139,8 @@ function draw(){
  const perfQ=(typeof mobilePerf!=='undefined'&&mobilePerf.enabled)?mobilePerf.quality:1;
  // 降载只减少模糊与渐变层，绝不再把子弹退化成纯色圆点。
  const lowFx=perfQ<.86||renderLoad>(38+10*perfQ)||(particles?.length||0)>250;
- if(shake&&uiPrefs.shake){ctx.translate((Math.random()-.5)*shake,(Math.random()-.5)*shake);shake*=.85}ctx.clearRect(0,0,W,H);ctx.fillStyle='#020712';ctx.fillRect(0,0,W,H);
- const starStride=mobilePerf?.enabled?(perfQ<.66?3:perfQ<.82?2:1):1;for(let i=0;i<stars.length;i+=starStride){const s=stars[i];ctx.globalAlpha=.35+s.s/3;ctx.fillStyle='#85ddff';ctx.fillRect(s.x,s.y,s.s,s.s)}ctx.globalAlpha=1;
+ if(shake&&uiPrefs.shake){ctx.translate((Math.random()-.5)*shake,(Math.random()-.5)*shake);shake*=.85}ctx.clearRect(0,0,W,H);drawDeepSpaceBackground();
+ const starStride=mobilePerf?.enabled?(perfQ<.66?3:perfQ<.82?2:1):1,flightBoost=1+Math.min(2.2,threat*.1);for(let i=0;i<stars.length;i+=starStride){const s=stars[i],near=s.s>1.35;ctx.globalAlpha=(near?.62:.28)+s.s/5;ctx.fillStyle=near?'#d9fbff':'#78cce8';if(near){const streak=Math.min(18,(3+s.v*.085)*flightBoost);ctx.fillRect(s.x,s.y,s.s,streak)}else ctx.fillRect(s.x,s.y,s.s,s.s)}ctx.globalAlpha=1;
  const bossWarning=typeof bossWarningState==='function'?bossWarningState():null;
  if(bossWarning){withRenderState('Boss预警',()=>{const pulse=.72+.28*Math.sin(elapsed*14);ctx.globalAlpha=.78+.22*pulse;ctx.fillStyle='rgba(66,4,18,.88)';ctx.fillRect(W/2-155,82,310,48);ctx.strokeStyle='#ff526d';ctx.lineWidth=2;ctx.strokeRect(W/2-155,82,310,48);ctx.fillStyle='#fff0f3';ctx.font='bold 15px system-ui';ctx.textAlign='center';ctx.fillText(`警告 · 第 ${bossWarning.number} 号 Boss 接近`,W/2,102);ctx.fillStyle='#ff9baa';ctx.font='bold 13px ui-monospace,monospace';ctx.fillText(`${Math.max(0,bossWarning.remaining).toFixed(1)} 秒`,W/2,121)})}
  if(!(particles instanceof PooledEntityArray))particles=ensureEntityArray('particles',particles);

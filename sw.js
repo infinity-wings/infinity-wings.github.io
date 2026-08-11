@@ -1,9 +1,9 @@
-const CACHE='iw-cache-8.78-balanced-shield-size-v1';
+const CACHE='iw-cache-8.79-deep-space-flight-v1';
 const ASSETS=[
   './',
   './index.html',
-  './style.css?v=8.78.0',
-  './game.js?v=8.78.0',
+  './style.css?v=8.79.0',
+  './game.js?v=8.79.0',
   './manifest.webmanifest',
   './apple-touch-icon.png',
   './favicon.png',
@@ -14,6 +14,7 @@ const ASSETS=[
   './assets/menu/menu-space-background-phone.jpg',
   './assets/menu/menu-title-logo.PNG',
   './assets/menu/menu-fighter-rear-v2.png',
+  './assets/backgrounds/deep-space-flight-v1.jpg',
   './assets/ships/player-fighter-v4.png',
   './assets/ships/player-drone-v1.png',
   './assets/ships/enemy-scout-v3.png',

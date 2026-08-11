@@ -1,9 +1,9 @@
-const CACHE='iw-cache-8.93-sharp-player-v1';
+const CACHE='iw-cache-8.94-boss-health-v1';
 const ASSETS=[
   './',
   './index.html',
-  './style.css?v=8.93.0',
-  './game.js?v=8.93.0',
+  './style.css?v=8.94.0',
+  './game.js?v=8.94.0',
   './manifest.webmanifest',
   './apple-touch-icon.png',
   './favicon.png',

@@ -41,12 +41,12 @@ for(const image of [shipSpriteAssets.player,shipSpriteAssets.drone,shipSpriteAss
 const tintedShipSpriteCache=new Map();
 const mobileRenderSpriteCache=new WeakMap();
 const playerEnginePlumeSprite=(()=>{const sprite=document.createElement('canvas');sprite.width=32;sprite.height=80;const c=sprite.getContext('2d'),g=c.createLinearGradient(16,2,16,76);g.addColorStop(0,'rgba(255,255,255,.98)');g.addColorStop(.14,'rgba(184,249,255,.96)');g.addColorStop(.42,'rgba(51,205,255,.72)');g.addColorStop(.72,'rgba(67,106,255,.28)');g.addColorStop(1,'rgba(65,61,255,0)');c.fillStyle=g;c.shadowBlur=12;c.shadowColor='#58eaff';c.beginPath();c.moveTo(16,1);c.bezierCurveTo(8,14,7,37,12,73);c.lineTo(16,79);c.lineTo(20,73);c.bezierCurveTo(25,37,24,14,16,1);c.closePath();c.fill();c.fillStyle='rgba(242,255,255,.94)';c.beginPath();c.moveTo(16,2);c.bezierCurveTo(13,17,13,34,16,55);c.bezierCurveTo(19,34,19,17,16,2);c.fill();return sprite})();
-function getMobileRenderSprite(image){
+function getMobileRenderSprite(image,maxSide=256){
  if(!mobilePerf?.enabled||!image)return image;
- if(mobileRenderSpriteCache.has(image))return mobileRenderSpriteCache.get(image);
+ const cachedVariants=mobileRenderSpriteCache.get(image);if(cachedVariants?.has(maxSide))return cachedVariants.get(maxSide);
  const sourceW=image.naturalWidth||image.width||0,sourceH=image.naturalHeight||image.height||0;if(!sourceW||!sourceH)return image;
- const scale=Math.min(1,256/Math.max(sourceW,sourceH)),sprite=document.createElement('canvas');sprite.width=Math.max(1,Math.round(sourceW*scale));sprite.height=Math.max(1,Math.round(sourceH*scale));
- const spriteCtx=sprite.getContext('2d',{alpha:true});spriteCtx.imageSmoothingEnabled=true;spriteCtx.imageSmoothingQuality='high';spriteCtx.drawImage(image,0,0,sprite.width,sprite.height);mobileRenderSpriteCache.set(image,sprite);return sprite;
+ const scale=Math.min(1,maxSide/Math.max(sourceW,sourceH)),sprite=document.createElement('canvas');sprite.width=Math.max(1,Math.round(sourceW*scale));sprite.height=Math.max(1,Math.round(sourceH*scale));
+ const spriteCtx=sprite.getContext('2d',{alpha:true});spriteCtx.imageSmoothingEnabled=true;spriteCtx.imageSmoothingQuality='high';spriteCtx.drawImage(image,0,0,sprite.width,sprite.height);const variants=cachedVariants||new Map();variants.set(maxSide,sprite);mobileRenderSpriteCache.set(image,variants);return sprite;
 }
 function getTintedShipSprite(image,color,strength=.35){
  if(!shipSpriteReady(image)||!color)return image;
@@ -524,7 +524,7 @@ function drawShip(x,y,color,pose=null){
  ctx.restore();
 
  if(shipSpriteReady(shipSpriteAssets.player)){
-  const spriteAlpha=pose?.alpha??.99,playerImage=getMobileRenderSprite(pose?.bodyColor?getTintedShipSprite(shipSpriteAssets.player,pose.bodyColor,.42):shipSpriteAssets.player);ctx.save();ctx.globalAlpha=spriteAlpha;ctx.drawImage(playerImage,-39,-46,78,88);ctx.restore();drawPlayerSpriteGlow(pose?.color||color,spriteAlpha);ctx.restore();return;
+  const spriteAlpha=pose?.alpha??.99,playerImage=getMobileRenderSprite(pose?.bodyColor?getTintedShipSprite(shipSpriteAssets.player,pose.bodyColor,.42):shipSpriteAssets.player,384);ctx.save();ctx.globalAlpha=spriteAlpha;ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(playerImage,-39,-46,78,88);ctx.restore();drawPlayerSpriteGlow(pose?.color||color,spriteAlpha);ctx.restore();return;
  }
 
  // 横滚透视：压低的一侧更宽、更暗并稍向下；抬高的一侧更窄、更亮并稍向上。

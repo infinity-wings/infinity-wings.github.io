@@ -215,6 +215,7 @@ const BOSS_ENCOUNTERS=[
 ];
 function bossScheduledAt(number){return BOSS_TIMELINE[Math.max(0,Math.min(BOSS_TOTAL-1,number-1))]??Infinity}
 function currentStageNumber(){return Math.max(1,Math.min(BOSS_TOTAL,build?.nextBossNumber||1))}
+function bossNumberForThreat(tier=threatLevel()){return [1,2,3,5,7,9][Math.max(0,Math.min(5,tier))]}
 function bossWarningState(){const number=build?.nextBossNumber||1,remaining=(build?.nextBossAt??bossScheduledAt(number))-elapsed;return number<=BOSS_TOTAL&&remaining>0&&remaining<=5?{number,remaining}:null}
 function updateBossWarning(){const warning=bossWarningState();if(!warning||enemies.some(e=>e.boss)||build.bossWarningShownFor===warning.number||battleEventSystem.warning||battleEventSystem.active)return;const encounter=BOSS_ENCOUNTERS[warning.number-1];build.bossWarningShownFor=warning.number;audioSystem?.play('ui');toast(`警告：危险等级 ${THREAT_ROMAN[(encounter?.tier||1)-1]} · ${encounter?.role==='projection'?'Boss 投影':'Boss'} 接近`)}
 function maybeSpawnStageBoss(){

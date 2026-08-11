@@ -1,9 +1,9 @@
-const CACHE='iw-cache-8.98-projection-flicker-v1';
+const CACHE='iw-cache-8.99-boss-hover-v1';
 const ASSETS=[
   './',
   './index.html',
-  './style.css?v=8.98.0',
-  './game.js?v=8.98.0',
+  './style.css?v=8.99.0',
+  './game.js?v=8.99.0',
   './manifest.webmanifest',
   './apple-touch-icon.png',
   './favicon.png',

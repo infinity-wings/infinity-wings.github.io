@@ -403,7 +403,7 @@ function drawTexturedEnemyOnly(e,pulse,hpRatio){
  const spriteAlpha=e.bossRetreating?Math.max(.14,Math.min(1,(e.retreatTime||0)/1.6))*(.7+.3*Math.sin(elapsed*24)):e.bossEntering?(.22+.77*entryProgress)*entryPulse:.99;
  enemyModelCtx.save();enemyModelCtx.scale(1,-1);if(e.bossEntering){const entryScale=.78+.22*(1-Math.pow(1-entryProgress,3));enemyModelCtx.scale(entryScale,entryScale)}
  const mirrorProgress=e.eventMirror?Math.min(1,(e.age||0)/.72):1;
- if(e.eventMirror){const phaseScale=.2+.8*(1-Math.pow(1-mirrorProgress,3));enemyModelCtx.scale(phaseScale,1);enemyModelCtx.globalAlpha=(.18+.81*mirrorProgress)*(.84+.16*Math.sin(elapsed*18+(e.mirrorSeed||0)))}else enemyModelCtx.globalAlpha=spriteAlpha*(e.projectionBoss?.62+.12*Math.sin(elapsed*13):1);
+ if(e.eventMirror){const phaseScale=.2+.8*(1-Math.pow(1-mirrorProgress,3));enemyModelCtx.scale(phaseScale,1);enemyModelCtx.globalAlpha=(.18+.81*mirrorProgress)*(.84+.16*Math.sin(elapsed*18+(e.mirrorSeed||0)))}else enemyModelCtx.globalAlpha=spriteAlpha*(e.projectionBoss?.69+.07*Math.sin(elapsed*3.2):1);
  enemyModelCtx.imageSmoothingEnabled=true;enemyModelCtx.imageSmoothingQuality='high';enemyModelCtx.drawImage(renderImage,-width/2,-height/2,width,height);enemyModelCtx.restore();
  const coreColor=e.boss?(e.awakenedBoss?'#ff5fd7':bossProfile.core):e.bossGuard?'#ff79dc':e.type==='support'?'#5deaff':e.type==='sniper'||e.type==='raider'?'#ffe171':e.type==='carrier'||e.type==='jammer'?'#c477ff':e.type==='heavy'||e.type==='barrage'?'#ff9b45':'#ff526f';enemyCore(0,e.boss?-4:-3,e.boss?8:Math.max(3.2,width*.075),coreColor,pulse);return true;
 }

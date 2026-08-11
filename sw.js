@@ -1,9 +1,9 @@
-const CACHE='iw-cache-8.71-round-shields-v1';
+const CACHE='iw-cache-8.72-escort-barrier-v1';
 const ASSETS=[
   './',
   './index.html',
-  './style.css?v=8.71.0',
-  './game.js?v=8.71.0',
+  './style.css?v=8.72.0',
+  './game.js?v=8.72.0',
   './manifest.webmanifest',
   './apple-touch-icon.png',
   './favicon.png',
@@ -29,6 +29,7 @@ const ASSETS=[
   './assets/ships/boss-dreadnought-wide-v3.png',
   './assets/effects/enemy-support-shield-v2.png',
   './assets/effects/player-shield-round-v2.png',
+  './assets/effects/escort-front-barrier-v1.png',
   './assets/meteors/meteor-small-v1.png',
   './assets/meteors/meteor-medium-v1.png',
   './assets/meteors/meteor-large-v1.png'

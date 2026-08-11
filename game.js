@@ -3,7 +3,7 @@
 (() => {
   if (window.__IW_MODULE_LOADER_STARTED__) return;
   window.__IW_MODULE_LOADER_STARTED__ = true;
-  const version = '8.73.0';
+  const version = '8.74.0';
   const files = [
     './src/bootstrap.js',
     './src/core/coreDefinitions.js',

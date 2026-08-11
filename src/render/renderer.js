@@ -17,7 +17,9 @@ const shipSpriteAssets={
 };
 const shieldSpriteAssets={
  enemy:Object.assign(new Image(),{src:'assets/effects/enemy-support-shield-v2.png'}),
- deflector:Object.assign(new Image(),{src:'assets/effects/player-shield-round-v2.png'}),
+ player1:Object.assign(new Image(),{src:'assets/effects/player-shield-level1-v1.png'}),
+ player2:Object.assign(new Image(),{src:'assets/effects/player-shield-level2-v1.png'}),
+ player3:Object.assign(new Image(),{src:'assets/effects/player-shield-level3-v1.png'}),
  escort:Object.assign(new Image(),{src:'assets/effects/escort-front-barrier-v2.png'})
 };
 for(const image of [shipSpriteAssets.player,shipSpriteAssets.drone,shipSpriteAssets.guard,shipSpriteAssets.boss,...Object.values(shipSpriteAssets.enemies),...Object.values(shieldSpriteAssets)])image.decoding='async';
@@ -295,9 +297,9 @@ function drawBarrierWave(wave){
 function drawHeavyEscortShield(){
  if(!build||build.heavyEscortShieldActive<=0)return;
  const escorts=drones.filter(d=>d.mode==='drone_heavy');if(escorts.length<2)return;
- const fade=Math.min(1,build.heavyEscortShieldActive/.38),pulse=.88+.12*Math.sin(elapsed*8.5);
- const cx=player.x,cy=player.y-70,width=190*pulse,height=86*pulse;
- if(!drawShieldSprite(ctx,shieldSpriteAssets.escort,cx,cy,width,height,.46+.34*fade)){ctx.save();ctx.globalCompositeOperation='lighter';ctx.strokeStyle='rgba(110,239,255,.88)';ctx.lineWidth=5;ctx.beginPath();ctx.arc(player.x,player.y-5,88,Math.PI*1.12,Math.PI*1.88);ctx.stroke();ctx.restore()}
+ const fade=Math.min(1,build.heavyEscortShieldActive/.38);
+ const cx=player.x,cy=player.y-70,width=190,height=86;
+ drawShieldSprite(ctx,shieldSpriteAssets.escort,cx,cy,width,height,.78+.18*fade);
 }
 
 function drawAwakenedFrontShield(){
@@ -426,17 +428,10 @@ function drawCoreDefenseEffects(lowFx=false){
  const shieldLayers=build?.shieldLayers||0;
  if(shieldLayers>0&&!dying){
   ctx.save();ctx.translate(player.x,player.y+(player.visualY||0));ctx.globalCompositeOperation='lighter';
-  const pulse=1+Math.sin(elapsed*3.6)*.018;
   for(let i=0;i<shieldLayers;i++){
-   const radius=(48+i*8)*pulse;
-   const color=i===2?'#a56cff':i===1?'#4f8cff':'#4ff6ff';
-   const textureWidth=(94+i*16)*pulse,textureHeight=textureWidth;
-   const layerSprite=shipSpriteReady(shieldSpriteAssets.deflector)?getTintedShipSprite(shieldSpriteAssets.deflector,color,.56):shieldSpriteAssets.deflector;
-   if(drawShieldSprite(ctx,layerSprite,0,0,textureWidth,textureHeight,.64+i*.09,(i-1)*.035+Math.sin(elapsed*1.8+i)*.012))continue;
-   ctx.save();ctx.rotate(elapsed*(i%2?-.16:.12)+i*.16);ctx.globalAlpha=.10+i*.035;
-   ctx.fillStyle=color;ctx.beginPath();for(let a=0;a<6;a++){const ang=-Math.PI/2+a*Math.PI/3,x=Math.cos(ang)*radius,y=Math.sin(ang)*radius;(a?ctx.lineTo(x,y):ctx.moveTo(x,y))}ctx.closePath();ctx.fill();ctx.restore();
-   ctx.save();ctx.rotate(i*.08);ctx.globalAlpha=.7+i*.08;ctx.strokeStyle=color;ctx.lineWidth=2.4+i*.7;ctx.shadowBlur=18+i*5;ctx.shadowColor=color;ctx.beginPath();for(let a=0;a<6;a++){const ang=-Math.PI/2+a*Math.PI/3,x=Math.cos(ang)*radius,y=Math.sin(ang)*radius;(a?ctx.lineTo(x,y):ctx.moveTo(x,y))}ctx.closePath();ctx.stroke();
-   ctx.globalAlpha=.28;ctx.lineWidth=1;for(let a=0;a<6;a++){const ang=-Math.PI/2+a*Math.PI/3;ctx.beginPath();ctx.moveTo(Math.cos(ang)*(radius-10),Math.sin(ang)*(radius-10));ctx.lineTo(Math.cos(ang)*radius,Math.sin(ang)*radius);ctx.stroke()}ctx.restore();
+   const textureWidth=94+i*16,textureHeight=textureWidth;
+   const layerSprite=shieldSpriteAssets[`player${i+1}`];
+   drawShieldSprite(ctx,layerSprite,0,0,textureWidth,textureHeight,.76+i*.07,(i-1)*.025);
   }
   ctx.restore();
  }

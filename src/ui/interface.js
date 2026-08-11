@@ -10,17 +10,17 @@ const ENEMY_ARCHIVE_DATA={
  raider:{name:'侧翼突袭机',baseHp:36,attack:'高速横穿连射',damage:'连射弹 7 / 接触 16',xp:12,desc:'从左右两侧进入战场，快速穿越交战区域。'},
  carrier:{name:'分裂母机',baseHp:165,attack:'射击并在击毁后释放3架小型机',damage:'子弹 10 / 接触 16',xp:26,desc:'大型载机，死亡后仍会制造新的威胁。'},
  jammer:{name:'干扰机',baseHp:62,attack:'紫色减速干扰弹',damage:'干扰弹 10 / 接触 16',xp:17,desc:'命中后暂时降低玩家移动速度，不影响武器。'},
- boss:{name:'序列Boss总览',baseHp:'2400+',attack:'多阶段弹幕与激光武装',damage:'子弹 13–20 / 激光 24–28',xp:'260–1800+',desc:'共十个强度递增的高危单位；详细记录将在各编号 Boss 首次遭遇后解锁。'},
- 'boss-1':{name:'#1 裂隙先锋',baseHp:2400,attack:'扇形弹幕、环形弹幕',damage:'13–20',xp:260,desc:'2分30秒出现的首个限时目标，30秒后撤离。'},
- 'boss-2':{name:'#2 赤钢破城者',baseHp:'3120+',attack:'强化扇形、强化环形',damage:'13–20',xp:380,desc:'装甲强化的第二序列目标，限时30秒。'},
- 'boss-3':{name:'#3 紫电裁决者',baseHp:'3840+',attack:'高速扇形、环形压制',damage:'13–20',xp:500,desc:'以高密度交叉区域压迫走位的限时目标。'},
- 'boss-4':{name:'#4 虚空母舰',baseHp:'4560+',attack:'强化扇形、强化环形',damage:'13–20',xp:620,desc:'最后一个限时序列 Boss，撤离后不会留下奖励。'},
- 'boss-5':{name:'#5 觉醒核心·涅槃',baseHp:'8184+',attack:'强化扇形、环形、召唤战机',damage:'13–28',xp:'1100+',desc:'固定觉醒 Boss，持续存在至击毁并掉落觉醒原核。'},
- 'boss-6':{name:'#6 时蚀君王',baseHp:'6000+',attack:'瞄准弹、定点激光、召唤战机',damage:'17–28',xp:'1100+',desc:'高阶常驻 Boss；本局可能成为额外觉醒目标。'},
- 'boss-7':{name:'#7 星渊吞噬者',baseHp:'6720+',attack:'强化扇形、交叉火力、召唤战机',damage:'18–20',xp:'1220+',desc:'以交叉方向火力封锁安全区域。'},
- 'boss-8':{name:'#8 因果审判者',baseHp:'7440+',attack:'强化环形、弹雨、召唤战机',damage:'16–20',xp:'1340+',desc:'从战场上方释放连续弹雨的常驻目标。'},
- 'boss-9':{name:'#9 Ω 前哨',baseHp:'8160+',attack:'双层新星、扫射激光、召唤战机',damage:'18–28',xp:'1460+',desc:'最终战前的前哨核心；本局可能成为额外觉醒目标。'},
- 'boss-10':{name:'#10 终焉核心 Ω',baseHp:'11988+',attack:'强化扇形、强化环形、激光、召唤、终焉齐射',damage:'17–28',xp:'1800+',desc:'第16分钟抵达的最终 Boss，拥有五种攻击方式。'}
+ boss:{name:'六级 Boss 总览',baseHp:'1953–14159+',attack:'连续波次弹幕、召唤与可躲避激光',damage:'子弹 13–20 / 激光 24–28',xp:'255–1640+',desc:'危险等级 I、II 为前哨；III 至 Ω 各有投影与真身两次遭遇。'},
+ 'boss-1':{name:'危险 I · 重甲先锋［前哨］',baseHp:'1953+',attack:'连续扇形、环形弹幕',damage:'13–20',xp:480,desc:'1分30秒出现的前期小型 Boss，30秒后撤离。'},
+ 'boss-2':{name:'危险 II · 弹幕母机［前哨］',baseHp:'2695+',attack:'连续扇形、环形弹幕',damage:'13–20',xp:660,desc:'3分30秒出现的第二前哨，使用放大的现役载机模型。'},
+ 'boss-3':{name:'危险 III · 裂隙猎手［投影］',baseHp:'2883+',attack:'扇形连射、瞄准弹',damage:'14–17',xp:405,desc:'真身的相位投影，固定在战场上方；60秒未击毁会自行消散。'},
+ 'boss-4':{name:'危险 III · 裂隙猎手［真身］',baseHp:'5544+',attack:'强化扇形、瞄准弹、定点激光',damage:'17–28',xp:840,desc:'宽体真身占据上方空域，以连续波次压迫闪避空间。'},
+ 'boss-5':{name:'危险 IV · 赤钢战争堡垒［投影］',baseHp:'3505+',attack:'强化扇形、环形齐射',damage:'18–20',xp:480,desc:'战争堡垒的全息投影，60秒后相位消散。'},
+ 'boss-6':{name:'危险 IV · 赤钢战争堡垒［真身］',baseHp:'6741+',attack:'强化扇形、强化环形、扫射激光',damage:'18–28',xp:1020,desc:'固定封锁战场上沿，以更长的连续齐射形成火力墙。'},
+ 'boss-7':{name:'危险 V · 虚空航母［投影］',baseHp:'4128+',attack:'强化环形、召唤护航机',damage:'18–20',xp:555,desc:'虚空航母投影，会在60秒内持续投放护航单位。'},
+ 'boss-8':{name:'危险 V · 虚空航母［真身］',baseHp:'7938+',attack:'强化环形、召唤、连续弹雨',damage:'16–20',xp:1460,desc:'巨型宽体航母，控制战场上方并持续制造额外目标。'},
+ 'boss-9':{name:'危险 Ω · 终焉核心［投影］',baseHp:'4750+',attack:'双层新星、瞄准弹、定点激光',damage:'17–28',xp:630,desc:'最终 Boss 的全息先兆，拥有三种攻击方式。'},
+ 'boss-10':{name:'危险 Ω · 终焉核心［真身］',baseHp:'14159+',attack:'强化扇形、强化环形、新星、扫射激光、终焉齐射',damage:'17–28',xp:'1640+',desc:'约14分30秒抵达的最终 Boss，宽度覆盖几乎整个上方战区。'}
 };
 function readArchiveSet(key){try{return new Set(JSON.parse(localStorage.getItem(key)||'[]'))}catch{return new Set()}}
 function writeArchiveSet(key,set){localStorage.setItem(key,JSON.stringify([...set]))}
@@ -47,11 +47,11 @@ function renderArchiveHome(){document.querySelector('#archiveHome').classList.re
 function drawEnemyArchivePreview(canvas,type){
  const c=canvas?.getContext?.('2d');if(!c||typeof drawEnemyShip!=='function')return;
  const w=canvas.width||132,h=canvas.height||96,isBoss=type==='boss'||type.startsWith('boss-');
- const scale=isBoss?.68:(type==='carrier'||type==='heavy'||type==='barrage')?.82:.98;
+ const bossNumber=isBoss?Math.max(1,Number(type.split('-')[1])||1):0,encounter=isBoss&&typeof BOSS_ENCOUNTERS!=='undefined'?BOSS_ENCOUNTERS[bossNumber-1]:null;
+ const previewSize=encounter?.size||[196,144],scale=isBoss?Math.min(112/previewSize[0],78/previewSize[1]):(type==='carrier'||type==='heavy'||type==='barrage')?.82:.98;
  c.save();c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,w,h);c.globalAlpha=1;c.globalCompositeOperation='source-over';
  c.translate(w/2,h/2+4);c.scale(scale,scale);
- const bossNumber=isBoss?Math.max(1,Number(type.split('-')[1])||1):0,kinds=['rift','fortress','seraph','omega','seraph','rift','fortress','seraph','omega','omega'];
- const model={type:isBoss?'boss':type,boss:isBoss,bossNumber,bossKind:isBoss?kinds[bossNumber-1]:'',eventMeteor:false,x:0,y:0,r:isBoss?70:28,age:Math.max(1,Number(elapsed)||1),dir:1,hp:100,max:100,maxHp:100,shield:0,fuse:2.2};
+ const model={type:isBoss?'boss':type,boss:isBoss,bossNumber,bossStage:encounter?.tier||bossNumber,bossKind:encounter?.kind||'',bossName:encounter?.name,bossArtKey:encounter?.art,bossSpriteType:encounter?.sprite,bossRenderSize:previewSize,projectionBoss:encounter?.role==='projection',miniBoss:encounter?.role==='mini',eventMeteor:false,x:0,y:0,r:isBoss?Math.max(...(encounter?.hit||[70,60])):28,age:Math.max(1,Number(elapsed)||1),dir:1,hp:100,max:100,maxHp:100,shield:0,fuse:2.2};
  drawEnemyShip(model,c);c.restore();
 }
 function renderArchiveView(view){

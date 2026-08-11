@@ -1,9 +1,9 @@
-const CACHE='iw-cache-8.76-single-color-shields-v1';
+const CACHE='iw-cache-8.77-unified-honeycomb-shields-v1';
 const ASSETS=[
   './',
   './index.html',
-  './style.css?v=8.76.0',
-  './game.js?v=8.76.0',
+  './style.css?v=8.77.0',
+  './game.js?v=8.77.0',
   './manifest.webmanifest',
   './apple-touch-icon.png',
   './favicon.png',
@@ -28,9 +28,9 @@ const ASSETS=[
   './assets/ships/enemy-boss-guard-v1.png',
   './assets/ships/boss-dreadnought-wide-v3.png',
   './assets/effects/enemy-support-shield-v2.png',
-  './assets/effects/player-shield-level1-v2.png',
-  './assets/effects/player-shield-level2-v2.png',
-  './assets/effects/player-shield-level3-v2.png',
+  './assets/effects/player-shield-level1-v3.png',
+  './assets/effects/player-shield-level2-v3.png',
+  './assets/effects/player-shield-level3-v3.png',
   './assets/effects/escort-front-barrier-v2.png',
   './assets/meteors/meteor-small-v1.png',
   './assets/meteors/meteor-medium-v1.png',

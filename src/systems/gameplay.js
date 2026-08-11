@@ -202,16 +202,16 @@ function spawnEnemy(){
 }
 const BOSS_TIMELINE=[90,210,270,350,420,510,580,675,760,870],BOSS_TOTAL=BOSS_TIMELINE.length;
 const BOSS_ENCOUNTERS=[
- {tier:1,role:'mini',kind:'fortress',name:'重甲先锋',sprite:'heavy',duration:30,modes:['fan','ring'],size:[142,112],hit:[61,47]},
- {tier:2,role:'mini',kind:'seraph',name:'弹幕母机',sprite:'barrage',duration:30,modes:['fan','ring'],size:[150,116],hit:[65,49]},
- {tier:3,role:'projection',kind:'rift',name:'裂隙猎手',art:'iii',duration:60,modes:['fan','aimed'],size:[210,148],hit:[90,61]},
- {tier:3,role:'entity',kind:'rift',name:'裂隙猎手',art:'iii',modes:['fanStrong','aimed','beam'],size:[218,154],hit:[94,64]},
- {tier:4,role:'projection',kind:'fortress',name:'赤钢战争堡垒',art:'iv',duration:60,modes:['fanStrong','ring'],size:[220,148],hit:[96,62]},
- {tier:4,role:'entity',kind:'fortress',name:'赤钢战争堡垒',art:'iv',modes:['fanStrong','ringStrong','sweep'],size:[232,156],hit:[101,65]},
- {tier:5,role:'projection',kind:'seraph',name:'虚空航母',art:'v',duration:60,modes:['ringStrong','guard'],size:[222,154],hit:[96,65]},
- {tier:5,role:'entity',kind:'seraph',name:'虚空航母',art:'v',modes:['ringStrong','guard','rain'],size:[236,164],hit:[103,69]},
- {tier:6,role:'projection',kind:'omega',name:'终焉核心 Ω',art:'omega',duration:60,modes:['nova','aimed','beam'],size:[224,162],hit:[96,68]},
- {tier:6,role:'entity',kind:'omega',name:'终焉核心 Ω',art:'omega',modes:['fanStrong','ringStrong','nova','sweep','finalBarrage'],size:[242,176],hit:[105,74],final:true}
+ {tier:1,role:'mini',kind:'fortress',name:'重甲先锋',sprite:'heavy',duration:30,modes:['fan','ring'],size:[170,134],hit:[73,56]},
+ {tier:2,role:'mini',kind:'seraph',name:'弹幕母机',sprite:'barrage',duration:30,modes:['fan','ring'],size:[180,139],hit:[78,59]},
+ {tier:3,role:'projection',kind:'rift',name:'裂隙猎手',art:'iii',duration:60,modes:['fan','aimed'],size:[242,170],hit:[104,70]},
+ {tier:3,role:'entity',kind:'rift',name:'裂隙猎手',art:'iii',modes:['fanStrong','aimed','beam'],size:[251,177],hit:[108,74]},
+ {tier:4,role:'projection',kind:'fortress',name:'赤钢战争堡垒',art:'iv',duration:60,modes:['fanStrong','ring'],size:[253,170],hit:[110,71]},
+ {tier:4,role:'entity',kind:'fortress',name:'赤钢战争堡垒',art:'iv',modes:['fanStrong','ringStrong','sweep'],size:[267,179],hit:[116,75]},
+ {tier:5,role:'projection',kind:'seraph',name:'虚空航母',art:'v',duration:60,modes:['ringStrong','guard'],size:[255,177],hit:[110,75]},
+ {tier:5,role:'entity',kind:'seraph',name:'虚空航母',art:'v',modes:['ringStrong','guard','rain'],size:[271,189],hit:[118,79]},
+ {tier:6,role:'projection',kind:'omega',name:'终焉核心 Ω',art:'omega',duration:60,modes:['nova','aimed','beam'],size:[258,186],hit:[110,78]},
+ {tier:6,role:'entity',kind:'omega',name:'终焉核心 Ω',art:'omega',modes:['fanStrong','ringStrong','nova','sweep','finalBarrage'],size:[278,202],hit:[121,85],final:true}
 ];
 function bossScheduledAt(number){return BOSS_TIMELINE[Math.max(0,Math.min(BOSS_TOTAL-1,number-1))]??Infinity}
 function currentStageNumber(){return Math.max(1,Math.min(BOSS_TOTAL,build?.nextBossNumber||1))}

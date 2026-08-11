@@ -60,14 +60,6 @@ const BOSS_VISUAL_PROFILES=Object.freeze([
  {tint:'#183f54',core:'#62edff',mark:6},{tint:'#743226',core:'#ff705b',mark:7},{tint:'#49316f',core:'#b77aff',mark:8},{tint:'#705c18',core:'#ffd84b',mark:9},{tint:'#83182e',core:'#ff365c',mark:10}
 ]);
 function bossVisualProfile(e){return BOSS_VISUAL_PROFILES[Math.max(0,Math.min(9,(e.bossStage||e.bossNumber||1)-1))]}
-function drawBossStageDetails(e,profile,pulse){
- const advanced=(e.bossStage||1)>=5;enemyModelCtx.save();enemyModelCtx.globalCompositeOperation='lighter';enemyModelCtx.strokeStyle=profile.core;enemyModelCtx.fillStyle=profile.core;enemyModelCtx.shadowBlur=advanced?15:9;enemyModelCtx.shadowColor=profile.core;enemyModelCtx.globalAlpha=.46+.28*pulse;enemyModelCtx.lineWidth=1.5;
- const span=58+Math.min(18,profile.mark*1.6);enemyModelCtx.beginPath();enemyModelCtx.moveTo(-span,-15);enemyModelCtx.lineTo(-34,-4);enemyModelCtx.lineTo(-span,12);enemyModelCtx.moveTo(span,-15);enemyModelCtx.lineTo(34,-4);enemyModelCtx.lineTo(span,12);enemyModelCtx.stroke();
- if(advanced){for(const side of [-1,1]){enemyModelCtx.beginPath();enemyModelCtx.arc(side*(42+profile.mark%3*6),-2,4+(profile.mark%2),0,Math.PI*2);enemyModelCtx.fill()}}
- if(profile.mark===10){enemyModelCtx.lineWidth=2.5;enemyModelCtx.beginPath();enemyModelCtx.ellipse(0,-4,70,45,0,0,Math.PI*2);enemyModelCtx.stroke()}
- if(elapsed-(e.lastHitAt||-99)<.12){enemyModelCtx.globalAlpha=.92;enemyModelCtx.strokeStyle='#ffffff';enemyModelCtx.shadowBlur=20;enemyModelCtx.lineWidth=2.4;enemyModelCtx.beginPath();enemyModelCtx.ellipse(0,0,82,59,0,0,Math.PI*2);enemyModelCtx.stroke()}
- enemyModelCtx.restore();
-}
 const enemySpriteSizes={
  scout:[76,80],heavy:[100,92],suicide:[72,80],sniper:[82,92],support:[90,84],
  barrage:[102,90],raider:[82,78],carrier:[112,92],jammer:[90,84]
@@ -415,7 +407,7 @@ function drawTexturedEnemyOnly(e,pulse,hpRatio){
  const mirrorProgress=e.eventMirror?Math.min(1,(e.age||0)/.72):1;
  if(e.eventMirror){const phaseScale=.2+.8*(1-Math.pow(1-mirrorProgress,3));enemyModelCtx.scale(phaseScale,1);enemyModelCtx.globalAlpha=(.18+.81*mirrorProgress)*(.84+.16*Math.sin(elapsed*18+(e.mirrorSeed||0)))}else enemyModelCtx.globalAlpha=spriteAlpha;
  enemyModelCtx.imageSmoothingEnabled=true;enemyModelCtx.imageSmoothingQuality='high';enemyModelCtx.drawImage(renderImage,-width/2,-height/2,width,height);enemyModelCtx.restore();
- const coreColor=e.boss?(e.awakenedBoss?'#ff5fd7':bossProfile.core):e.bossGuard?'#ff79dc':e.type==='support'?'#5deaff':e.type==='sniper'||e.type==='raider'?'#ffe171':e.type==='carrier'||e.type==='jammer'?'#c477ff':e.type==='heavy'||e.type==='barrage'?'#ff9b45':'#ff526f';if(e.boss){drawBossStageDetails(e,bossProfile,pulse);const mode=(e.bossModes||[])[e.bossModeIndex||0]||'',morph=e.bossModeMorph??1;enemyModelCtx.save();enemyModelCtx.globalCompositeOperation='lighter';enemyModelCtx.globalAlpha=.18+.48*morph;enemyModelCtx.strokeStyle=mode.includes('beam')||mode==='sweep'?'#9ffaff':mode==='guard'?'#d49cff':coreColor;enemyModelCtx.shadowBlur=18;enemyModelCtx.shadowColor=enemyModelCtx.strokeStyle;enemyModelCtx.lineWidth=1.4;const span=width*.31+(1-morph)*18;enemyModelCtx.beginPath();enemyModelCtx.moveTo(-span,-height*.06);enemyModelCtx.lineTo(-width*.16,height*.04);enemyModelCtx.moveTo(span,-height*.06);enemyModelCtx.lineTo(width*.16,height*.04);enemyModelCtx.stroke();enemyModelCtx.restore()}enemyCore(0,e.boss?-4:-3,e.boss?8:Math.max(3.2,width*.075),coreColor,pulse);return true;
+ const coreColor=e.boss?(e.awakenedBoss?'#ff5fd7':bossProfile.core):e.bossGuard?'#ff79dc':e.type==='support'?'#5deaff':e.type==='sniper'||e.type==='raider'?'#ffe171':e.type==='carrier'||e.type==='jammer'?'#c477ff':e.type==='heavy'||e.type==='barrage'?'#ff9b45':'#ff526f';enemyCore(0,e.boss?-4:-3,e.boss?8:Math.max(3.2,width*.075),coreColor,pulse);return true;
 }
 function drawEnemyShip(e,targetCtx=null){
  const previousEnemyModelCtx=enemyModelCtx;if(targetCtx)enemyModelCtx=targetCtx;

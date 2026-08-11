@@ -1,9 +1,9 @@
-const CACHE='iw-cache-8.89-boss-encounters-v1';
+const CACHE='iw-cache-8.90-clean-boss-visuals-v1';
 const ASSETS=[
   './',
   './index.html',
-  './style.css?v=8.89.0',
-  './game.js?v=8.89.0',
+  './style.css?v=8.90.0',
+  './game.js?v=8.90.0',
   './manifest.webmanifest',
   './apple-touch-icon.png',
   './favicon.png',

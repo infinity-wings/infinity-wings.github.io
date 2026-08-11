@@ -28,7 +28,7 @@ function drawMeteorWarningOverlay(f){
 const BATTLE_EVENT_DEFINITIONS=Object.freeze([
  {id:'supply_tide',name:'补给潮汐',category:'reward',label:'奖励事件',duration:20,desc:'敌军攻势暂缓，战场析出经验与修复补给。'},
  {id:'core_meteor',name:'源核陨星',category:'reward',label:'奖励事件',duration:35,desc:'击破高能源核陨星，获得一次直升Ⅲ级或觉醒机会。'},
- {id:'mirror_invasion',name:'镜像入侵',category:'danger',label:'危险事件',duration:26,desc:'事件期间，所有正常刷新的敌军都会以镜像形态进入战场。'},
+ {id:'mirror_invasion',name:'镜像入侵',category:'danger',label:'危险事件',duration:26,desc:'事件期间，每次刷新都会在战场左右两侧同时生成完全相同的实体敌军。'},
  {id:'hunt_reversal',name:'赏金猎杀',category:'danger',label:'危险事件',duration:34,desc:'限时击毁小型Boss级赏金目标；目标拥有高耐久与强化弹幕。'},
  {id:'fire_support',name:'火力支援',category:'rare',label:'稀有事件',duration:18,desc:'两架友军进入战区，在底部左右巡航并持续射击，为驾驶员提供火力掩护。'},
  {id:'emp_storm',name:'电磁风暴',category:'environment',label:'环境异常',duration:25,desc:'高亮红色雷击走廊提前预警，落雷同时威胁敌我。'},
@@ -54,7 +54,7 @@ class BattleEventSystem{
   if(!this.active)return;
   const id=this.active.def.id;
   if(id==='core_meteor')for(let i=enemies.length-1;i>=0;i--)if(enemies[i].eventMeteor)enemies.splice(i,1);
-  if(id==='mirror_invasion')for(let i=enemies.length-1;i>=0;i--)if(enemies[i].eventMirror)enemies.splice(i,1);
+  if(id==='mirror_invasion')for(let i=enemies.length-1;i>=0;i--)if(enemies[i].mirrorInvasionUnit)enemies.splice(i,1);
   if(id==='hunt_reversal'&&this.huntTarget){const i=enemies.indexOf(this.huntTarget);if(i>=0)enemies.splice(i,1)}
   this.fx=[];this.gravity=null;this.supportUnits=[];this.active=null;this.huntTarget=null;this.hideHud();this.nextAt=elapsed+28;
   toast('Boss 接近 · 随机事件已中止');
@@ -91,7 +91,14 @@ class BattleEventSystem{
  }
  start(id,forced=false){const def=BATTLE_EVENT_BY_ID[id];if(!def||enemies.some(e=>e.boss))return false;if(this.active)this.end(true);this.active={def,time:def.duration,forced,success:false};this.spawnCd=0;this.lastEventAt=elapsed;toast(`${def.label} · ${def.name}`);if(id==='core_meteor')this.spawnCoreMeteor();if(id==='hunt_reversal')this.spawnHuntTarget();if(id==='gravity_anomaly')this.gravity={x:W*(.28+Math.random()*.44),y:H*(.25+Math.random()*.3),life:def.duration};if(id==='fire_support')this.startFireSupport();return true}
  end(cancelled=false){if(!this.active)return;const id=this.active.def.id;if(id==='hunt_reversal'&&this.huntTarget&&this.huntTarget.hp>0&&!cancelled){this.huntTarget.enraged=true;this.huntTarget.bountyPhase=2;this.huntTarget.shoot=Math.min(this.huntTarget.shoot,520);this.huntTarget.hp=Math.min(this.huntTarget.max,this.huntTarget.hp+this.huntTarget.max*.28);toast('赏金猎杀失败 · 目标火力强化')}if(id==='gravity_anomaly')this.gravity=null;if(id==='meteor_rain')this.fx=this.fx.filter(f=>!['meteor','meteorWarning'].includes(f.type));if(id==='fire_support')this.supportUnits=[];this.active=null;this.huntTarget=null;this.hideHud();this.nextAt=elapsed+95+Math.random()*45}
- decorateSpawnedEnemy(enemy){if(this.active?.def.id==='mirror_invasion'&&enemy&&!enemy.boss&&!enemy.eventMeteor){enemy.eventMirror=true;enemy.mirrorSpawn=true;enemy.mirrorSeed=Math.random()*Math.PI*2;enemy.hp=Math.max(1,Math.round(enemy.hp*.88));enemy.max=enemy.hp}return enemy}
+ decorateSpawnedEnemy(enemy){return enemy}
+ spawnMirrorPartner(enemy){
+  if(this.active?.def.id!=='mirror_invasion'||!enemy||enemy.boss||enemy.eventMeteor)return null;
+  const offset=Math.max(62,Math.min(W*.34,W*(.17+Math.random()*.14))),sharedHp=Math.max(1,Math.round(enemy.hp*.82));
+  Object.assign(enemy,{x:W/2-offset,mirrorInvasionUnit:true,hp:sharedHp,max:sharedHp});
+  const partner={...enemy,x:W/2+offset,dir:-(enemy.dir||1),mirrorInvasionUnit:true,age:enemy.age||0,shoot:enemy.shoot};
+  enemies.push(partner);return partner;
+ }
  triggerRandom(){const pool=BATTLE_EVENT_DEFINITIONS.filter(e=>!this.active||e.id!==this.active.def.id);return this.start(pool[Math.floor(Math.random()*pool.length)].id,true)}
  spawnCoreMeteor(){enemies.push({type:'eventMeteor',eventMeteor:true,x:W/2,y:115,r:40,hp:720,max:720,v:12,shoot:999999,age:0,dir:1})}
  spawnHuntTarget(){const candidates=['heavy','barrage','carrier'];const e=makeEnemy(candidates[Math.floor(Math.random()*candidates.length)]);e.x=W/2;e.y=92;e.huntTarget=true;e.bountyPhase=1;e.bountyPattern=0;e.bountyVolley=0;e.r=Math.round((e.r||22)*1.28);e.hp=Math.max(680,Math.round(e.hp*5.4));e.max=e.hp;e.v=16;e.shoot=720;e.dir=Math.random()<.5?-1:1;this.huntTarget=e;enemies.push(e);toast('赏金目标进入战区 · 小型Boss级威胁')}

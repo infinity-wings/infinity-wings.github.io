@@ -187,17 +187,17 @@ function spawnEnemy(){
  const cap=enemyCap();
  if(enemies.length>=cap)return;
  let type=chooseEnemyType();for(let tries=0;tries<6&&!canSpawnEnemyType(type);tries++)type=chooseEnemyType();if(!canSpawnEnemyType(type))type='scout';
- enemies.push(battleEventSystem.decorateSpawnedEnemy(makeEnemy(type,type==='raider')));
+ const primary=battleEventSystem.decorateSpawnedEnemy(makeEnemy(type,type==='raider'));enemies.push(primary);battleEventSystem.spawnMirrorPartner(primary);
  const power=combatPower(),rate=recentKillRate();
  const ramp=Math.min(1,Math.max(0,(elapsed-45)/120));
  const extraChance=Math.min(.52,.02+ramp*(power*.016+rate*.10));
  if(enemies.length<cap&&Math.random()<extraChance){
   const forcedHigh=Number.isInteger(build?.debugThreatLevel)&&build.debugThreatLevel>=4;
-  enemies.push(battleEventSystem.decorateSpawnedEnemy(makeEnemy(forcedHigh?chooseEnemyType():(Math.random()<.72?'scout':chooseEnemyType()),false)));
+  const primary=battleEventSystem.decorateSpawnedEnemy(makeEnemy(forcedHigh?chooseEnemyType():(Math.random()<.72?'scout':chooseEnemyType()),false));enemies.push(primary);battleEventSystem.spawnMirrorPartner(primary);
  }
  if(level>=10&&elapsed>150&&power>12&&enemies.length<cap-2&&Math.random()<.08){
   const burstType=Number.isInteger(build?.debugThreatLevel)&&build.debugThreatLevel>=4?chooseEnemyType():'scout';
-  enemies.push(battleEventSystem.decorateSpawnedEnemy(makeEnemy(burstType)));enemies.push(battleEventSystem.decorateSpawnedEnemy(makeEnemy(burstType)));
+  const first=battleEventSystem.decorateSpawnedEnemy(makeEnemy(burstType));enemies.push(first);battleEventSystem.spawnMirrorPartner(first);const second=battleEventSystem.decorateSpawnedEnemy(makeEnemy(burstType));enemies.push(second);battleEventSystem.spawnMirrorPartner(second);
  }
 }
 const BOSS_TIMELINE=[90,210,270,350,420,510,580,675,760,870],BOSS_TOTAL=BOSS_TIMELINE.length;

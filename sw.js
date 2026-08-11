@@ -1,9 +1,9 @@
-const CACHE='iw-cache-9.00-boss-aspect-suicide-v1';
+const CACHE='iw-cache-9.01-mirror-pairs-v1';
 const ASSETS=[
   './',
   './index.html',
-  './style.css?v=9.00.0',
-  './game.js?v=9.00.0',
+  './style.css?v=9.01.0',
+  './game.js?v=9.01.0',
   './manifest.webmanifest',
   './apple-touch-icon.png',
   './favicon.png',

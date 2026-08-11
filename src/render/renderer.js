@@ -79,7 +79,7 @@ function drawSpaceLandmark(landmark){
  ctx.restore();
 }
 function drawSpaceTravelLayers(perfQ,threat){
- const landmarkStride=mobilePerf?.enabled&&perfQ<.7?2:1;for(let i=0;i<spaceLandmarks.length;i+=landmarkStride){const l=spaceLandmarks[i];if(l.y>-l.size*1.7&&l.y<H+l.size*1.7)drawSpaceLandmark(l)}
+ const reduceProceduralLandmarks=mobilePerf?.enabled&&perfQ<.7;for(let i=0;i<spaceLandmarks.length;i++){const l=spaceLandmarks[i];if(reduceProceduralLandmarks&&l.type==='asteroids'&&i%2)continue;if(l.y>-l.size*1.7&&l.y<H+l.size*1.7)drawSpaceLandmark(l)}
  const dustStride=mobilePerf?.enabled?(perfQ<.68?3:perfQ<.82?2:1):1;for(let i=0;i<spaceDust.length;i+=dustStride){const d=spaceDust[i];ctx.globalAlpha=d.kind==='debris'?.4:.24;ctx.fillStyle=d.kind==='debris'?'#7292a5':'#8ac6d8';if(d.kind==='debris'){ctx.save();ctx.translate(d.x,d.y);ctx.rotate(elapsed*.18+i);ctx.fillRect(-d.s*1.8,-d.s*.45,d.s*3.6,d.s*.9);ctx.restore()}else ctx.fillRect(d.x,d.y,d.s,d.s)}
  const starStride=mobilePerf?.enabled?(perfQ<.66?3:perfQ<.82?2:1):1;for(let i=0;i<stars.length;i+=starStride){const s=stars[i];ctx.globalAlpha=.24+s.s/5;ctx.fillStyle='#78cce8';ctx.fillRect(s.x,s.y,s.s,s.s)}
  const streakStride=mobilePerf?.enabled&&perfQ<.72?2:1,boost=1+Math.min(1.2,threat*.055);for(let i=0;i<nearSpaceStreaks.length;i+=streakStride){const s=nearSpaceStreaks[i],length=Math.min(28,s.len*boost);ctx.globalAlpha=s.alpha;ctx.fillStyle='#d9fbff';ctx.fillRect(s.x,s.y,s.w,length)}ctx.globalAlpha=1;

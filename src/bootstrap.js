@@ -51,8 +51,9 @@ const MOBILE_DEVICE=/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)||navig
 const spaceDust=Array.from({length:MOBILE_DEVICE?32:44},()=>({x:Math.random()*W,y:Math.random()*H,s:.45+Math.random()*1.25,v:12+Math.random()*24,drift:(Math.random()-.5)*5,kind:Math.random()>.78?'debris':'dust'}));
 const nearSpaceStreaks=Array.from({length:MOBILE_DEVICE?9:14},()=>({x:Math.random()*W,y:Math.random()*H,w:.7+Math.random()*1.2,v:260+Math.random()*260,len:8+Math.random()*15,alpha:.34+Math.random()*.42}));
 const spaceLandmarks=[
- {type:'planetTexture',x:W*.92,y:-H*.2,size:142,v:4.2,alpha:.2,rotation:0},
- {type:'wreckTexture',x:W*.14,y:-H*1.36,size:92,v:7.2,alpha:.18,rotation:-.18},
+ // 行星开局即可从右上方看到；残骸约十几秒后从左上方进入。
+ {type:'planetTexture',x:W*.88,y:H*.1,size:126,v:4.2,alpha:.3,rotation:0},
+ {type:'wreckTexture',x:W*.18,y:-H*.18,size:88,v:8.5,alpha:.25,rotation:-.18},
  {type:'asteroids',x:W*.86,y:-H*2.5,size:64,v:7.4,alpha:.18,rotation:.18},
  {type:'asteroids',x:W*.16,y:-H*3.6,size:52,v:6.2,alpha:.14,rotation:-.31}
 ];

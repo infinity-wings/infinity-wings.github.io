@@ -380,9 +380,9 @@ function applyBlastPayload(projectile){
 }
 function spawnSplitBullets(x,y,baseDamage,blastLevel){
  const stats=[null,
-  {count:2,damageScale:.52,speed:465,seekRadius:210},
-  {count:3,damageScale:.62,speed:505,seekRadius:265},
-  {count:4,damageScale:.72,speed:545,seekRadius:330}
+  {count:2,damageScale:.52,speed:360,seekRadius:210},
+  {count:3,damageScale:.62,speed:395,seekRadius:265},
+  {count:4,damageScale:.72,speed:430,seekRadius:330}
  ][blastLevel];
  if(!stats)return;
  const candidates=enemies
@@ -399,7 +399,7 @@ function spawnSplitBullets(x,y,baseDamage,blastLevel){
    const spread=stats.count===1?0:(i-(stats.count-1)/2)*.24;
    vx=Math.sin(spread)*stats.speed;vy=-Math.cos(spread)*stats.speed;
   }
- bullets.push({x,y,vx,vy,r:3.1,d:baseDamage*stats.damageScale,source:'split',isSplit:true,life:1.15});
+  bullets.push({x,y,vx,vy,r:3.1,d:baseDamage*stats.damageScale,source:'split',isSplit:true,splitLevel:blastLevel,life:1.5,maxLife:1.5});
  }
  blastWaves.push({x,y,life:.34,maxLife:.34,radius:6,prevRadius:0,maxRadius:42+blastLevel*14,absorbed:0,blastCore:true});
  for(let i=0;i<8+blastLevel*3;i++){const a=Math.PI*2*i/(8+blastLevel*3),s=85+blastLevel*32+Math.random()*70;particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:.25+Math.random()*.18,max:.43,r:2+blastLevel*.45,type:'blastCore'})}

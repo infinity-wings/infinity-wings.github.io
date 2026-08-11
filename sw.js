@@ -1,9 +1,9 @@
-const CACHE='iw-cache-8.74-three-shields-v1';
+const CACHE='iw-cache-8.75-active-shield-layer-v1';
 const ASSETS=[
   './',
   './index.html',
-  './style.css?v=8.74.0',
-  './game.js?v=8.74.0',
+  './style.css?v=8.75.0',
+  './game.js?v=8.75.0',
   './manifest.webmanifest',
   './apple-touch-icon.png',
   './favicon.png',

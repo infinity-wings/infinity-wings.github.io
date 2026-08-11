@@ -428,11 +428,10 @@ function drawCoreDefenseEffects(lowFx=false){
  const shieldLayers=build?.shieldLayers||0;
  if(shieldLayers>0&&!dying){
   ctx.save();ctx.translate(player.x,player.y+(player.visualY||0));ctx.globalCompositeOperation='lighter';
-  for(let i=0;i<shieldLayers;i++){
-   const textureWidth=94+i*16,textureHeight=textureWidth;
-   const layerSprite=shieldSpriteAssets[`player${i+1}`];
-   drawShieldSprite(ctx,layerSprite,0,0,textureWidth,textureHeight,.76+i*.07,(i-1)*.025);
-  }
+  const currentLayer=Math.max(1,Math.min(3,shieldLayers));
+  const textureWidth=94+(currentLayer-1)*16,textureHeight=textureWidth;
+  const layerSprite=shieldSpriteAssets[`player${currentLayer}`];
+  drawShieldSprite(ctx,layerSprite,0,0,textureWidth,textureHeight,.76+(currentLayer-1)*.07,(currentLayer-2)*.025);
   ctx.restore();
  }
  if(build?.chronoActive>0){ctx.save();ctx.globalCompositeOperation='lighter';ctx.globalAlpha=.16+.06*Math.sin(elapsed*7);ctx.strokeStyle=coreManager.getLevel('time')===3?'#f0e8ff':'#b58cff';ctx.lineWidth=3;ctx.beginPath();ctx.arc(player.x,player.y,70+Math.sin(elapsed*5)*10,0,Math.PI*2);ctx.stroke();ctx.restore();}

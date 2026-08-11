@@ -1,9 +1,9 @@
-const CACHE='iw-cache-8.95-oppressive-boss-v1';
+const CACHE='iw-cache-8.96-important-toast-v1';
 const ASSETS=[
   './',
   './index.html',
-  './style.css?v=8.95.0',
-  './game.js?v=8.95.0',
+  './style.css?v=8.96.0',
+  './game.js?v=8.96.0',
   './manifest.webmanifest',
   './apple-touch-icon.png',
   './favicon.png',

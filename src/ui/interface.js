@@ -278,7 +278,17 @@ function animateBarrierUse(spentIndex){
  if(touchCore){touchCore.classList.remove('active');touchCore.classList.add('consuming');setTimeout(()=>touchCore.classList.remove('consuming'),540)}
  setTimeout(()=>{UI.barrierBox.classList.remove('activating');UI.bombButton.classList.remove('activating')},430);
 }
-function toast(text){UI.toast.textContent=text;UI.toast.classList.remove('show');void UI.toast.offsetWidth;UI.toast.classList.add('show');clearTimeout(UI.toast._timer);UI.toast._timer=setTimeout(()=>UI.toast.classList.remove('show'),1500)}
+function toast(text,priority='normal'){
+ const now=performance.now();
+ if(priority==='quiet')return;
+ // 重要警报显示期间，普通状态消息不能覆盖它；普通消息本身也限制频率。
+ if(priority!=='important'&&(UI.toast._importantUntil||0)>now)return;
+ if(priority==='normal'&&now-(UI.toast._lastNormalAt||0)<3200)return;
+ if(priority==='important')UI.toast._importantUntil=now+2100;
+ else UI.toast._lastNormalAt=now;
+ UI.toast.textContent=text;UI.toast.classList.remove('show');void UI.toast.offsetWidth;UI.toast.classList.add('show');clearTimeout(UI.toast._timer);
+ UI.toast._timer=setTimeout(()=>UI.toast.classList.remove('show'),priority==='important'?2000:1350);
+}
 
 $('#systemMenuButton').onclick=openPauseMenu;const resumeButton=$('#resumeButton');if(resumeButton){resumeButton.onclick=closePauseMenu;resumeButton.addEventListener('pointerup',e=>{e.preventDefault();closePauseMenu()},{passive:false})}$('#restartButton').onclick=restartCurrentRun;$('#titleButton').onclick=returnToTitle;
 $('#controlsButton').onclick=()=>$('#controlsPanel').classList.toggle('hidden');

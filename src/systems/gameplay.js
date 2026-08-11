@@ -570,7 +570,7 @@ function explodeMissile(m){
  for(let i=0;i<22;i++){const a=Math.random()*Math.PI*2,s=70+Math.random()*250;particles.push({x:m.x,y:m.y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:.25+Math.random()*.35,max:.6,r:1.8+Math.random()*3.8,type:'missile'})}
  shake=Math.max(shake,m.awakening==='missile_hunter'?19:m.awakening==='missile_cluster'?14:12);
 }
-function enemyBulletLimit(){const quality=(typeof mobilePerf!=='undefined'&&mobilePerf.enabled)?mobilePerf.quality:1;return (typeof mobilePerf!=='undefined'&&mobilePerf.enabled)?Math.round(120+90*quality):320}
+function enemyBulletLimit(){const quality=(typeof mobilePerf!=='undefined'&&mobilePerf.enabled)?mobilePerf.quality:1;return (typeof mobilePerf!=='undefined'&&mobilePerf.enabled)?Math.round(95+105*quality):320}
 function enemyBulletVisualType(type,damage){
  if(type==='purple'&&damage<=10)return 'purple';
  if(damage>=19)return 'red';
@@ -578,6 +578,8 @@ function enemyBulletVisualType(type,damage){
  return 'cyan';
 }
 function pushEnemyBullet(x,y,vx,vy,r,type,damage){if(enemyBullets.length>=enemyBulletLimit())return false;const visualType=enemyBulletVisualType(type,damage);enemyBullets.push({x,y,vx,vy,r,type:visualType,damage,angle:Math.atan2(vy,vx)});return true}
+const ENEMY_ATTACK_INTERVAL=Object.freeze({scout:1120,raider:820,heavy:2180,sniper:2650,barrage:1280,carrier:2350,jammer:1720});
+function enemyAttackInterval(e,threat){const base=ENEMY_ATTACK_INTERVAL[e.type]||1450,pressure=Math.min(e.type==='sniper'?260:420,threat*(e.type==='barrage'?45:e.type==='raider'?28:34));return Math.max(e.type==='raider'?620:e.type==='barrage'?900:e.type==='scout'?780:1050,base-pressure)}
 function bossPhase(e){const ratio=e.hp/e.max;return ratio<=.3?3:ratio<=.6?2:1}
 function bossModes(e,phase){
  const number=Math.max(1,e.bossNumber||e.bossStage||1);
@@ -603,10 +605,10 @@ function summonBossGuards(e){
  e.guardActive=true;toast(`${e.bossName||'觉醒Boss'} · 小型战机编队出击`);
 }
 function spawnBossLaser(e,mode){
- const warning=mode==='sweep'?1.05:.9;
- const duration=mode==='sweep'?2.15:1.25;
- const width=mode==='sweep'?18:24;
- const startX=mode==='sweep'?Math.max(45,Math.min(W-45,e.x)):Math.max(45,Math.min(W-45,player.x));
+ const warning=mode==='sweep'?1.45:1.2;
+ const duration=mode==='sweep'?3.35:1.35;
+ const width=mode==='sweep'?12:16;
+ const startX=mode==='sweep'?Math.max(W*.22,Math.min(W*.78,e.x)):Math.max(45,Math.min(W-45,player.x));
  enemyLasers.push({boss:e,mode,x:startX,y:e.y+32,width,warning,duration,life:warning+duration,damage:mode==='sweep'?24:28,tick:0,sweepDir:e.dir||1});
 }
 function fireBossMode(e,mode,phase=1){
@@ -756,7 +758,7 @@ function damageEnemy(e,d,opts={}){
  if(e.bossRetreating)return false;
  if(e.boss){const guards=enemies.filter(g=>g.bossGuardFor===e&&g.hp>0);e.guardActive=guards.length>0;if(e.guardActive&&!opts.piercing){e.guardFlash=.16;return false}if(e.guardActive&&opts.piercing)d*=.42;}
  if(e.shield>0){const absorbed=Math.min(e.shield,d);e.shield-=absorbed;d-=absorbed;if(d<=0)return false;}
- e.hp-=d;if(e.hp<=0){audioSystem?.play(e.boss||e.type==='carrier'?'explosionLarge':'explosionSmall');const archiveId=e.boss?`boss-${e.bossNumber||e.bossStage}`:e.type;if(typeof markEnemyDefeated==='function')markEnemyDefeated(archiveId);const [points,experience]=enemyReward(e);score+=points;spawnExperienceFragments(e,experience);build.killWindow.push(elapsed);addBarrierCharge(barrierChargeValue(e));maybeDropRepair(e);if(e.type==='carrier')releaseCarrierDrones(e);if(e.type==='suicide')suicideBlast(e);if(e.boss){build.bossesDefeated=(build.bossesDefeated||0)+1;if(e.finalBoss){build.finalBossDefeated=true;toast('最终 Boss 已击毁 · 终焉信号消散')}else toast(`第 ${e.bossNumber||e.bossStage} 号 Boss 已击毁 · 大量经验释放`);for(let burst=0;burst<5;burst++)explode(e.x+(Math.random()-.5)*e.r*1.4,e.y+(Math.random()-.5)*e.r*1.1,18);blastWaves.push({x:e.x,y:e.y,life:.72,maxLife:.72,radius:18,prevRadius:0,maxRadius:e.r*2.8,absorbed:0,temporalCollapse:true});shake=Math.max(shake,22)}awakeningSystem.onEnemyKilled(e,opts);battleEventSystem.onEnemyKilled(e);if(!e.boss)explode(e.x,e.y,e.type==='carrier'?30:18);return true}return false
+ e.lastHitAt=elapsed;e.hp-=d;if(e.hp<=0){audioSystem?.play(e.boss||e.type==='carrier'?'explosionLarge':'explosionSmall');const archiveId=e.boss?`boss-${e.bossNumber||e.bossStage}`:e.type;if(typeof markEnemyDefeated==='function')markEnemyDefeated(archiveId);const [points,experience]=enemyReward(e);score+=points;spawnExperienceFragments(e,experience);build.killWindow.push(elapsed);addBarrierCharge(barrierChargeValue(e));maybeDropRepair(e);if(e.type==='carrier')releaseCarrierDrones(e);if(e.type==='suicide')suicideBlast(e);if(e.boss){build.bossesDefeated=(build.bossesDefeated||0)+1;if(e.finalBoss){build.finalBossDefeated=true;toast('最终 Boss 已击毁 · 终焉信号消散')}else toast(`第 ${e.bossNumber||e.bossStage} 号 Boss 已击毁 · 大量经验释放`);for(let burst=0;burst<5;burst++)explode(e.x+(Math.random()-.5)*e.r*1.4,e.y+(Math.random()-.5)*e.r*1.1,18);blastWaves.push({x:e.x,y:e.y,life:.72,maxLife:.72,radius:18,prevRadius:0,maxRadius:e.r*2.8,absorbed:0,temporalCollapse:true});shake=Math.max(shake,22)}awakeningSystem.onEnemyKilled(e,opts);battleEventSystem.onEnemyKilled(e);if(!e.boss)explode(e.x,e.y,e.type==='carrier'?30:18);return true}return false
 }
 function despawnTimedBoss(e){
  if(e.bossRetreating)return;
@@ -960,16 +962,16 @@ function update(dt){
     e.supportCd-=dt;if(e.supportCd<=0){e.supportCd=1.15;for(const ally of enemies)if(ally!==e&&Math.hypot(ally.x-e.x,ally.y-e.y)<125){ally.maxShield=Math.max(ally.maxShield||0,28+threat*4);ally.shield=Math.min(ally.maxShield,(ally.shield||0)+18+threat*3)}}
    }
   }
-  e.shoot-=dt*1000*slow;if(e.shoot<=0&&!e.boss&&!['suicide','support'].includes(e.type)){enemyShoot(e);e.shoot=e.huntTarget?(e.enraged?560:760):e.type==='barrage'?Math.max(1250,1950-threat*70):e.type==='heavy'?Math.max(1350,2200-threat*90):Math.max(820,1600-threat*80)}
+  e.shoot-=dt*1000*slow;if(e.shoot<=0&&!e.boss&&!['suicide','support'].includes(e.type)){enemyShoot(e);e.shoot=e.huntTarget?(e.enraged?560:760):enemyAttackInterval(e,threat)}
   if(!e.bossRetreating&&Math.hypot(player.x-e.x,player.y-e.y)<player.r+e.r){damagePlayer(e.boss?30:e.type==='suicide'?28:16);if(e.type==='suicide')suicideBlast(e);explode(e.x,e.y);enemies.splice(i,1);if(dying)break;continue}
   if(e.y>H+50||e.x<-70||e.x>W+70)enemies.splice(i,1)
  }
  for(let i=enemyLasers.length-1;i>=0;i--){
   const l=enemyLasers[i];l.life-=dt;
   if(!l.boss||!enemies.includes(l.boss)){enemyLasers.splice(i,1);continue}
-  if(l.mode==='sweep'&&l.life<l.duration){const progress=1-Math.max(0,l.life)/l.duration;l.x=35+(W-70)*(l.sweepDir>0?progress:1-progress)}
+  if(l.mode==='sweep'&&l.life<l.duration){const progress=1-Math.max(0,l.life)/l.duration;l.x=W*.22+W*.56*(l.sweepDir>0?progress:1-progress)}
   const active=l.life<l.duration;
-  if(active){l.tick-=dt;if(l.tick<=0&&Math.abs(player.x-l.x)<l.width+player.r&&player.y>l.y){damagePlayer(l.damage);l.tick=.42}}
+  if(active){l.tick-=dt;if(l.tick<=0&&Math.abs(player.x-l.x)<l.width+player.r&&player.y>l.y){damagePlayer(l.damage);l.tick=.55}}
   if(l.life<=0)enemyLasers.splice(i,1)
  }
  for(let i=enemyBullets.length-1;i>=0;i--){const b=enemyBullets[i];b.x+=b.vx*dt*slow;b.y+=b.vy*dt*slow;if(build.heavyEscortShieldActive>0){const dx=b.x-player.x,dy=b.y-(player.y-8),dist=Math.hypot(dx,dy);const inFront=dy<2&&dy>-112;const insideGuard=dist<92&&Math.abs(dx)<88;if(inFront&&insideGuard){enemyBullets.splice(i,1);particles.push({x:b.x,y:b.y,vx:dx*.75,vy:-70,life:.26,max:.26,r:5.5,type:'barrier'});continue}}if(build.awakeFrontShieldActive>0){const dx=b.x-player.x,dy=b.y-(player.y-78);if(dy>-26&&dy<34&&Math.abs(dx)<118){enemyBullets.splice(i,1);particles.push({x:b.x,y:b.y,vx:dx*.55,vy:-65,life:.28,max:.28,r:6,type:'barrier'});continue}}const bd=Math.hypot(b.x-player.x,b.y-player.y);if(bd<b.r+player.r){if(b.type==='purple'&&b.damage<=10){player.slowTimer=2.2;toast('动力受阻 · 移动速度下降')}damagePlayer(Number.isFinite(b.damage)?b.damage:10+threat*1.5);enemyBullets.splice(i,1);if(dying)break;continue}if(b.y>H+30||b.x<-30||b.x>W+30)enemyBullets.splice(i,1)}

@@ -141,7 +141,7 @@ const IWStability={
   if(typeof last!=='undefined')last=performance.now();
   if(typeof mobilePerf!=='undefined'){
    mobilePerf.lastSample=performance.now();mobilePerf.sampleFrames=0;mobilePerf.frameMs=16.7;
-   mobilePerf.slowFrames=0;mobilePerf.fastFrames=0;
+   mobilePerf.slowFrames=0;mobilePerf.fastFrames=0;mobilePerf.thermalPressure=Math.max(0,(mobilePerf.thermalPressure||0)-2);
    mobilePerf.quality=Math.max(.9,Number(mobilePerf.quality)||1);
   }
   this.watchdog(true);
@@ -230,7 +230,8 @@ const IWStability={
   bullets=this.cleanPool(bullets,{margin:260,max:260});
   missiles=this.cleanPool(missiles,{margin:320,max:40});
   enemyBullets=this.cleanPool(enemyBullets,{margin:240,max:typeof enemyBulletLimit==='function'?enemyBulletLimit():220});
-  particles=this.cleanPool(particles,{margin:360,max:360,requireLife:true});
+  const stabilityQuality=typeof mobilePerf!=='undefined'&&mobilePerf.enabled?mobilePerf.quality:1;
+  particles=this.cleanPool(particles,{margin:360,max:Math.round(170+190*stabilityQuality),requireLife:true});
   pickups=this.cleanPool(pickups,{margin:180,max:120});
   drones=this.cleanPool(drones,{margin:180,max:8});
   if(typeof blastWaves!=='undefined'&&Array.isArray(blastWaves)){
@@ -239,7 +240,7 @@ const IWStability={
   }
   if(typeof lightningArcs!=='undefined'&&Array.isArray(lightningArcs)){
    for(let i=lightningArcs.length-1;i>=0;i--){const arc=lightningArcs[i];if(!arc||![arc.x1,arc.y1,arc.x2,arc.y2,arc.life].every(Number.isFinite))lightningArcs.splice(i,1)}
-   if(lightningArcs.length>48)lightningArcs.splice(0,lightningArcs.length-48);
+   const arcCap=Math.round(20+28*(typeof mobilePerf!=='undefined'&&mobilePerf.enabled?mobilePerf.quality:1));if(lightningArcs.length>arcCap)lightningArcs.splice(0,lightningArcs.length-arcCap);
   }
   if(typeof enemyLasers!=='undefined'&&Array.isArray(enemyLasers)){
    for(let i=enemyLasers.length-1;i>=0;i--){const laser=enemyLasers[i];if(!laser||!Number.isFinite(laser.x)||!Number.isFinite(laser.y)||!Number.isFinite(laser.life))enemyLasers.splice(i,1)}

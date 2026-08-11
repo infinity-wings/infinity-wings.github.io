@@ -175,9 +175,9 @@ function loop(t){
   const sampleAge=t-mobilePerf.lastSample;
   if(sampleAge>=1000){
    mobilePerf.avgFps=Math.max(1,Math.round(mobilePerf.sampleFrames*1000/sampleAge));mobilePerf.sampleFrames=0;mobilePerf.lastSample=t;
-   if(mobilePerf.avgFps<38){mobilePerf.slowFrames++;mobilePerf.fastFrames=0}else if(mobilePerf.avgFps>50){mobilePerf.fastFrames++;mobilePerf.slowFrames=Math.max(0,mobilePerf.slowFrames-1)}else{mobilePerf.slowFrames=Math.max(0,mobilePerf.slowFrames-1);mobilePerf.fastFrames=Math.max(0,mobilePerf.fastFrames-1)}
-   if(mobilePerf.slowFrames>=4){mobilePerf.quality=Math.max(.58,mobilePerf.quality-.10);mobilePerf.slowFrames=0}
-   if(mobilePerf.fastFrames>=3){mobilePerf.quality=Math.min(1,mobilePerf.quality+.10);mobilePerf.fastFrames=0}
+   if(mobilePerf.avgFps<40){mobilePerf.slowFrames++;mobilePerf.fastFrames=0;mobilePerf.thermalPressure=Math.min(10,(mobilePerf.thermalPressure||0)+1)}else if(mobilePerf.avgFps>53){mobilePerf.fastFrames++;mobilePerf.slowFrames=Math.max(0,mobilePerf.slowFrames-1);mobilePerf.thermalPressure=Math.max(0,(mobilePerf.thermalPressure||0)-.35)}else{mobilePerf.slowFrames=Math.max(0,mobilePerf.slowFrames-1);mobilePerf.fastFrames=Math.max(0,mobilePerf.fastFrames-1)}
+   if(mobilePerf.slowFrames>=2){const drop=mobilePerf.avgFps<30?.16:.10;mobilePerf.quality=Math.max(.52,mobilePerf.quality-drop);mobilePerf.slowFrames=0}
+   if(mobilePerf.fastFrames>=6&&(mobilePerf.thermalPressure||0)<2){mobilePerf.quality=Math.min(1,mobilePerf.quality+.06);mobilePerf.fastFrames=0}
   }
  }
  try{

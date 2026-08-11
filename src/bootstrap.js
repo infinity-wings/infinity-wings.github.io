@@ -48,7 +48,7 @@ window.IWEntityPools=IW_ENTITY_POOLS;
 pilotId=Math.max(1,Number(localStorage.getItem('infinityWingsPilotIdV2'))||1);
 const stars=Array.from({length:110},()=>({x:Math.random()*W,y:Math.random()*H,s:.4+Math.random()*1.8,v:18+Math.random()*65}));
 const MOBILE_DEVICE=/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)||navigator.maxTouchPoints>1;
-const mobilePerf={enabled:MOBILE_DEVICE,quality:1,avgFps:60,frameMs:16.7,slowFrames:0,fastFrames:0,lastSample:performance.now(),sampleFrames:0};
+const mobilePerf={enabled:MOBILE_DEVICE,quality:1,avgFps:60,frameMs:16.7,slowFrames:0,fastFrames:0,thermalPressure:0,lastSample:performance.now(),sampleFrames:0};
 window.IWMobilePerf=mobilePerf;
 
 const CORES=[

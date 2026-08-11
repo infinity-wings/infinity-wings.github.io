@@ -1,9 +1,9 @@
-const CACHE='iw-cache-8.68-p0-fixes-v1';
+const CACHE='iw-cache-8.69-p1-fixes-v1';
 const ASSETS=[
   './',
   './index.html',
-  './style.css?v=8.68.0',
-  './game.js?v=8.68.0',
+  './style.css?v=8.69.0',
+  './game.js?v=8.69.0',
   './manifest.webmanifest',
   './apple-touch-icon.png',
   './favicon.png',

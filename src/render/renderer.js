@@ -18,7 +18,7 @@ const shipSpriteAssets={
 const shieldSpriteAssets={
  enemy:Object.assign(new Image(),{src:'assets/effects/enemy-support-shield-v2.png'}),
  deflector:Object.assign(new Image(),{src:'assets/effects/player-shield-round-v2.png'}),
- escort:Object.assign(new Image(),{src:'assets/effects/escort-front-barrier-v1.png'})
+ escort:Object.assign(new Image(),{src:'assets/effects/escort-front-barrier-v2.png'})
 };
 for(const image of [shipSpriteAssets.player,shipSpriteAssets.drone,shipSpriteAssets.guard,shipSpriteAssets.boss,...Object.values(shipSpriteAssets.enemies),...Object.values(shieldSpriteAssets)])image.decoding='async';
 const tintedShipSpriteCache=new Map();
@@ -298,7 +298,6 @@ function drawHeavyEscortShield(){
  const fade=Math.min(1,build.heavyEscortShieldActive/.38),pulse=.88+.12*Math.sin(elapsed*8.5);
  const cx=player.x,cy=player.y-70,width=190*pulse,height=86*pulse;
  if(!drawShieldSprite(ctx,shieldSpriteAssets.escort,cx,cy,width,height,.46+.34*fade)){ctx.save();ctx.globalCompositeOperation='lighter';ctx.strokeStyle='rgba(110,239,255,.88)';ctx.lineWidth=5;ctx.beginPath();ctx.arc(player.x,player.y-5,88,Math.PI*1.12,Math.PI*1.88);ctx.stroke();ctx.restore()}
- ctx.save();ctx.globalCompositeOperation='lighter';ctx.globalAlpha=.28+.25*fade;ctx.strokeStyle='#7cefff';ctx.lineWidth=1.2;for(const d of escorts){const pos=dronePosition(d),targetX=cx+(d.slot===0?-width*.38:width*.38),targetY=cy+height*.18;ctx.beginPath();ctx.moveTo(pos.x,pos.y-12);ctx.lineTo(targetX,targetY);ctx.stroke()}ctx.restore();
 }
 
 function drawAwakenedFrontShield(){
@@ -430,9 +429,10 @@ function drawCoreDefenseEffects(lowFx=false){
   const pulse=1+Math.sin(elapsed*3.6)*.018;
   for(let i=0;i<shieldLayers;i++){
    const radius=(48+i*8)*pulse;
-   const color=i===2?'#b28cff':i===1?'#73d9ff':'#9bf5ff';
+   const color=i===2?'#a56cff':i===1?'#4f8cff':'#4ff6ff';
    const textureWidth=(94+i*16)*pulse,textureHeight=textureWidth;
-   if(drawShieldSprite(ctx,shieldSpriteAssets.deflector,0,0,textureWidth,textureHeight,.34+i*.13,(i-1)*.035+Math.sin(elapsed*1.8+i)*.012)){ctx.save();ctx.globalCompositeOperation='lighter';ctx.globalAlpha=.38+i*.1;ctx.strokeStyle=color;ctx.shadowBlur=15+i*3;ctx.shadowColor=color;ctx.lineWidth=1.5+i*.45;ctx.beginPath();ctx.ellipse(0,0,textureWidth*.48,textureHeight*.48,0,0,Math.PI*2);ctx.stroke();ctx.restore();continue}
+   const layerSprite=shipSpriteReady(shieldSpriteAssets.deflector)?getTintedShipSprite(shieldSpriteAssets.deflector,color,.56):shieldSpriteAssets.deflector;
+   if(drawShieldSprite(ctx,layerSprite,0,0,textureWidth,textureHeight,.64+i*.09,(i-1)*.035+Math.sin(elapsed*1.8+i)*.012))continue;
    ctx.save();ctx.rotate(elapsed*(i%2?-.16:.12)+i*.16);ctx.globalAlpha=.10+i*.035;
    ctx.fillStyle=color;ctx.beginPath();for(let a=0;a<6;a++){const ang=-Math.PI/2+a*Math.PI/3,x=Math.cos(ang)*radius,y=Math.sin(ang)*radius;(a?ctx.lineTo(x,y):ctx.moveTo(x,y))}ctx.closePath();ctx.fill();ctx.restore();
    ctx.save();ctx.rotate(i*.08);ctx.globalAlpha=.7+i*.08;ctx.strokeStyle=color;ctx.lineWidth=2.4+i*.7;ctx.shadowBlur=18+i*5;ctx.shadowColor=color;ctx.beginPath();for(let a=0;a<6;a++){const ang=-Math.PI/2+a*Math.PI/3,x=Math.cos(ang)*radius,y=Math.sin(ang)*radius;(a?ctx.lineTo(x,y):ctx.moveTo(x,y))}ctx.closePath();ctx.stroke();

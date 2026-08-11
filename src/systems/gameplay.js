@@ -768,6 +768,7 @@ function despawnTimedBoss(e){
  blastWaves.push({x:e.x,y:e.y,life:.55,maxLife:.55,radius:14,prevRadius:0,maxRadius:e.r*1.8,absorbed:0,temporalCollapse:true});
  shake=Math.max(shake,9);toast(`第 ${e.bossNumber||e.bossStage} 号 Boss 正在撤离 · 未获得奖励`);
 }
+function playerCombatRadius(){const layers=Math.max(0,Math.min(3,build?.shieldLayers||0));return layers?47+(layers-1)*8:player.r}
 function damagePlayer(d){
  audioSystem?.play('damage');
  if(awakeningSystem.onPlayerDamage(d))return;
@@ -964,7 +965,7 @@ function update(dt){
    }
   }
   e.shoot-=dt*1000*slow;if(e.shoot<=0&&!e.boss&&!['suicide','support'].includes(e.type)){enemyShoot(e);e.shoot=e.huntTarget?(e.enraged?560:760):enemyAttackInterval(e,threat)}
-  if(!e.bossRetreating&&Math.hypot(player.x-e.x,player.y-e.y)<player.r+e.r){damagePlayer(e.boss?30:e.type==='suicide'?28:16);if(e.type==='suicide')suicideBlast(e);explode(e.x,e.y);enemies.splice(i,1);if(dying)break;continue}
+  if(!e.bossRetreating&&Math.hypot(player.x-e.x,player.y-e.y)<playerCombatRadius()+e.r){damagePlayer(e.boss?30:e.type==='suicide'?28:16);if(e.type==='suicide')suicideBlast(e);explode(e.x,e.y);enemies.splice(i,1);if(dying)break;continue}
   if(e.y>H+50||e.x<-70||e.x>W+70)enemies.splice(i,1)
  }
  for(let i=enemyLasers.length-1;i>=0;i--){
@@ -972,10 +973,10 @@ function update(dt){
   if(!l.boss||!enemies.includes(l.boss)){enemyLasers.splice(i,1);continue}
   if(l.mode==='sweep'&&l.life<l.duration){const progress=1-Math.max(0,l.life)/l.duration;l.x=W*.22+W*.56*(l.sweepDir>0?progress:1-progress)}
   const active=l.life<l.duration;
-  if(active){l.tick-=dt;if(l.tick<=0&&Math.abs(player.x-l.x)<l.width+player.r&&player.y>l.y){damagePlayer(l.damage);l.tick=.55}}
+  if(active){l.tick-=dt;if(l.tick<=0&&Math.abs(player.x-l.x)<l.width+playerCombatRadius()&&player.y>l.y){damagePlayer(l.damage);l.tick=.55}}
   if(l.life<=0)enemyLasers.splice(i,1)
  }
- for(let i=enemyBullets.length-1;i>=0;i--){const b=enemyBullets[i];b.x+=b.vx*dt*slow;b.y+=b.vy*dt*slow;if(build.heavyEscortShieldActive>0){const dx=b.x-player.x,dy=b.y-(player.y-8),dist=Math.hypot(dx,dy);const inFront=dy<2&&dy>-112;const insideGuard=dist<92&&Math.abs(dx)<88;if(inFront&&insideGuard){enemyBullets.splice(i,1);particles.push({x:b.x,y:b.y,vx:dx*.75,vy:-70,life:.26,max:.26,r:5.5,type:'barrier'});continue}}if(build.awakeFrontShieldActive>0){const dx=b.x-player.x,dy=b.y-(player.y-78);if(dy>-26&&dy<34&&Math.abs(dx)<118){enemyBullets.splice(i,1);particles.push({x:b.x,y:b.y,vx:dx*.55,vy:-65,life:.28,max:.28,r:6,type:'barrier'});continue}}const bd=Math.hypot(b.x-player.x,b.y-player.y);if(bd<b.r+player.r){if(b.type==='purple'&&b.damage<=10){player.slowTimer=2.2;toast('动力受阻 · 移动速度下降')}damagePlayer(Number.isFinite(b.damage)?b.damage:10+threat*1.5);enemyBullets.splice(i,1);if(dying)break;continue}if(b.y>H+30||b.x<-30||b.x>W+30)enemyBullets.splice(i,1)}
+ for(let i=enemyBullets.length-1;i>=0;i--){const b=enemyBullets[i];b.x+=b.vx*dt*slow;b.y+=b.vy*dt*slow;if(build.heavyEscortShieldActive>0){const dx=b.x-player.x,dy=b.y-(player.y-8),dist=Math.hypot(dx,dy);const inFront=dy<2&&dy>-112;const insideGuard=dist<92&&Math.abs(dx)<88;if(inFront&&insideGuard){enemyBullets.splice(i,1);particles.push({x:b.x,y:b.y,vx:dx*.75,vy:-70,life:.26,max:.26,r:5.5,type:'barrier'});continue}}if(build.awakeFrontShieldActive>0){const dx=b.x-player.x,dy=b.y-(player.y-78);if(dy>-26&&dy<34&&Math.abs(dx)<118){enemyBullets.splice(i,1);particles.push({x:b.x,y:b.y,vx:dx*.55,vy:-65,life:.28,max:.28,r:6,type:'barrier'});continue}}const bd=Math.hypot(b.x-player.x,b.y-player.y);if(bd<b.r+playerCombatRadius()){if(b.type==='purple'&&b.damage<=10){player.slowTimer=2.2;toast('动力受阻 · 移动速度下降')}damagePlayer(Number.isFinite(b.damage)?b.damage:10+threat*1.5);enemyBullets.splice(i,1);if(dying)break;continue}if(b.y>H+30||b.x<-30||b.x>W+30)enemyBullets.splice(i,1)}
  if(dying){updateUI();return}
  const heavyEscortActive=drones.some(d=>d.mode==='drone_heavy');
  if(heavyEscortActive){

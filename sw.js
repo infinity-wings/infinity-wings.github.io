@@ -1,9 +1,9 @@
-const CACHE='iw-cache-8.91-debug-boss-tier-v1';
+const CACHE='iw-cache-8.92-engine-alignment-v1';
 const ASSETS=[
   './',
   './index.html',
-  './style.css?v=8.91.0',
-  './game.js?v=8.91.0',
+  './style.css?v=8.92.0',
+  './game.js?v=8.92.0',
   './manifest.webmanifest',
   './apple-touch-icon.png',
   './favicon.png',

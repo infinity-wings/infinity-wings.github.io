@@ -1,9 +1,9 @@
-const CACHE='iw-cache-8.84-engine-plume-v1';
+const CACHE='iw-cache-8.85-mirror-entry-v1';
 const ASSETS=[
   './',
   './index.html',
-  './style.css?v=8.84.0',
-  './game.js?v=8.84.0',
+  './style.css?v=8.85.0',
+  './game.js?v=8.85.0',
   './manifest.webmanifest',
   './apple-touch-icon.png',
   './favicon.png',
@@ -15,6 +15,8 @@ const ASSETS=[
   './assets/menu/menu-title-logo.PNG',
   './assets/menu/menu-fighter-rear-v2.png',
   './assets/backgrounds/deep-space-flight-v1.jpg',
+  './assets/backgrounds/landmarks/distant-planet-v1.png',
+  './assets/backgrounds/landmarks/station-wreck-v1.png',
   './assets/ships/player-fighter-v4.png',
   './assets/ships/player-drone-v1.png',
   './assets/ships/enemy-scout-v3.png',

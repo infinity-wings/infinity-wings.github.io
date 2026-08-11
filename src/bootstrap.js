@@ -51,10 +51,10 @@ const MOBILE_DEVICE=/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)||navig
 const spaceDust=Array.from({length:MOBILE_DEVICE?32:44},()=>({x:Math.random()*W,y:Math.random()*H,s:.45+Math.random()*1.25,v:12+Math.random()*24,drift:(Math.random()-.5)*5,kind:Math.random()>.78?'debris':'dust'}));
 const nearSpaceStreaks=Array.from({length:MOBILE_DEVICE?9:14},()=>({x:Math.random()*W,y:Math.random()*H,w:.7+Math.random()*1.2,v:260+Math.random()*260,len:8+Math.random()*15,alpha:.34+Math.random()*.42}));
 const spaceLandmarks=[
- {type:'planet',x:W*.9,y:-H*.15,size:118,v:4.2,alpha:.3},
- {type:'wreck',x:W*.14,y:-H*1.28,size:72,v:7.2,alpha:.26,rotation:-.24},
- {type:'asteroids',x:W*.86,y:-H*2.42,size:76,v:9.5,alpha:.28},
- {type:'vortex',x:W*.12,y:-H*3.55,size:92,v:5.6,alpha:.24,rotation:.18}
+ {type:'planetTexture',x:W*.92,y:-H*.2,size:142,v:4.2,alpha:.2,rotation:0},
+ {type:'wreckTexture',x:W*.14,y:-H*1.36,size:92,v:7.2,alpha:.18,rotation:-.18},
+ {type:'asteroids',x:W*.86,y:-H*2.5,size:64,v:7.4,alpha:.18,rotation:.18},
+ {type:'asteroids',x:W*.16,y:-H*3.6,size:52,v:6.2,alpha:.14,rotation:-.31}
 ];
 const mobilePerf={enabled:MOBILE_DEVICE,quality:1,avgFps:60,frameMs:16.7,slowFrames:0,fastFrames:0,thermalPressure:0,lastSample:performance.now(),sampleFrames:0};
 window.IWMobilePerf=mobilePerf;

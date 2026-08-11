@@ -101,10 +101,9 @@ function drawSupportShieldLinks(){
 function drawPlayerSpriteGlow(color='#69efff',alpha=1){
  const pulse=.76+.24*Math.sin(elapsed*6.4);
  ctx.save();ctx.globalCompositeOperation='lighter';ctx.globalAlpha=alpha;
- ctx.shadowBlur=13;ctx.shadowColor=color;ctx.strokeStyle=color;ctx.lineWidth=1.35;
- ctx.beginPath();ctx.moveTo(0,-32);ctx.lineTo(0,8);ctx.moveTo(-8,-8);ctx.lineTo(-15,10);ctx.lineTo(-31,18);ctx.moveTo(8,-8);ctx.lineTo(15,10);ctx.lineTo(31,18);ctx.stroke();
- ctx.globalAlpha=alpha*pulse;ctx.fillStyle='#eaffff';ctx.beginPath();ctx.ellipse(0,-18,3.8,10,0,0,Math.PI*2);ctx.fill();
- ctx.shadowBlur=18;ctx.fillStyle=color;for(const x of [-27,27]){ctx.beginPath();ctx.arc(x,15,2.1,0,Math.PI*2);ctx.fill()}
+ ctx.globalAlpha=alpha*(.16+.08*pulse);ctx.shadowBlur=3;ctx.shadowColor=color;ctx.strokeStyle=color;ctx.lineWidth=.55;
+ ctx.beginPath();ctx.moveTo(0,-30);ctx.lineTo(0,-9);ctx.stroke();
+ ctx.globalAlpha=alpha*(.42+.12*pulse);ctx.fillStyle='#c9fbff';for(const x of [-27,27]){ctx.beginPath();ctx.arc(x,15,1.15,0,Math.PI*2);ctx.fill()}
  ctx.restore();
 }
 
@@ -522,7 +521,7 @@ function drawShip(x,y,color,pose=null){
  ctx.restore();
 
  if(shipSpriteReady(shipSpriteAssets.player)){
-  const spriteAlpha=pose?.alpha??.99,playerImage=getMobileRenderSprite(pose?.bodyColor?getTintedShipSprite(shipSpriteAssets.player,pose.bodyColor,.42):shipSpriteAssets.player,384);ctx.save();ctx.globalAlpha=spriteAlpha;ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(playerImage,-39,-46,78,88);ctx.restore();drawPlayerSpriteGlow(pose?.color||color,spriteAlpha);ctx.restore();return;
+  const spriteAlpha=pose?.alpha??.99,playerImage=getMobileRenderSprite(pose?.bodyColor?getTintedShipSprite(shipSpriteAssets.player,pose.bodyColor,.42):shipSpriteAssets.player,512);ctx.save();ctx.globalAlpha=spriteAlpha;ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(playerImage,-39,-46,78,88);ctx.restore();drawPlayerSpriteGlow(pose?.color||color,spriteAlpha);ctx.restore();return;
  }
 
  // 横滚透视：压低的一侧更宽、更暗并稍向下；抬高的一侧更窄、更亮并稍向上。

@@ -1,9 +1,9 @@
-const CACHE='iw-cache-8.92-engine-alignment-v1';
+const CACHE='iw-cache-8.93-sharp-player-v1';
 const ASSETS=[
   './',
   './index.html',
-  './style.css?v=8.92.0',
-  './game.js?v=8.92.0',
+  './style.css?v=8.93.0',
+  './game.js?v=8.93.0',
   './manifest.webmanifest',
   './apple-touch-icon.png',
   './favicon.png',

@@ -1,9 +1,9 @@
-const CACHE='iw-cache-8.77-unified-honeycomb-shields-v1';
+const CACHE='iw-cache-8.78-balanced-shield-size-v1';
 const ASSETS=[
   './',
   './index.html',
-  './style.css?v=8.77.0',
-  './game.js?v=8.77.0',
+  './style.css?v=8.78.0',
+  './game.js?v=8.78.0',
   './manifest.webmanifest',
   './apple-touch-icon.png',
   './favicon.png',

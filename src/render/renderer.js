@@ -429,7 +429,7 @@ function drawCoreDefenseEffects(lowFx=false){
  if(shieldLayers>0&&!dying){
   ctx.save();ctx.translate(player.x,player.y+(player.visualY||0));ctx.globalCompositeOperation='lighter';
   const currentLayer=Math.max(1,Math.min(3,shieldLayers));
-  const textureWidth=152,textureHeight=152;
+  const textureWidth=136,textureHeight=136;
   const layerSprite=shieldSpriteAssets[`player${currentLayer}`];
   drawShieldSprite(ctx,layerSprite,0,0,textureWidth,textureHeight,.76+(currentLayer-1)*.07,(currentLayer-2)*.025);
   ctx.restore();

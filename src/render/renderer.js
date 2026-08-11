@@ -151,6 +151,7 @@ function draw(){
   drones=Array.isArray(drones)?drones:[];
  const renderLoad=enemies.length+enemyBullets.length*.08+bullets.length*.035+particles.length*.02+(pickups?.length||0)*.07;
  const perfQ=(typeof mobilePerf!=='undefined'&&mobilePerf.enabled)?mobilePerf.quality:1;
+ const threat=typeof threatLevel==='function'?threatLevel():1;
  // 降载只减少模糊与渐变层，绝不再把子弹退化成纯色圆点。
  const lowFx=perfQ<.86||renderLoad>(38+10*perfQ)||(particles?.length||0)>250;
  ctx.clearRect(0,0,W,H);drawDeepSpaceBackground();

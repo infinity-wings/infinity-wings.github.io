@@ -1,9 +1,9 @@
-const CACHE='iw-cache-8.81-multilayer-space-v1';
+const CACHE='iw-cache-8.82-render-loop-recovery-v1';
 const ASSETS=[
   './',
   './index.html',
-  './style.css?v=8.81.0',
-  './game.js?v=8.81.0',
+  './style.css?v=8.82.0',
+  './game.js?v=8.82.0',
   './manifest.webmanifest',
   './apple-touch-icon.png',
   './favicon.png',

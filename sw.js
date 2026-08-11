@@ -1,9 +1,9 @@
-const CACHE='iw-cache-8.86-landmark-visibility-v1';
+const CACHE='iw-cache-8.87-event-scheduler-v1';
 const ASSETS=[
   './',
   './index.html',
-  './style.css?v=8.86.0',
-  './game.js?v=8.86.0',
+  './style.css?v=8.87.0',
+  './game.js?v=8.87.0',
   './manifest.webmanifest',
   './apple-touch-icon.png',
   './favicon.png',

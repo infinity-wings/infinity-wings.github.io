@@ -204,8 +204,9 @@ const BOSS_FIRST_AT=150,BOSS_INTERVAL=90,BOSS_TOTAL=10,BOSS_TIMED_DURATION=30;
 function bossScheduledAt(number){return BOSS_FIRST_AT+(Math.max(1,number)-1)*BOSS_INTERVAL}
 function currentStageNumber(){return Math.max(1,Math.min(BOSS_TOTAL,build?.nextBossNumber||1))}
 function bossWarningState(){const number=build?.nextBossNumber||1,remaining=(build?.nextBossAt??bossScheduledAt(number))-elapsed;return number<=BOSS_TOTAL&&remaining>0&&remaining<=5?{number,remaining}:null}
-function updateBossWarning(){const warning=bossWarningState();if(!warning||enemies.some(e=>e.boss)||build.bossWarningShownFor===warning.number)return;if(battleEventSystem.warning||battleEventSystem.active)battleEventSystem.cancelForBoss();build.bossWarningShownFor=warning.number;audioSystem?.play('ui');toast(`警告：第 ${warning.number} 号 Boss 将在 5 秒后进入战区`)}
+function updateBossWarning(){const warning=bossWarningState();if(!warning||enemies.some(e=>e.boss)||build.bossWarningShownFor===warning.number||battleEventSystem.warning||battleEventSystem.active)return;build.bossWarningShownFor=warning.number;audioSystem?.play('ui');toast(`警告：第 ${warning.number} 号 Boss 将在 5 秒后进入战区`)}
 function maybeSpawnStageBoss(){
+ if(battleEventSystem.warning||battleEventSystem.active){const remaining=battleEventSystem.active?.time??battleEventSystem.warning?.time??0;if(elapsed>=(build.nextBossAt??Infinity)-5)build.nextBossAt=Math.max(build.nextBossAt??0,elapsed+remaining+5);return}
  updateBossWarning();
  const number=build?.nextBossNumber||1;
  if(number>BOSS_TOTAL||enemies.some(e=>e.boss)||elapsed<(build.nextBossAt??bossScheduledAt(number)))return;

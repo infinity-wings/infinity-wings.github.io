@@ -1,9 +1,9 @@
-const CACHE='iw-cache-8.88-threat-landmarks-v1';
+const CACHE='iw-cache-8.89-boss-encounters-v1';
 const ASSETS=[
   './',
   './index.html',
-  './style.css?v=8.88.0',
-  './game.js?v=8.88.0',
+  './style.css?v=8.89.0',
+  './game.js?v=8.89.0',
   './manifest.webmanifest',
   './apple-touch-icon.png',
   './favicon.png',
@@ -30,6 +30,14 @@ const ASSETS=[
   './assets/ships/enemy-jammer-v1.png',
   './assets/ships/enemy-boss-guard-v1.png',
   './assets/ships/boss-dreadnought-wide-v3.png',
+  './assets/ships/bosses/design-v1/boss-iii-entity.png',
+  './assets/ships/bosses/design-v1/boss-iii-projection.png',
+  './assets/ships/bosses/design-v1/boss-iv-entity.png',
+  './assets/ships/bosses/design-v1/boss-iv-projection.png',
+  './assets/ships/bosses/design-v1/boss-v-entity.png',
+  './assets/ships/bosses/design-v1/boss-v-projection.png',
+  './assets/ships/bosses/design-v1/boss-omega-entity.png',
+  './assets/ships/bosses/design-v1/boss-omega-projection.png',
   './assets/effects/enemy-support-shield-v2.png',
   './assets/effects/player-shield-level1-v3.png',
   './assets/effects/player-shield-level2-v4.png',

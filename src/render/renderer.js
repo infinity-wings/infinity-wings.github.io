@@ -17,9 +17,9 @@ const shipSpriteAssets={
 };
 const shieldSpriteAssets={
  enemy:Object.assign(new Image(),{src:'assets/effects/enemy-support-shield-v2.png'}),
- player1:Object.assign(new Image(),{src:'assets/effects/player-shield-level1-v1.png'}),
- player2:Object.assign(new Image(),{src:'assets/effects/player-shield-level2-v1.png'}),
- player3:Object.assign(new Image(),{src:'assets/effects/player-shield-level3-v1.png'}),
+ player1:Object.assign(new Image(),{src:'assets/effects/player-shield-level1-v2.png'}),
+ player2:Object.assign(new Image(),{src:'assets/effects/player-shield-level2-v2.png'}),
+ player3:Object.assign(new Image(),{src:'assets/effects/player-shield-level3-v2.png'}),
  escort:Object.assign(new Image(),{src:'assets/effects/escort-front-barrier-v2.png'})
 };
 for(const image of [shipSpriteAssets.player,shipSpriteAssets.drone,shipSpriteAssets.guard,shipSpriteAssets.boss,...Object.values(shipSpriteAssets.enemies),...Object.values(shieldSpriteAssets)])image.decoding='async';
@@ -429,7 +429,7 @@ function drawCoreDefenseEffects(lowFx=false){
  if(shieldLayers>0&&!dying){
   ctx.save();ctx.translate(player.x,player.y+(player.visualY||0));ctx.globalCompositeOperation='lighter';
   const currentLayer=Math.max(1,Math.min(3,shieldLayers));
-  const textureWidth=94+(currentLayer-1)*16,textureHeight=textureWidth;
+  const textureWidth=128+(currentLayer-1)*12,textureHeight=textureWidth;
   const layerSprite=shieldSpriteAssets[`player${currentLayer}`];
   drawShieldSprite(ctx,layerSprite,0,0,textureWidth,textureHeight,.76+(currentLayer-1)*.07,(currentLayer-2)*.025);
   ctx.restore();

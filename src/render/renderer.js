@@ -16,8 +16,8 @@ const shipSpriteAssets={
  boss:Object.assign(new Image(),{src:'assets/ships/boss-dreadnought-wide-v3.png'})
 };
 const shieldSpriteAssets={
- enemy:Object.assign(new Image(),{src:'assets/effects/enemy-support-shield-v1.png'}),
- deflector:Object.assign(new Image(),{src:'assets/effects/deflector-shield-v1.png'})
+ enemy:Object.assign(new Image(),{src:'assets/effects/enemy-support-shield-v2.png'}),
+ deflector:Object.assign(new Image(),{src:'assets/effects/player-shield-round-v2.png'})
 };
 for(const image of [shipSpriteAssets.player,shipSpriteAssets.drone,shipSpriteAssets.guard,shipSpriteAssets.boss,...Object.values(shipSpriteAssets.enemies),...Object.values(shieldSpriteAssets)])image.decoding='async';
 const tintedShipSpriteCache=new Map();
@@ -62,7 +62,7 @@ function drawSupportShieldLinks(){
  const supports=enemies.filter(e=>e?.type==='support'&&e.hp>0);if(!supports.length)return;
  ctx.save();ctx.globalCompositeOperation='lighter';ctx.lineCap='round';
  for(const support of supports){
-  const allies=enemies.filter(e=>e!==support&&e.hp>0&&e.shield>0&&Math.hypot(e.x-support.x,e.y-support.y)<132).sort((a,b)=>Math.hypot(a.x-support.x,a.y-support.y)-Math.hypot(b.x-support.x,b.y-support.y)).slice(0,3);
+  const allies=enemies.filter(e=>e!==support&&e.hp>0&&e.shield>0&&e.supportShieldSource===support&&Math.hypot(e.x-support.x,e.y-support.y)<132).sort((a,b)=>Math.hypot(a.x-support.x,a.y-support.y)-Math.hypot(b.x-support.x,b.y-support.y)).slice(0,3);
   for(const ally of allies){const pulse=.68+.32*Math.sin(elapsed*10+ally.x*.03),gradient=ctx.createLinearGradient(support.x,support.y,ally.x,ally.y);gradient.addColorStop(0,'rgba(198,255,255,.92)');gradient.addColorStop(.45,'rgba(67,224,255,.72)');gradient.addColorStop(1,'rgba(84,170,255,.22)');ctx.globalAlpha=.52+.28*pulse;ctx.shadowBlur=12;ctx.shadowColor='#4ceaff';ctx.strokeStyle=gradient;ctx.lineWidth=2.2;ctx.beginPath();ctx.moveTo(support.x,support.y);ctx.lineTo(ally.x,ally.y);ctx.stroke();ctx.globalAlpha=.8;ctx.fillStyle='#e8ffff';for(let t=.22;t<1;t+=.28){const travel=(t+elapsed*.55)%1;ctx.beginPath();ctx.arc(support.x+(ally.x-support.x)*travel,support.y+(ally.y-support.y)*travel,1.7,0,Math.PI*2);ctx.fill()}}
  }
  ctx.restore();
@@ -439,7 +439,7 @@ function drawCoreDefenseEffects(lowFx=false){
   for(let i=0;i<shieldLayers;i++){
    const radius=(48+i*8)*pulse;
    const color=i===2?'#b28cff':i===1?'#73d9ff':'#9bf5ff';
-   const textureWidth=(86+i*15)*pulse,textureHeight=(128+i*20)*pulse;
+   const textureWidth=(94+i*16)*pulse,textureHeight=textureWidth;
    if(drawShieldSprite(ctx,shieldSpriteAssets.deflector,0,0,textureWidth,textureHeight,.34+i*.13,(i-1)*.035+Math.sin(elapsed*1.8+i)*.012)){ctx.save();ctx.globalCompositeOperation='lighter';ctx.globalAlpha=.38+i*.1;ctx.strokeStyle=color;ctx.shadowBlur=15+i*3;ctx.shadowColor=color;ctx.lineWidth=1.5+i*.45;ctx.beginPath();ctx.ellipse(0,0,textureWidth*.48,textureHeight*.48,0,0,Math.PI*2);ctx.stroke();ctx.restore();continue}
    ctx.save();ctx.rotate(elapsed*(i%2?-.16:.12)+i*.16);ctx.globalAlpha=.10+i*.035;
    ctx.fillStyle=color;ctx.beginPath();for(let a=0;a<6;a++){const ang=-Math.PI/2+a*Math.PI/3,x=Math.cos(ang)*radius,y=Math.sin(ang)*radius;(a?ctx.lineTo(x,y):ctx.moveTo(x,y))}ctx.closePath();ctx.fill();ctx.restore();

@@ -15,7 +15,11 @@ const shipSpriteAssets={
  guard:Object.assign(new Image(),{src:'assets/ships/enemy-boss-guard-v1.png'}),
  boss:Object.assign(new Image(),{src:'assets/ships/boss-dreadnought-wide-v3.png'})
 };
-for(const image of [shipSpriteAssets.player,shipSpriteAssets.drone,shipSpriteAssets.guard,shipSpriteAssets.boss,...Object.values(shipSpriteAssets.enemies)])image.decoding='async';
+const shieldSpriteAssets={
+ enemy:Object.assign(new Image(),{src:'assets/effects/enemy-support-shield-v1.png'}),
+ deflector:Object.assign(new Image(),{src:'assets/effects/deflector-shield-v1.png'})
+};
+for(const image of [shipSpriteAssets.player,shipSpriteAssets.drone,shipSpriteAssets.guard,shipSpriteAssets.boss,...Object.values(shipSpriteAssets.enemies),...Object.values(shieldSpriteAssets)])image.decoding='async';
 const tintedShipSpriteCache=new Map();
 const mobileRenderSpriteCache=new WeakMap();
 function getMobileRenderSprite(image){
@@ -50,6 +54,19 @@ const enemySpriteSizes={
  barrage:[102,90],raider:[82,78],carrier:[112,92],jammer:[90,84]
 };
 function shipSpriteReady(image){return image?.complete&&image.naturalWidth>0}
+function drawShieldSprite(targetCtx,image,x,y,width,height,alpha=1,rotation=0){
+ if(!shipSpriteReady(image))return false;
+ const sprite=getMobileRenderSprite(image);targetCtx.save();targetCtx.translate(x,y);targetCtx.rotate(rotation);targetCtx.globalCompositeOperation='lighter';targetCtx.globalAlpha=alpha;targetCtx.imageSmoothingEnabled=true;targetCtx.imageSmoothingQuality='high';targetCtx.drawImage(sprite,-width/2,-height/2,width,height);targetCtx.restore();return true;
+}
+function drawSupportShieldLinks(){
+ const supports=enemies.filter(e=>e?.type==='support'&&e.hp>0);if(!supports.length)return;
+ ctx.save();ctx.globalCompositeOperation='lighter';ctx.lineCap='round';
+ for(const support of supports){
+  const allies=enemies.filter(e=>e!==support&&e.hp>0&&e.shield>0&&Math.hypot(e.x-support.x,e.y-support.y)<132).sort((a,b)=>Math.hypot(a.x-support.x,a.y-support.y)-Math.hypot(b.x-support.x,b.y-support.y)).slice(0,3);
+  for(const ally of allies){const pulse=.68+.32*Math.sin(elapsed*10+ally.x*.03),gradient=ctx.createLinearGradient(support.x,support.y,ally.x,ally.y);gradient.addColorStop(0,'rgba(198,255,255,.92)');gradient.addColorStop(.45,'rgba(67,224,255,.72)');gradient.addColorStop(1,'rgba(84,170,255,.22)');ctx.globalAlpha=.52+.28*pulse;ctx.shadowBlur=12;ctx.shadowColor='#4ceaff';ctx.strokeStyle=gradient;ctx.lineWidth=2.2;ctx.beginPath();ctx.moveTo(support.x,support.y);ctx.lineTo(ally.x,ally.y);ctx.stroke();ctx.globalAlpha=.8;ctx.fillStyle='#e8ffff';for(let t=.22;t<1;t+=.28){const travel=(t+elapsed*.55)%1;ctx.beginPath();ctx.arc(support.x+(ally.x-support.x)*travel,support.y+(ally.y-support.y)*travel,1.7,0,Math.PI*2);ctx.fill()}}
+ }
+ ctx.restore();
+}
 function drawPlayerSpriteGlow(color='#69efff',alpha=1){
  const pulse=.76+.24*Math.sin(elapsed*6.4),enginePulse=.8+.2*Math.sin(elapsed*18);
  ctx.save();ctx.globalCompositeOperation='lighter';ctx.globalAlpha=alpha;
@@ -170,6 +187,7 @@ function draw(){
  if(enemyBulletBaseTransform)ctx.setTransform(enemyBulletBaseTransform);
  ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.shadowBlur=0;ctx.shadowColor='transparent';ctx.filter='none';ctx.setLineDash([]);ctx.lineWidth=1;ctx.lineCap='butt';ctx.lineJoin='miter';
  enemyModelCtx=ctx;
+ withRenderState('支援护盾连接',()=>drawSupportShieldLinks());
  for(const e of enemies){try{withRenderState('敌机模型',()=>drawEnemyShip(e));if(e.boss&&!e.bossRetreating){ctx.save();ctx.fillStyle='#dbeaff';ctx.font='bold 12px system-ui';ctx.textAlign='center';const timer=!e.persistentBoss&&Number.isFinite(e.bossTimeLeft)?` · ${Math.max(0,Math.ceil(e.bossTimeLeft))}秒`:'';ctx.fillText(`#${e.bossNumber||e.bossStage} ${e.bossName||'Boss'}${e.awakenedBoss?' [觉醒]':''}${timer}`,W/2,21);ctx.fillStyle='#18233b';ctx.fillRect(55,28,W-110,12);ctx.fillStyle=e.awakenedBoss?'#ff5fd7':'#a767ff';ctx.fillRect(55,28,(W-110)*Math.max(0,Math.min(1,(finite(e.hp,0)/Math.max(1,finite(e.max,1))))),12);ctx.restore()}}catch(error){console.warn('敌机绘制已跳过',error,e)}}
  for(const d of drones){try{withRenderState('无人机模型',()=>drawDrone(d))}catch(error){console.warn('无人机绘制已跳过',error,d)}}
  try{drawHeavyEscortShield()}catch(error){console.warn('护航盾绘制已跳过',error)}
@@ -309,7 +327,7 @@ function drawDrone(d){
   const swarm=d.mode==='drone_swarm',heavy=d.mode==='drone_heavy',width=heavy?64:swarm?34:46,height=heavy?58:swarm?31:42;
   const droneImage=getMobileRenderSprite(heavy?getTintedShipSprite(shipSpriteAssets.drone,'#6c87c8',.2):swarm?getTintedShipSprite(shipSpriteAssets.drone,'#62efff',.16):shipSpriteAssets.drone);
   ctx.save();ctx.globalAlpha=.99;ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(droneImage,-width/2,-height/2,width,height);ctx.restore();
-  ctx.save();ctx.globalCompositeOperation='lighter';ctx.shadowBlur=heavy?15:10;ctx.shadowColor='#59ddff';ctx.fillStyle='#dfffff';const engineY=height*.39;for(const engineX of heavy?[-11,11]:[-7,7]){ctx.beginPath();ctx.ellipse(engineX,engineY,heavy?2.2:1.5,heavy?6:4,0,0,Math.PI*2);ctx.fill()}if(heavy&&d.guardFlash>0){ctx.globalAlpha=.7;ctx.strokeStyle='#aefaff';ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,-2,27+Math.sin(elapsed*8)*2,0,Math.PI*2);ctx.stroke()}ctx.restore();ctx.restore();return;
+  ctx.save();ctx.globalCompositeOperation='lighter';ctx.shadowBlur=heavy?15:10;ctx.shadowColor='#59ddff';ctx.fillStyle='#dfffff';const engineY=height*.39;for(const engineX of heavy?[-11,11]:[-7,7]){ctx.beginPath();ctx.ellipse(engineX,engineY,heavy?2.2:1.5,heavy?6:4,0,0,Math.PI*2);ctx.fill()}ctx.restore();if(heavy&&d.guardFlash>0){const guardPulse=1+Math.sin(elapsed*8+(d.slot||0))*0.025;drawShieldSprite(ctx,shieldSpriteAssets.deflector,0,-2,70*guardPulse,82*guardPulse,.42+.3*d.guardFlash,(d.slot?-.025:.025))}ctx.restore();return;
  }
  if(d.mode==='drone_swarm'){
   const scale=.68+(d.slot%2)*.04;ctx.scale(scale,scale);
@@ -327,7 +345,7 @@ function drawDrone(d){
   for(const ox of [-7,7]){const flame=11+Math.sin(elapsed*19+(d.slot||0)*1.8+ox)*1.8;ctx.save();ctx.globalCompositeOperation='lighter';ctx.shadowBlur=15;ctx.shadowColor='#5ecfff';const fg=ctx.createLinearGradient(ox,10,ox,10+flame);fg.addColorStop(0,'#fff');fg.addColorStop(.32,'#54dbff');fg.addColorStop(1,'rgba(39,76,255,0)');ctx.fillStyle=fg;ctx.beginPath();ctx.moveTo(ox-2.5,9);ctx.lineTo(ox+2.5,9);ctx.lineTo(ox,10+flame);ctx.closePath();ctx.fill();ctx.restore();}
   ctx.shadowBlur=16;ctx.shadowColor='rgba(72,184,255,.6)';const hull=ctx.createLinearGradient(0,-22,0,15);hull.addColorStop(0,'#eefaff');hull.addColorStop(.45,'#6d95b7');hull.addColorStop(1,'#1d354d');ctx.fillStyle=hull;ctx.beginPath();ctx.moveTo(0,-23);ctx.lineTo(-8,-13);ctx.lineTo(-24,-8);ctx.lineTo(-28,1);ctx.lineTo(-16,8);ctx.lineTo(-9,6);ctx.lineTo(-5,15);ctx.lineTo(0,11);ctx.lineTo(5,15);ctx.lineTo(9,6);ctx.lineTo(16,8);ctx.lineTo(28,1);ctx.lineTo(24,-8);ctx.lineTo(8,-13);ctx.closePath();ctx.fill();
   ctx.fillStyle='#22364d';ctx.beginPath();ctx.moveTo(-22,-6);ctx.lineTo(-27,1);ctx.lineTo(-15,6);ctx.lineTo(-5,2);ctx.closePath();ctx.fill();ctx.beginPath();ctx.moveTo(22,-6);ctx.lineTo(27,1);ctx.lineTo(15,6);ctx.lineTo(5,2);ctx.closePath();ctx.fill();
-  ctx.fillStyle='#0e1b2d';ctx.fillRect(-5,-24,10,15);ctx.fillStyle='#dffaff';ctx.fillRect(-2.5,-27,5,10);ctx.save();ctx.globalCompositeOperation='lighter';ctx.shadowBlur=17;ctx.shadowColor='#63e8ff';ctx.fillStyle='#eaffff';ctx.beginPath();ctx.arc(0,-4,5.5,0,Math.PI*2);ctx.fill();ctx.fillStyle='#26aee9';ctx.beginPath();ctx.arc(0,-4,3.2,0,Math.PI*2);ctx.fill();if(d.guardFlash>0){ctx.globalAlpha=.7;ctx.strokeStyle='#aefaff';ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,-2,20+Math.sin(elapsed*8)*2,0,Math.PI*2);ctx.stroke()}ctx.restore();ctx.restore();return;
+  ctx.fillStyle='#0e1b2d';ctx.fillRect(-5,-24,10,15);ctx.fillStyle='#dffaff';ctx.fillRect(-2.5,-27,5,10);ctx.save();ctx.globalCompositeOperation='lighter';ctx.shadowBlur=17;ctx.shadowColor='#63e8ff';ctx.fillStyle='#eaffff';ctx.beginPath();ctx.arc(0,-4,5.5,0,Math.PI*2);ctx.fill();ctx.fillStyle='#26aee9';ctx.beginPath();ctx.arc(0,-4,3.2,0,Math.PI*2);ctx.fill();ctx.restore();if(d.guardFlash>0){const guardPulse=1+Math.sin(elapsed*8+(d.slot||0))*0.025;drawShieldSprite(ctx,shieldSpriteAssets.deflector,0,-2,72*guardPulse,86*guardPulse,.42+.3*d.guardFlash,(d.slot?-.025:.025))}ctx.restore();return;
  }
  // Standard drone model.
  ctx.save();ctx.translate(bank*2,13);ctx.scale(1,.32);ctx.filter='blur(5px)';ctx.globalAlpha=.24;ctx.fillStyle='#000';ctx.beginPath();ctx.ellipse(0,0,13,7,0,0,Math.PI*2);ctx.fill();ctx.restore();
@@ -352,8 +370,8 @@ function enemyPanelLine(points,color='rgba(255,255,255,.25)',width=1){enemyModel
 function enemyCore(x,y,r,color,pulse=1){enemyModelCtx.save();enemyModelCtx.globalCompositeOperation='lighter';enemyModelCtx.shadowBlur=18;enemyModelCtx.shadowColor=color;enemyModelCtx.fillStyle='rgba(245,255,255,.96)';enemyModelCtx.beginPath();enemyModelCtx.arc(x,y,r,0,Math.PI*2);enemyModelCtx.fill();enemyModelCtx.globalAlpha=.72+.28*pulse;enemyModelCtx.fillStyle=color;enemyModelCtx.beginPath();enemyModelCtx.arc(x,y,r*.62,0,Math.PI*2);enemyModelCtx.fill();enemyModelCtx.restore();}
 function drawTexturedEnemyOnly(e,pulse,hpRatio){
  const image=e.boss?shipSpriteAssets.boss:e.bossGuard?shipSpriteAssets.guard:(shipSpriteAssets.enemies[e.type]||shipSpriteAssets.enemies.scout);if(!shipSpriteReady(image))return false;const bossProfile=e.boss?bossVisualProfile(e):null,renderImage=getMobileRenderSprite(e.boss?getTintedShipSprite(image,bossProfile.tint,e.awakenedBoss?.27:.17):image);
- if(e.shield>0){enemyModelCtx.save();enemyModelCtx.globalCompositeOperation='lighter';enemyModelCtx.strokeStyle='rgba(91,224,255,.8)';enemyModelCtx.lineWidth=2.5;enemyModelCtx.shadowBlur=13;enemyModelCtx.shadowColor='#57ddff';enemyModelCtx.beginPath();enemyModelCtx.arc(0,0,e.r+7+Math.sin(e.age*5)*2,0,Math.PI*2);enemyModelCtx.stroke();enemyModelCtx.restore()}
  const [width,height]=e.boss?[196,144]:e.bossGuard?[78,66]:(enemySpriteSizes[e.type]||enemySpriteSizes.scout);
+ if(e.shield>0){const shieldPulse=1+Math.sin(e.age*6)*.025,shieldAlpha=.48+.28*Math.min(1,e.shield/Math.max(1,e.maxShield||e.shield));enemyModelCtx.save();enemyModelCtx.scale(1,-1);if(!drawShieldSprite(enemyModelCtx,shieldSpriteAssets.enemy,0,0,(width+24)*shieldPulse,(Math.max(width,height)+24)*shieldPulse,shieldAlpha,elapsed*.06)){enemyModelCtx.strokeStyle='rgba(91,224,255,.85)';enemyModelCtx.lineWidth=3;enemyModelCtx.beginPath();enemyModelCtx.arc(0,0,e.r+9,0,Math.PI*2);enemyModelCtx.stroke()}enemyModelCtx.restore()}
  const entryProgress=e.bossEntering?Math.min(1,(e.bossEntryTime||0)/1.7):1,entryPulse=.72+.28*Math.sin(elapsed*18);
  const spriteAlpha=e.bossRetreating?Math.max(.14,Math.min(1,(e.retreatTime||0)/1.6))*(.7+.3*Math.sin(elapsed*24)):e.bossEntering?(.22+.77*entryProgress)*entryPulse:.99;
  enemyModelCtx.save();enemyModelCtx.scale(1,-1);if(e.bossEntering){const entryScale=.78+.22*(1-Math.pow(1-entryProgress,3));enemyModelCtx.scale(entryScale,entryScale)}enemyModelCtx.globalAlpha=spriteAlpha;enemyModelCtx.imageSmoothingEnabled=true;enemyModelCtx.imageSmoothingQuality='high';enemyModelCtx.drawImage(renderImage,-width/2,-height/2,width,height);enemyModelCtx.restore();
@@ -417,10 +435,12 @@ function drawCoreDefenseEffects(lowFx=false){
  const shieldLayers=build?.shieldLayers||0;
  if(shieldLayers>0&&!dying){
   ctx.save();ctx.translate(player.x,player.y+(player.visualY||0));ctx.globalCompositeOperation='lighter';
-  const pulse=1+Math.sin(elapsed*3.6)*.025;
+  const pulse=1+Math.sin(elapsed*3.6)*.018;
   for(let i=0;i<shieldLayers;i++){
-   const radius=(48+i*7)*pulse;
+   const radius=(48+i*8)*pulse;
    const color=i===2?'#b28cff':i===1?'#73d9ff':'#9bf5ff';
+   const textureWidth=(86+i*15)*pulse,textureHeight=(128+i*20)*pulse;
+   if(drawShieldSprite(ctx,shieldSpriteAssets.deflector,0,0,textureWidth,textureHeight,.34+i*.13,(i-1)*.035+Math.sin(elapsed*1.8+i)*.012)){ctx.save();ctx.globalCompositeOperation='lighter';ctx.globalAlpha=.38+i*.1;ctx.strokeStyle=color;ctx.shadowBlur=15+i*3;ctx.shadowColor=color;ctx.lineWidth=1.5+i*.45;ctx.beginPath();ctx.ellipse(0,0,textureWidth*.48,textureHeight*.48,0,0,Math.PI*2);ctx.stroke();ctx.restore();continue}
    ctx.save();ctx.rotate(elapsed*(i%2?-.16:.12)+i*.16);ctx.globalAlpha=.10+i*.035;
    ctx.fillStyle=color;ctx.beginPath();for(let a=0;a<6;a++){const ang=-Math.PI/2+a*Math.PI/3,x=Math.cos(ang)*radius,y=Math.sin(ang)*radius;(a?ctx.lineTo(x,y):ctx.moveTo(x,y))}ctx.closePath();ctx.fill();ctx.restore();
    ctx.save();ctx.rotate(i*.08);ctx.globalAlpha=.7+i*.08;ctx.strokeStyle=color;ctx.lineWidth=2.4+i*.7;ctx.shadowBlur=18+i*5;ctx.shadowColor=color;ctx.beginPath();for(let a=0;a<6;a++){const ang=-Math.PI/2+a*Math.PI/3,x=Math.cos(ang)*radius,y=Math.sin(ang)*radius;(a?ctx.lineTo(x,y):ctx.moveTo(x,y))}ctx.closePath();ctx.stroke();

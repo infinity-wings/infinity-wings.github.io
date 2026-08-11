@@ -1,9 +1,9 @@
-const CACHE='iw-cache-8.69-p1-fixes-v1';
+const CACHE='iw-cache-8.70-shield-vfx-v1';
 const ASSETS=[
   './',
   './index.html',
-  './style.css?v=8.69.0',
-  './game.js?v=8.69.0',
+  './style.css?v=8.70.0',
+  './game.js?v=8.70.0',
   './manifest.webmanifest',
   './apple-touch-icon.png',
   './favicon.png',
@@ -27,6 +27,8 @@ const ASSETS=[
   './assets/ships/enemy-jammer-v1.png',
   './assets/ships/enemy-boss-guard-v1.png',
   './assets/ships/boss-dreadnought-wide-v3.png',
+  './assets/effects/enemy-support-shield-v1.png',
+  './assets/effects/deflector-shield-v1.png',
   './assets/meteors/meteor-small-v1.png',
   './assets/meteors/meteor-medium-v1.png',
   './assets/meteors/meteor-large-v1.png'

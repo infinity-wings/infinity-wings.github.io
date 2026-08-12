@@ -1,9 +1,9 @@
-const CACHE='iw-cache-9.07-signature-fighters-v10';
+const CACHE='iw-cache-9.07-periodic-chain-lightning-v11';
 const ASSETS=[
   './',
   './index.html',
   './style.css?v=9.07.7',
-  './game.js?v=9.07.7',
+  './game.js?v=9.07.8',
   './manifest.webmanifest',
   './apple-touch-icon.png',
   './favicon.png',

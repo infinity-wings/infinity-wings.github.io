@@ -80,9 +80,9 @@ const CORE_DEFINITIONS = Object.freeze({
     id: 'thunder', name: '电磁源核', shortName: '电磁', category: CORE_CATEGORIES.WEAPON,
     role: '连锁清场输出',
     levels: [
-      { name: '电弧发生器', description: '普通弹命中有18%概率，向220范围内最多2个敌人连续跳跃。' },
-      { name: '连锁回路', description: '触发率提升至27%，向280范围内最多连锁3个目标。' },
-      { name: '雷暴矩阵', description: '触发率提升至36%，向350范围内最多连锁4个目标，终点释放雷暴脉冲。' }
+      { name: '电弧发生器', description: '每隔一段时间从机身释放闪电，在一定范围内连续连接最多2个敌人。' },
+      { name: '连锁回路', description: '闪电可连续连接最多3个敌人，并显著提高每次电击伤害。' },
+      { name: '雷暴矩阵', description: '闪电可连续连接最多5个敌人，扩大连接范围并明显缩短释放冷却。' }
     ]
   }),
   shield: defineCore({

@@ -64,7 +64,7 @@ function reset(){
  mainBulletSize:1,
  mainBulletDamageScale:1
 };
-bullets=resetEntityArray('bullets',bullets);missiles=resetEntityArray('missiles',missiles);enemies=[];enemyBullets=resetEntityArray('enemyBullets',enemyBullets);enemyLasers=[];particles=resetEntityArray('particles',particles);blastWaves=[];lightningArcs=[];drones=[];pickups=resetEntityArray('pickups',pickups);score=0;level=1;xp=0;nextXp=50;bombs=3;build={laserState:{phase:'cooldown',timer:1.8,level:0},missileCd:1.4,chronoActive:0,chronoCd:8,levelUpLock:0,killWindow:[],spawnBurst:0,lastEnemyUnlock:1,lastLandmarkThreat:0,barrierCharge:0,shieldLayers:0,shieldRecharge:0,lastHitAt:-99,projectionActive:0,projectionCd:0,projectionLevel:0,projectionMirrorSide:1,projectionCacheFrame:-1,projectionCacheLevel:0,projectionCache:[],projectionMode:'none',projectionMainCd:0,projectionMissileCd:0,projectionLaserState:{phase:'idle',timer:0},debugLockHp:false,debugLockXp:false,debugThreatLevel:null,bossClearedTier:-1,bossDirectorTier:0,bossDirectorIndex:0,bossDirectorProgress:0,bossPendingNumber:0,bossPendingTimer:0,bossWarningShownFor:0,bossesDefeated:0,finalBossDefeated:false,firstEliteSpawned:false,droneVolleyCd:0,droneVolleyMode:'none',heavyEscortShieldActive:0,heavyEscortShieldCd:0,heavyEscortShieldDuration:4.5,heavyEscortShieldCooldown:9,awakeFrontShieldActive:0,awakeFrontShieldCd:0,awakeFrontShieldDuration:4,awakeFrontShieldCooldown:8,awakeFrontShieldBurstDone:false};coreManager.reset({silent:true});const sortieFighter=IWSave?.data?.profile?.selectedFighter||'infinity',sortieCore={infinity:'main',laser:'laser',drone:'drone',missile:'missile',thunder:'thunder'}[sortieFighter]||'main';coreManager.setLevel(sortieCore,1,{silent:true});awakeningSystem.reset();battleEventSystem.reset();upgradeSystem.reset();rewindHistory=[];projectionHistory=[];elapsed=0;spawnCd=0;bossSpawned=false;dying=false;deathTimer=0;deathFade=0;spaceLandmarks.length=0;build.allCoresMax=false;updateUI();coreEffects.init()
+bullets=resetEntityArray('bullets',bullets);missiles=resetEntityArray('missiles',missiles);enemies=[];enemyBullets=resetEntityArray('enemyBullets',enemyBullets);enemyLasers=[];particles=resetEntityArray('particles',particles);blastWaves=[];lightningArcs=[];drones=[];pickups=resetEntityArray('pickups',pickups);score=0;level=1;xp=0;nextXp=50;bombs=3;build={laserState:{phase:'cooldown',timer:1.8,level:0},missileCd:1.4,thunderCd:.7,chronoActive:0,chronoCd:8,levelUpLock:0,killWindow:[],spawnBurst:0,lastEnemyUnlock:1,lastLandmarkThreat:0,barrierCharge:0,shieldLayers:0,shieldRecharge:0,lastHitAt:-99,projectionActive:0,projectionCd:0,projectionLevel:0,projectionMirrorSide:1,projectionCacheFrame:-1,projectionCacheLevel:0,projectionCache:[],projectionMode:'none',projectionMainCd:0,projectionMissileCd:0,projectionLaserState:{phase:'idle',timer:0},debugLockHp:false,debugLockXp:false,debugThreatLevel:null,bossClearedTier:-1,bossDirectorTier:0,bossDirectorIndex:0,bossDirectorProgress:0,bossPendingNumber:0,bossPendingTimer:0,bossWarningShownFor:0,bossesDefeated:0,finalBossDefeated:false,firstEliteSpawned:false,droneVolleyCd:0,droneVolleyMode:'none',heavyEscortShieldActive:0,heavyEscortShieldCd:0,heavyEscortShieldDuration:4.5,heavyEscortShieldCooldown:9,awakeFrontShieldActive:0,awakeFrontShieldCd:0,awakeFrontShieldDuration:4,awakeFrontShieldCooldown:8,awakeFrontShieldBurstDone:false};coreManager.reset({silent:true});const sortieFighter=IWSave?.data?.profile?.selectedFighter||'infinity',sortieCore={infinity:'main',laser:'laser',drone:'drone',missile:'missile',thunder:'thunder'}[sortieFighter]||'main';coreManager.setLevel(sortieCore,1,{silent:true});awakeningSystem.reset();battleEventSystem.reset();upgradeSystem.reset();rewindHistory=[];projectionHistory=[];elapsed=0;spawnCd=0;bossSpawned=false;dying=false;deathTimer=0;deathFade=0;spaceLandmarks.length=0;build.allCoresMax=false;updateUI();coreEffects.init()
 }
 function threatLevel(){
  if(Number.isInteger(build?.debugThreatLevel))return Math.max(0,Math.min(5,build.debugThreatLevel));
@@ -324,14 +324,12 @@ function getThunderCoreStats(){
  const thunderLevel=coreManager.getLevel('thunder');
  if(thunderLevel<=0)return null;
  return [null,
-  {level:1,chance:.18,chains:2,range:220,damageScale:.46},
-  {level:2,chance:.27,chains:3,range:280,damageScale:.54},
-  {level:3,chance:.36,chains:4,range:350,damageScale:.62,stormRadius:72,stormScale:.34}
+  {level:1,chains:2,range:260,damage:38,cooldown:2.8},
+  {level:2,chains:3,range:310,damage:58,cooldown:2.8},
+  {level:3,chains:5,range:370,damage:72,cooldown:1.75}
  ][thunderLevel];
 }
 function applyThunderPayload(projectile){
- const stats=getThunderCoreStats();
- if(stats)projectile.thunderLevel=stats.level;
  return projectile;
 }
 function removeKilledEnemy(enemy,baseDamage,blastLevel){
@@ -344,6 +342,21 @@ function removeKilledEnemy(enemy,baseDamage,blastLevel){
 function createLightningArc(from,to,level=1){
  lightningArcs.push({x1:from.x,y1:from.y,x2:to.x,y2:to.y,life:.26,maxLife:.26,level,seed:Math.random()*9999});
  for(let i=0;i<4;i++)particles.push({x:to.x+(Math.random()-.5)*10,y:to.y+(Math.random()-.5)*10,vx:(Math.random()-.5)*90,vy:(Math.random()-.5)*90,life:.18+Math.random()*.18,max:.36,r:1+Math.random()*1.8,type:'thunder'});
+}
+function fireThunderCore(level){
+ const stats=getThunderCoreStats();if(!stats||!enemies.length)return false;
+ let from={x:player.x,y:player.y-18},fired=false;const struck=new Set();
+ for(let step=0;step<stats.chains;step++){
+  const target=enemies.filter(enemy=>enemy.hp>0&&!enemy.bossRetreating&&!struck.has(enemy)&&Math.hypot(enemy.x-from.x,enemy.y-from.y)<=stats.range).sort((a,b)=>Math.hypot(a.x-from.x,a.y-from.y)-Math.hypot(b.x-from.x,b.y-from.y))[0];
+  if(!target)break;fired=true;struck.add(target);createLightningArc(from,target,level);const nextFrom={x:target.x,y:target.y};
+  if(damageEnemy(target,stats.damage)){const index=enemies.indexOf(target);if(index>=0)enemies.splice(index,1)}from=nextFrom;
+ }
+ if(fired){audioSystem?.play('thunder');shake=Math.max(shake,level===3?6:4)}return fired;
+}
+function updateThunderCore(dt){
+ const level=coreManager.getLevel('thunder'),stats=getThunderCoreStats();if(!level||!stats){build.thunderCd=.7;return}
+ build.thunderCd=Math.max(0,(build.thunderCd??.7)-dt/timeCooldownScale());if(build.thunderCd>0)return;
+ fireThunderCore(level);build.thunderCd=stats.cooldown;
 }
 function triggerThunder(origin,baseDamage,thunderLevel,blastLevel=0,excludedEnemy=null){
  audioSystem?.play('thunder');
@@ -959,7 +972,7 @@ function update(dt){
  player.inv=Math.max(0,player.inv-dt);player.fireCd-=dt*1000;if(player.fireCd<=0){playerShoot();const mainAwakening=awakeningSystem.get('main');player.fireCd=mainAwakening?.id==='main_piercer'?1550:mainAwakening?.id==='main_rapid'?220:player.fireRate}
  syncAttackCoreState();updateDefenseCores(dt);updateProjectionCore(dt);updateProjectionInheritedSkills(dt);awakeningSystem.update(dt);
  const cooldownScale=timeCooldownScale();
- const laserLevel=coreManager.getLevel('laser');updateLaserCore(dt/cooldownScale,laserLevel)
+ const laserLevel=coreManager.getLevel('laser');updateLaserCore(dt/cooldownScale,laserLevel);updateThunderCore(dt)
  const missileLevel=coreManager.getLevel('missile');if(missileLevel){build.missileCd-=dt/cooldownScale;if(build.missileCd<=0){fireMissiles(missileLevel);build.missileCd=missileStats(missileLevel).cooldown}}
  rewindHistory.unshift({x:player.x,y:player.y,hp:player.hp});if(rewindHistory.length>240)rewindHistory.pop();
  // 投影已经使用固定阵列缓存，不再每帧创建未被读取的历史姿态对象。

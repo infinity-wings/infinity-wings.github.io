@@ -459,42 +459,50 @@ function playerShoot(){
 }
 function sortiePrimaryCore(){return({infinity:'main',laser:'laser',drone:'drone',missile:'missile',thunder:'thunder'})[IWSave?.data?.profile?.selectedFighter||'infinity']||'main'}
 function projectionCoreLevel(){const coreId=sortiePrimaryCore();return{coreId,level:Math.max(1,coreManager.getLevel(coreId))}}
+function projectionPrimaryAwakening(){return awakeningSystem.get(projectionCoreLevel().coreId)}
 function fireProjectionMainVolley(){
  const inherited=projectionCoreLevel();if(inherited.coreId!=='main')return;
+ const awakening=projectionPrimaryAwakening();
  for(const clone of clonePositions()){
-  fireMainWeapon(clone.x,clone.y-43,'clone',clone.damageScale,{projectionInherited:true});
+  if(awakening?.id==='main_piercer')bullets.push({x:clone.x,y:clone.y-45,vx:0,vy:-500,r:12,d:138*clone.damageScale,life:3.4,source:'clone',awakening:'main_piercer',pierce:7,projectionInherited:true});
+  else if(awakening?.id==='main_rapid'){for(const angle of [-.42,-.28,-.14,0,.14,.28,.42]){const speed=690;bullets.push({x:clone.x,y:clone.y-40,vx:Math.sin(angle)*speed,vy:-Math.cos(angle)*speed,r:2.7,d:13*clone.damageScale,life:2.2,source:'clone',awakening:'main_rapid',projectionInherited:true})}}
+  else fireMainWeapon(clone.x,clone.y-43,'clone',clone.damageScale,{projectionInherited:true});
  }
 }
 function fireProjectionLaserVolley(){
  const inherited=projectionCoreLevel();if(inherited.coreId!=='laser')return;
- const stats=laserStats(inherited.level);
+ const stats=laserStats(inherited.level),awakening=projectionPrimaryAwakening();
  clonePositions().forEach((clone,index)=>{
-  bullets.push({laser:true,x:clone.x,y:0,w:stats.width*.72,h:clone.y-20,life:stats.duration,maxLife:stats.duration,d:stats.dps*clone.damageScale,level:inherited.level,source:'clone',emitterOffset:0,emitterIndex:index,projectionInherited:true,visualNodes:Array(9).fill(clone.x)});
+  const star=awakening?.id==='laser_star',reflect=awakening?.id==='laser_reflect',life=star?1.15:reflect?2.1:stats.duration;
+  bullets.push({laser:true,x:clone.x,y:0,w:star?20:reflect?7:stats.width*.72,h:clone.y-20,life,maxLife:life,d:(star?185:reflect?72:stats.dps)*clone.damageScale,level:inherited.level,source:'clone',awakening:awakening?.id||null,emitterOffset:0,emitterIndex:index,projectionInherited:true,visualNodes:Array(9).fill(clone.x)});
  });
  if(clonePositions().length)shake=Math.max(shake,3);
 }
 function fireProjectionMissileVolley(){
  const inherited=projectionCoreLevel();if(inherited.coreId!=='missile')return;
- const stats=missileStats(inherited.level);
+ const stats=missileStats(inherited.level),awakening=projectionPrimaryAwakening();
  clonePositions().forEach((clone,index)=>{
-  const targets=enemiesByDistance(clone.x,clone.y);for(let shot=0;shot<stats.count;shot++){const side=shot%2?1:-1,target=targets[shot%Math.max(1,targets.length)]||null;missiles.push({x:clone.x+side*(10+Math.floor(shot/2)*5),y:clone.y-7,vx:side*55,vy:-180,target,life:4.2,level:inherited.level,trail:0,count:stats.count,damage:stats.damage*clone.damageScale,radius:stats.radius,speed:stats.speed,turn:stats.turn,projectionInherited:true})}
+  const targets=enemiesByDistance(clone.x,clone.y);
+  if(awakening?.id==='missile_cluster'){for(let shot=0;shot<3;shot++){const target=targets[shot%Math.max(1,targets.length)]||null;missiles.push({x:clone.x+(shot-1)*16,y:clone.y-10,vx:(shot-1)*70,vy:-180,target,life:4.5,level:3,trail:0,damage:48*clone.damageScale,radius:46,speed:300,turn:6,awakening:'missile_cluster',cluster:true,projectionInherited:true})}}
+  else if(awakening?.id==='missile_hunter'&&targets.length){const target=[...targets].sort((a,b)=>b.hp-a.hp)[0];missiles.push({x:clone.x,y:clone.y-18,vx:0,vy:-135,target,life:7,level:3,trail:0,damage:(target.boss?260:180)*clone.damageScale,radius:105,speed:235,turn:3.8,awakening:'missile_hunter',projectionInherited:true})}
+  else for(let shot=0;shot<stats.count;shot++){const side=shot%2?1:-1,target=targets[shot%Math.max(1,targets.length)]||null;missiles.push({x:clone.x+side*(10+Math.floor(shot/2)*5),y:clone.y-7,vx:side*55,vy:-180,target,life:4.2,level:inherited.level,trail:0,count:stats.count,damage:stats.damage*clone.damageScale,radius:stats.radius,speed:stats.speed,turn:stats.turn,projectionInherited:true})}
  });
 }
 function fireProjectionDroneVolley(){
  const inherited=projectionCoreLevel();if(inherited.coreId!=='drone')return;
- const stats=[null,{count:2,damage:.5},{count:3,damage:.62},{count:4,damage:.75}][inherited.level];
- for(const clone of clonePositions())for(let shot=0;shot<stats.count;shot++){const offset=(shot-(stats.count-1)/2)*9;bullets.push({x:clone.x+offset,y:clone.y-38,vx:offset*.7,vy:-620,r:2.8,d:player.damage*stats.damage*clone.damageScale,source:'clone',life:2.4,projectionInherited:true})}
+ const awakening=projectionPrimaryAwakening(),stats=awakening?.id==='drone_swarm'?{count:8,damage:.23}:awakening?.id==='drone_heavy'?{count:2,damage:1.82,heavy:true}:[null,{count:2,damage:.5},{count:3,damage:.62},{count:4,damage:.75}][inherited.level];
+ for(const clone of clonePositions())for(let shot=0;shot<stats.count;shot++){const offset=(shot-(stats.count-1)/2)*(stats.count>4?6:12);bullets.push({x:clone.x+offset,y:clone.y-38,vx:offset*.7,vy:stats.heavy?-610:-690,r:stats.heavy?9.4:2.8,d:player.damage*stats.damage*clone.damageScale,source:'clone',life:stats.heavy?3.4:2.4,pierce:stats.heavy?4:0,awakening:awakening?.id||null,projectionInherited:true})}
 }
 function fireProjectionThunderVolley(){
  const inherited=projectionCoreLevel();if(inherited.coreId!=='thunder')return;
- const stats=getThunderCoreStats();if(!stats)return;
- const chainCount=stats.chains,range=stats.range,damage=stats.damage;
+ const stats=getThunderCoreStats();if(!stats)return;const awakening=projectionPrimaryAwakening();
+ const chainCount=awakening?.id==='thunder_lance'?4:awakening?.id==='thunder_storm'?5:stats.chains,range=awakening?.id==='thunder_lance'?420:awakening?.id==='thunder_storm'?Math.max(300,W*.48):stats.range,damage=awakening?.id==='thunder_lance'?265:awakening?.id==='thunder_storm'?21:stats.damage;
  const blastLevel=coreManager.getLevel('blast');
  for(const clone of clonePositions()){
   let from=clone;const struck=new Set();
   for(let step=0;step<chainCount;step++){
-   const target=enemies.filter(e=>e.hp>0&&!e.bossRetreating&&!struck.has(e)&&Math.hypot(e.x-from.x,e.y-from.y)<=range).sort((a,b)=>Math.hypot(a.x-from.x,a.y-from.y)-Math.hypot(b.x-from.x,b.y-from.y))[0];
-   if(!target)break;struck.add(target);createLightningArc(from,target,inherited.level);const arcDamage=damage*clone.damageScale;if(damageEnemy(target,arcDamage))removeKilledEnemy(target,arcDamage,blastLevel);from={x:target.x,y:target.y};
+   const origin=awakening?clone:from,target=enemies.filter(e=>e.hp>0&&!e.bossRetreating&&!struck.has(e)&&e.y<clone.y+16&&Math.hypot(e.x-origin.x,e.y-origin.y)<=range).sort((a,b)=>(awakening?.id==='thunder_lance'?(Number(b.boss)-Number(a.boss))||(b.hp-a.hp):Math.hypot(a.x-origin.x,a.y-origin.y)-Math.hypot(b.x-origin.x,b.y-origin.y)))[0];
+   if(!target)break;struck.add(target);lightningArcs.push({x1:origin.x,y1:origin.y-28,x2:target.x,y2:target.y,life:awakening?.id==='thunder_lance'?.58:.26,maxLife:awakening?.id==='thunder_lance'?.58:.26,level:3,lance:awakening?.id==='thunder_lance',storm:awakening?.id==='thunder_storm',projectionInherited:true,seed:Math.random()*9999});const arcDamage=(target.boss&&awakening?.id==='thunder_lance'?195:target.boss&&awakening?.id==='thunder_storm'?16:damage)*clone.damageScale;if(damageEnemy(target,arcDamage))removeKilledEnemy(target,arcDamage,blastLevel);from={x:target.x,y:target.y};
   }
  }
 }
@@ -503,16 +511,16 @@ function updateProjectionInheritedSkills(dt){
  if(!active){build.projectionMainCd=0;build.projectionMissileCd=0;build.projectionLaserState={phase:'idle',timer:0};return;}
  build.projectionMainCd-=dt;
  const inherited=projectionCoreLevel();
- if(build.projectionMainCd<=0){if(inherited.coreId==='main')fireProjectionMainVolley();else if(inherited.coreId==='drone')fireProjectionDroneVolley();else if(inherited.coreId==='thunder')fireProjectionThunderVolley();build.projectionMainCd=inherited.coreId==='thunder'?getThunderCoreStats().cooldown:inherited.coreId==='drone'?[0,.34,.3,.26][inherited.level]:.28;}
+ if(build.projectionMainCd<=0){if(inherited.coreId==='main')fireProjectionMainVolley();else if(inherited.coreId==='drone')fireProjectionDroneVolley();else if(inherited.coreId==='thunder')fireProjectionThunderVolley();const awakening=projectionPrimaryAwakening();build.projectionMainCd=inherited.coreId==='thunder'?(awakening?.id==='thunder_storm'?.36:awakening?.id==='thunder_lance'?2.5:getThunderCoreStats().cooldown):inherited.coreId==='drone'?(awakening?.id==='drone_swarm'?.52:awakening?.id==='drone_heavy'?1.02:[0,.34,.3,.26][inherited.level]):inherited.coreId==='main'?(awakening?.id==='main_piercer'?1.55:awakening?.id==='main_rapid'?.22:.28):.28;}
  if(inherited.coreId==='missile'){
   build.projectionMissileCd-=dt;
-  if(build.projectionMissileCd<=0){fireProjectionMissileVolley();build.projectionMissileCd=missileStats(inherited.level).cooldown;}
+  if(build.projectionMissileCd<=0){fireProjectionMissileVolley();const awakening=projectionPrimaryAwakening();build.projectionMissileCd=awakening?.id==='missile_cluster'?3.6:awakening?.id==='missile_hunter'?5.8:missileStats(inherited.level).cooldown;}
  }
  if(inherited.coreId==='laser'){
-  const state=build.projectionLaserState||{phase:'idle',timer:0};state.timer-=dt;
-  if(state.phase==='idle'||state.phase==='cooldown'&&state.timer<=0){state.phase='charging';state.timer=laserStats(inherited.level).charge;state.total=state.timer;}
-  else if(state.phase==='charging'&&state.timer<=0){fireProjectionLaserVolley();state.phase='firing';state.timer=laserStats(inherited.level).duration;state.total=state.timer;}
-  else if(state.phase==='firing'&&state.timer<=0){state.phase='cooldown';state.timer=laserStats(inherited.level).cooldown;state.total=state.timer;}
+  const state=build.projectionLaserState||{phase:'idle',timer:0},awakening=projectionPrimaryAwakening(),stats=laserStats(inherited.level),charge=awakening?.id==='laser_star'?1.15:awakening?.id==='laser_reflect'?.45:stats.charge,duration=awakening?.id==='laser_star'?1.15:awakening?.id==='laser_reflect'?2.1:stats.duration,cooldown=awakening?.id==='laser_star'?10:awakening?.id==='laser_reflect'?5.8:stats.cooldown;state.timer-=dt;
+  if(state.phase==='idle'||state.phase==='cooldown'&&state.timer<=0){state.phase='charging';state.timer=charge;state.total=state.timer;}
+  else if(state.phase==='charging'&&state.timer<=0){fireProjectionLaserVolley();state.phase='firing';state.timer=duration;state.total=state.timer;}
+  else if(state.phase==='firing'&&state.timer<=0){state.phase='cooldown';state.timer=cooldown;state.total=state.timer;}
   build.projectionLaserState=state;
  }
 }

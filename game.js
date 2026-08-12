@@ -3,7 +3,7 @@
 (() => {
   if (window.__IW_MODULE_LOADER_STARTED__) return;
   window.__IW_MODULE_LOADER_STARTED__ = true;
-  const version = '9.09.1';
+  const version = '9.09.2';
   const files = [
     './src/bootstrap.js',
     './src/systems/saveSystem.js',

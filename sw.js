@@ -1,9 +1,9 @@
-const CACHE='iw-cache-9.09-boss-laser-v38';
+const CACHE='iw-cache-9.09-projection-awakening-v39';
 const ASSETS=[
   './',
   './index.html',
-  './style.css?v=9.09.1',
-  './game.js?v=9.09.1',
+  './style.css?v=9.09.2',
+  './game.js?v=9.09.2',
   './manifest.webmanifest',
   './apple-touch-icon.png',
   './favicon.png',

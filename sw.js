@@ -1,9 +1,9 @@
-const CACHE='iw-cache-9.08-laser-duration-v30';
+const CACHE='iw-cache-9.08-laser-inertia-v31';
 const ASSETS=[
   './',
   './index.html',
-  './style.css?v=9.08.4',
-  './game.js?v=9.08.4',
+  './style.css?v=9.08.5',
+  './game.js?v=9.08.5',
   './manifest.webmanifest',
   './apple-touch-icon.png',
   './favicon.png',

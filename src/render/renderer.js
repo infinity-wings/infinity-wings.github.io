@@ -273,13 +273,15 @@ function drawLaserChargeEffect(){
 function drawPlayerLaserBeam(b,lowFx=false){
  const level=Math.max(1,b.level||1),height=Math.max(1,b.h||0),width=Math.max(3,b.w||8),lifeRatio=Math.max(0,Math.min(1,(b.life||0)/Math.max(.01,b.maxLife||1)));
  const pulse=.84+.16*Math.sin(elapsed*24+(b.emitterIndex||0)*1.7),violet=level===3;
- const outer=violet?'rgba(112,82,255,.18)':'rgba(35,195,255,.16)',edge=violet?'rgba(164,135,255,.72)':'rgba(67,222,255,.72)',core=violet?'#f5efff':'#efffff';
- ctx.save();ctx.translate(Math.round(b.x),0);ctx.globalCompositeOperation='lighter';
- const aura=ctx.createLinearGradient(-width*3.2,0,width*3.2,0);aura.addColorStop(0,'rgba(0,0,0,0)');aura.addColorStop(.32,outer);aura.addColorStop(.5,violet?'rgba(184,145,255,.38)':'rgba(82,233,255,.34)');aura.addColorStop(.68,outer);aura.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=aura;ctx.fillRect(-width*3.2,0,width*6.4,height);
- ctx.shadowBlur=18+level*5;ctx.shadowColor=violet?'#8f6cff':'#48e5ff';const body=ctx.createLinearGradient(-width*1.15,0,width*1.15,0);body.addColorStop(0,'rgba(35,119,255,0)');body.addColorStop(.18,edge);body.addColorStop(.42,core);body.addColorStop(.5,'#fff');body.addColorStop(.58,core);body.addColorStop(.82,edge);body.addColorStop(1,'rgba(35,119,255,0)');ctx.fillStyle=body;ctx.fillRect(-width*1.15,0,width*2.3,height);
- ctx.shadowBlur=8;ctx.fillStyle=`rgba(255,255,255,${.9*pulse})`;ctx.fillRect(-Math.max(1,width*.2),0,Math.max(2,width*.4),height);
- if(!lowFx){ctx.shadowBlur=9;ctx.lineWidth=Math.max(1,width*.12);ctx.lineCap='round';for(const side of [-1,1]){ctx.strokeStyle=violet?'rgba(197,171,255,.7)':'rgba(132,246,255,.7)';ctx.beginPath();for(let y=height;y>=0;y-=12){const x=side*(width*.78+Math.sin(y*.075-elapsed*13+side)*width*.32);y===height?ctx.moveTo(x,y):ctx.lineTo(x,y)}ctx.stroke()}ctx.globalAlpha=.5+.35*pulse;ctx.strokeStyle='#fff';ctx.lineWidth=1;for(let y=(elapsed*170)%34;y<height;y+=34){ctx.beginPath();ctx.moveTo(-width*.7,y);ctx.lineTo(width*.7,y-7);ctx.stroke()}}
- ctx.globalAlpha=.72+.22*pulse;ctx.shadowBlur=16;ctx.strokeStyle=violet?'#c5a9ff':'#96f7ff';ctx.lineWidth=Math.max(1.2,width*.16);ctx.beginPath();ctx.ellipse(0,height,Math.max(7,width*1.35),Math.max(3,width*.42),0,0,Math.PI*2);ctx.stroke();ctx.globalAlpha=.8*lifeRatio;ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(0,height,Math.max(2.3,width*.3),0,Math.PI*2);ctx.fill();ctx.restore();
+ const topX=Number.isFinite(b.visualTopX)?b.visualTopX:b.x,midX=Number.isFinite(b.visualX)?b.visualX:b.x,muzzleX=b.x;
+ const path=(offset=0)=>{ctx.beginPath();ctx.moveTo(topX+offset,-8);ctx.bezierCurveTo(topX+offset,height*.32,midX+offset,height*.62,muzzleX+offset,height)};
+ ctx.save();ctx.globalCompositeOperation='lighter';ctx.lineCap='round';ctx.lineJoin='round';ctx.globalAlpha=.78+.18*pulse;
+ ctx.shadowColor=violet?'#8f6cff':'#48e5ff';ctx.shadowBlur=25+level*5;ctx.strokeStyle=violet?'rgba(112,82,255,.15)':'rgba(35,195,255,.14)';ctx.lineWidth=width*5.2;path();ctx.stroke();
+ ctx.shadowBlur=18;ctx.strokeStyle=violet?'rgba(159,124,255,.58)':'rgba(54,218,255,.58)';ctx.lineWidth=width*2.05;path();ctx.stroke();
+ ctx.shadowBlur=10;ctx.strokeStyle=violet?'rgba(229,214,255,.94)':'rgba(198,252,255,.94)';ctx.lineWidth=Math.max(2.2,width*.82);path();ctx.stroke();
+ ctx.shadowBlur=5;ctx.strokeStyle=`rgba(255,255,255,${.88+.1*pulse})`;ctx.lineWidth=Math.max(1.2,width*.28);path();ctx.stroke();
+ if(!lowFx){ctx.globalAlpha=.52+.28*pulse;ctx.shadowBlur=8;ctx.strokeStyle=violet?'rgba(197,171,255,.72)':'rgba(132,246,255,.72)';ctx.lineWidth=Math.max(1,width*.11);for(const side of [-1,1]){const offset=side*width*(.82+.1*Math.sin(elapsed*11+side));path(offset);ctx.stroke()}ctx.strokeStyle='#fff';ctx.lineWidth=1;for(let y=(elapsed*150)%42;y<height-12;y+=42){const t=y/height,u=1-t,x=topX*u*u+2*midX*u*t+muzzleX*t*t,flow=width*(.72+.16*Math.sin(y*.08-elapsed*9));ctx.globalAlpha=.28+.34*pulse;ctx.beginPath();ctx.moveTo(x-flow,y+4);ctx.lineTo(x+flow,y-4);ctx.stroke()}}
+ ctx.globalAlpha=.72+.22*pulse;ctx.shadowBlur=16;ctx.strokeStyle=violet?'#c5a9ff':'#96f7ff';ctx.lineWidth=Math.max(1.2,width*.16);ctx.beginPath();ctx.ellipse(muzzleX,height,Math.max(7,width*1.35),Math.max(3,width*.42),0,0,Math.PI*2);ctx.stroke();ctx.globalAlpha=.8*lifeRatio;ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(muzzleX,height,Math.max(2.3,width*.3),0,Math.PI*2);ctx.fill();ctx.restore();
 }
 
 function drawLightningArc(arc){

@@ -561,7 +561,7 @@ function laserFire(level){
  audioSystem?.play('laser');
  const stats=laserStats(level);if(!stats)return;
  for(const emitter of laserEmitterPositions(level)){
-  bullets.push({laser:true,x:emitter.x,y:0,w:stats.width*(emitter.source==='clone'?.58:1),h:emitter.y-20,life:stats.duration,maxLife:stats.duration,d:stats.dps*(emitter.source==='clone'?.72:1),level,source:emitter.source,emitterOffset:emitter.offset,emitterIndex:emitter.emitterIndex});
+  bullets.push({laser:true,x:emitter.x,y:0,w:stats.width*(emitter.source==='clone'?.58:1),h:emitter.y-20,life:stats.duration,maxLife:stats.duration,d:stats.dps*(emitter.source==='clone'?.72:1),level,source:emitter.source,emitterOffset:emitter.offset,emitterIndex:emitter.emitterIndex,visualX:emitter.x,visualTopX:emitter.x});
  }
  shake=Math.max(shake,level===3?10:7);
 }
@@ -903,7 +903,9 @@ function update(dt){
  let inputLength=Math.hypot(dx,dy);
  const keyboardInput=keyboardMode&&inputLength>.035;
  player.slowTimer=Math.max(0,(player.slowTimer||0)-dt);
- const movementSpeed=player.speed*(player.slowTimer>0?.58:1);
+ const laserFiring=coreManager.getLevel('laser')>0&&build?.laserState?.phase==='firing';
+ const laserMovementDrag=laserFiring?.88:1;
+ const movementSpeed=player.speed*(player.slowTimer>0?.58:1)*laserMovementDrag;
  let touchDistance=0,mouseDistance=0;
  if(!touchDevice&&uiPrefs?.controlMode==='mouse'&&mouseMoveActive){
   mouseDistance=Math.hypot(mouseDeltaX,mouseDeltaY);
@@ -925,14 +927,16 @@ function update(dt){
  const reversingX=hasInput&&Math.sign(player.targetVx)&&Math.sign(player.vx)&&Math.sign(player.targetVx)!==Math.sign(player.vx);
  const reversingY=hasInput&&Math.sign(player.targetVy)&&Math.sign(player.vy)&&Math.sign(player.targetVy)!==Math.sign(player.vy);
  const touchResponse=usingTouch?Math.max(1.25,uiPrefs?.touchSensitivity||1.5):(usingMouse?2.15:1);
- const responseX=(!hasInput||reversingX?player.brake:player.accel)*touchResponse;
- const responseY=(!hasInput||reversingY?player.brake:player.accel)*touchResponse;
+ const laserTurnDrag=laserFiring?.68:1;
+ const responseX=(!hasInput||reversingX?player.brake:player.accel)*touchResponse*laserTurnDrag;
+ const responseY=(!hasInput||reversingY?player.brake:player.accel)*touchResponse*laserTurnDrag;
  if(usingMouse){
   // 鼠标采用一比一位置控制，不再复用触控灵敏度，也不经过加速/制动曲线。
   // 保留极小的异常输入上限，只拦截锁屏恢复或浏览器产生的巨大跳变。
   const maxMouseStep=Math.max(W,H)*.22;
-  const moveX=Math.max(-maxMouseStep,Math.min(maxMouseStep,mouseDeltaX));
-  const moveY=Math.max(-maxMouseStep,Math.min(maxMouseStep,mouseDeltaY));
+  const directDrag=laserFiring?.82:1;
+  const moveX=Math.max(-maxMouseStep,Math.min(maxMouseStep,mouseDeltaX))*directDrag;
+  const moveY=Math.max(-maxMouseStep,Math.min(maxMouseStep,mouseDeltaY))*directDrag;
   const safeDt=Math.max(dt,1/240);
   player.vx=moveX/safeDt;player.vy=moveY/safeDt;
   player.targetVx=player.vx;player.targetVy=player.vy;
@@ -980,7 +984,7 @@ function update(dt){
  if(!build.firstEliteSpawned&&elapsed>=50&&!enemies.some(e=>e.boss)&&!battleEventSystem.active){build.firstEliteSpawned=true;enemies.push(makeEnemy('heavy'))}
  spawnCd-=dt;if(spawnCd<=0){const bossActive=enemies.some(e=>e.boss);if(!bossActive)spawnEnemy();const gradual=Math.min(.48,elapsed/1800+Math.max(0,level-1)*.012);const pressure=Math.min(.18,combatPower()*.004+recentKillRate()*.03);spawnCd=bossActive?.5:Math.max(.30,1.18-gradual-pressure)}maybeSpawnStageBoss(dt);
  const timeLevel=coreManager.getLevel('time');const slow=(build.awakeTimeStop||0)>0?.015:(build.chronoActive>0?(timeLevel===3?.02:.42):1);
- for(let i=bullets.length-1;i>=0;i--){const b=bullets[i];if(b.laser){b.life-=dt;const emitter=b.source==='clone'?clonePositions()[b.emitterIndex||0]:player;if(emitter){b.x=emitter.x+(b.emitterOffset||0);b.h=emitter.y-20}for(let j=enemies.length-1;j>=0;j--){const e=enemies[j];if(Math.abs(e.x-b.x)<b.w+enemyHitHalfWidth(e)&&e.y<(emitter?emitter.y:player.y)){const killed=damageEnemy(e,b.d*dt,{piercing:true});if(b.awakening==='laser_reflect'&&Math.random()<dt*7){const others=enemies.filter(x=>x!==e&&Math.hypot(x.x-e.x,x.y-e.y)<180).slice(0,4);let from=e;for(const target of others){createLightningArc(from,target,2);if(damageEnemy(target,b.d*dt*.65)){const idx=enemies.indexOf(target);if(idx>=0)enemies.splice(idx,1)}from=target}}if(killed)enemies.splice(j,1)}}if(b.life<=0||!emitter)bullets.splice(i,1);continue}if(b.isSplit){b.life-=dt;if(b.life<=0){bullets.splice(i,1);continue}}if(b.awakening==='blast_chain'){if(!Number.isFinite(b.life)){b.life=1.1;b.maxLife=1.1}if(!b.isSplit){b.life-=dt;if(b.life<=0){bullets.splice(i,1);continue}}if(!b.target||b.target.hp<=0||!enemies.includes(b.target)){b.target=nearestLivingEnemy(b.x,b.y)}if(b.target){const dx=b.target.x-b.x,dy=b.target.y-b.y,len=Math.hypot(dx,dy)||1,speed=Math.hypot(b.vx,b.vy)||500,turn=Math.min(1,(b.seek||7.5)*dt);b.vx+=(dx/len*speed-b.vx)*turn;b.vy+=(dy/len*speed-b.vy)*turn}}b.x+=b.vx*dt;b.y+=b.vy*dt;if(b.y<-30||b.y>H+30||b.x<-30||b.x>W+30){bullets.splice(i,1);continue}for(let j=enemies.length-1;j>=0;j--){const e=enemies[j];if(enemyHitTest(e,b.x,b.y,b.r)){const hitX=e.x,hitY=e.y;if(b.awakening==='blast_chain'&&b.splitMark){e.blastAwakeMarks=(e.blastAwakeMarks||0)+1;if(e.blastAwakeMarks>=3){e.blastAwakeMarks=0;blastWaves.push({x:e.x,y:e.y,life:.28,maxLife:.28,radius:6,prevRadius:0,maxRadius:72,absorbed:0,temporalCollapse:true});for(const other of [...enemies])if(other!==e&&Math.hypot(other.x-e.x,other.y-e.y)<72)damageEnemy(other,34)}}const killed=damageEnemy(e,b.d,{piercing:(b.pierce||0)>0});if(killed){enemies.splice(j,1);if(b.blastLevel&&!b.isSplit)spawnSplitBullets(hitX,hitY,b.d,b.blastLevel);if(b.awakening==='blast_chain'&&b.chainDepth<2)awakeningSystem.spawnChainSplit?.(hitX,hitY,b.d,b.chainDepth+1)}if(b.thunderLevel)triggerThunder({x:hitX,y:hitY},b.d,b.thunderLevel,b.blastLevel&&!b.isSplit?b.blastLevel:0,e);if(b.pierce>0){b.pierce--;b.d*=1.08;break}else{bullets.splice(i,1);break}}}}
+ for(let i=bullets.length-1;i>=0;i--){const b=bullets[i];if(b.laser){b.life-=dt;const emitter=b.source==='clone'?clonePositions()[b.emitterIndex||0]:player;if(emitter){const targetX=emitter.x+(b.emitterOffset||0),visualFollow=1-Math.exp(-7.2*dt),topFollow=1-Math.exp(-3.5*dt),motionLean=Math.max(-13,Math.min(13,-(emitter.vx||0)*.025));b.x=targetX;b.h=emitter.y-20;if(!Number.isFinite(b.visualX))b.visualX=targetX;if(!Number.isFinite(b.visualTopX))b.visualTopX=targetX;b.visualX+=Math.max(-15,Math.min(15,targetX-b.visualX))*visualFollow;b.visualTopX+=(targetX+motionLean-b.visualTopX)*topFollow;b.visualTopX=Math.max(targetX-14,Math.min(targetX+14,b.visualTopX))}for(let j=enemies.length-1;j>=0;j--){const e=enemies[j];if(Math.abs(e.x-b.x)<b.w+enemyHitHalfWidth(e)&&e.y<(emitter?emitter.y:player.y)){const killed=damageEnemy(e,b.d*dt,{piercing:true});if(b.awakening==='laser_reflect'&&Math.random()<dt*7){const others=enemies.filter(x=>x!==e&&Math.hypot(x.x-e.x,x.y-e.y)<180).slice(0,4);let from=e;for(const target of others){createLightningArc(from,target,2);if(damageEnemy(target,b.d*dt*.65)){const idx=enemies.indexOf(target);if(idx>=0)enemies.splice(idx,1)}from=target}}if(killed)enemies.splice(j,1)}}if(b.life<=0||!emitter)bullets.splice(i,1);continue}if(b.isSplit){b.life-=dt;if(b.life<=0){bullets.splice(i,1);continue}}if(b.awakening==='blast_chain'){if(!Number.isFinite(b.life)){b.life=1.1;b.maxLife=1.1}if(!b.isSplit){b.life-=dt;if(b.life<=0){bullets.splice(i,1);continue}}if(!b.target||b.target.hp<=0||!enemies.includes(b.target)){b.target=nearestLivingEnemy(b.x,b.y)}if(b.target){const dx=b.target.x-b.x,dy=b.target.y-b.y,len=Math.hypot(dx,dy)||1,speed=Math.hypot(b.vx,b.vy)||500,turn=Math.min(1,(b.seek||7.5)*dt);b.vx+=(dx/len*speed-b.vx)*turn;b.vy+=(dy/len*speed-b.vy)*turn}}b.x+=b.vx*dt;b.y+=b.vy*dt;if(b.y<-30||b.y>H+30||b.x<-30||b.x>W+30){bullets.splice(i,1);continue}for(let j=enemies.length-1;j>=0;j--){const e=enemies[j];if(enemyHitTest(e,b.x,b.y,b.r)){const hitX=e.x,hitY=e.y;if(b.awakening==='blast_chain'&&b.splitMark){e.blastAwakeMarks=(e.blastAwakeMarks||0)+1;if(e.blastAwakeMarks>=3){e.blastAwakeMarks=0;blastWaves.push({x:e.x,y:e.y,life:.28,maxLife:.28,radius:6,prevRadius:0,maxRadius:72,absorbed:0,temporalCollapse:true});for(const other of [...enemies])if(other!==e&&Math.hypot(other.x-e.x,other.y-e.y)<72)damageEnemy(other,34)}}const killed=damageEnemy(e,b.d,{piercing:(b.pierce||0)>0});if(killed){enemies.splice(j,1);if(b.blastLevel&&!b.isSplit)spawnSplitBullets(hitX,hitY,b.d,b.blastLevel);if(b.awakening==='blast_chain'&&b.chainDepth<2)awakeningSystem.spawnChainSplit?.(hitX,hitY,b.d,b.chainDepth+1)}if(b.thunderLevel)triggerThunder({x:hitX,y:hitY},b.d,b.thunderLevel,b.blastLevel&&!b.isSplit?b.blastLevel:0,e);if(b.pierce>0){b.pierce--;b.d*=1.08;break}else{bullets.splice(i,1);break}}}}
  for(let i=missiles.length-1;i>=0;i--){
   const m=missiles[i];m.life-=dt;m.trail-=dt;
   if(!m.target||m.target.hp<=0||!enemies.includes(m.target))m.target=nearestLivingEnemy(m.x,m.y);

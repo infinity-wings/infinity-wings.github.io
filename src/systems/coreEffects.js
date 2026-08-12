@@ -49,13 +49,12 @@ class CoreEffectsSystem {
   applyMainCore() {
   const level = this.manager.getLevel('main');
 
-  // 0级：单弹道
-  // 1级：双弹道
-  // 2级：三弹道
-  // 3级：强化三弹道
-  player.mainBulletCount = [1, 2, 3, 3][level] || 1;
-  player.mainBulletSize = [1, 1, 1, 1.25][level] || 1;
-  player.mainBulletDamageScale = [1, 1, 1, 1.25][level] || 1;
+  // 0/1级：单弹道
+  // 2级：双弹道
+  // 3级：三弹道
+  player.mainBulletCount = [1, 1, 2, 3][level] || 1;
+  player.mainBulletSize = [1, 1, 1.08, 1.25][level] || 1;
+  player.mainBulletDamageScale = [1, 1, 1.08, 1.25][level] || 1;
   }
 
   getDebugState() {

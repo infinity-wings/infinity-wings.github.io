@@ -1,9 +1,9 @@
-const CACHE='iw-cache-9.07-combat-fighters-v19';
+const CACHE='iw-cache-9.07-main-lanes-v20';
 const ASSETS=[
   './',
   './index.html',
-  './style.css?v=9.07.16',
-  './game.js?v=9.07.16',
+  './style.css?v=9.07.17',
+  './game.js?v=9.07.17',
   './manifest.webmanifest',
   './apple-touch-icon.png',
   './favicon.png',

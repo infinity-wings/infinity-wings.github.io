@@ -16,7 +16,7 @@
   <link rel="preload" as="image" href="assets/menu/menu-space-background-desktop.jpg" media="(pointer:fine)" fetchpriority="high" />
   <link rel="preload" as="image" href="assets/menu/menu-title-logo.PNG" />
   <link rel="preload" as="image" href="assets/menu/menu-fighter-rear-v2.png" />
-  <link rel="stylesheet" href="style.css?v=9.07.2" />
+  <link rel="stylesheet" href="style.css?v=9.07.3" />
 </head>
 <body>
   <script>
@@ -226,6 +226,7 @@
           </div>
           <div class="pause-actions">
             <button id="resumeButton" class="pause-action primary"><b>继续作战</b><small>返回当前战斗</small></button>
+            <button id="saveProgressButton" class="pause-action"><b>保存进度</b><small id="saveProgressHint">建立安全作战检查点</small></button>
             <button id="restartButton" class="pause-action"><b>重新开始</b><small>放弃当前进度并重新出击</small></button>
             <button id="controlsButton" class="pause-action"><b>操作说明</b><small>查看键盘与触控操作</small></button>
             <button id="gameSettingsButton" class="pause-action"><b>游戏设置</b><small>音效、音乐与触控灵敏度</small></button>
@@ -282,7 +283,7 @@
       document.documentElement.style.setProperty('--iw-world-height', String(logicalHeight));
     })();
   </script>
-  <script src="game.js?v=9.07.2"></script>
+  <script src="game.js?v=9.07.3"></script>
   <script>if('serviceWorker' in navigator){addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));}</script>
 </body>
 </html>

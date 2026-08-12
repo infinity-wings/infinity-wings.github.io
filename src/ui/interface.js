@@ -107,11 +107,23 @@ function refreshChapterMenu(){
  $('#startButton').disabled=false;
  $('#startButton').classList.remove('unavailable');
  $('#startButton span').textContent='继续游戏';
+ const checkpoint=IWSave.data.runCheckpoint;
+ $('#startButton small').textContent=checkpoint?`检查点 ${formatRunTime(checkpoint.elapsed)}`:'开始当前行动';
  refreshSaveStatus();
+}
+function createRunCheckpoint(){
+ if(!running||!player||!build)return null;
+ const boss=enemies.some(e=>e.boss),snapshot={schema:1,elapsed:Math.floor(elapsed),score,level,xp,nextXp,bombs,player:{hp:Math.max(1,Math.ceil(player.hp)),maxHp:player.maxHp},cores:coreManager.createSnapshot(),awakenings:awakeningSystem.getActive().map(a=>a.id),build:{bossClearedTier:build.bossClearedTier,bossDirectorTier:build.bossDirectorTier,bossDirectorIndex:build.bossDirectorIndex,bossDirectorProgress:boss?8:build.bossDirectorProgress,bossesDefeated:build.bossesDefeated,barrierCharge:build.barrierCharge,shieldLayers:build.shieldLayers,lastLandmarkThreat:build.lastLandmarkThreat}};
+ return IWSave.saveCheckpoint(snapshot);
+}
+function restoreRunCheckpoint(){
+ const cp=IWSave.data.runCheckpoint;if(!cp||cp.schema!==1)return false;
+ elapsed=Math.max(0,Number(cp.elapsed)||0);score=Math.max(0,Number(cp.score)||0);level=Math.max(1,Number(cp.level)||1);xp=Math.max(0,Number(cp.xp)||0);nextXp=Math.max(1,Number(cp.nextXp)||50);bombs=Math.max(0,Math.min(3,Number(cp.bombs)||0));player.maxHp=Math.max(100,Number(cp.player?.maxHp)||100);player.hp=Math.max(1,Math.min(player.maxHp,Number(cp.player?.hp)||player.maxHp));coreManager.loadSnapshot(cp.cores,{silent:true});for(const id of cp.awakenings||[])awakeningSystem.grant(id);Object.assign(build,cp.build||{});build.bossPendingNumber=0;build.bossPendingTimer=0;coreEffects.applyPlayerStats();updateUI();setTimeout(()=>toast('安全检查点已载入','important'),180);return true;
 }
 function refreshSaveStatus(){const el=$('#saveStatusText');if(!el)return;const save=IWSave.data;el.textContent=`V${save.version} · ${save.profile.totalRuns} 次行动 · ${new Date(save.updatedAt).toLocaleString('zh-CN')}`}
 function showChapterComplete(){
  if(!IWSave.completeChapterOne())return;
+ IWSave.clearCheckpoint();
  running=false;paused=false;state='chapterComplete';UI.hud.classList.add('hidden');UI.timerPanel.classList.add('hidden');UI.touch.classList.add('hidden');setSystemMenuVisible(false);showScreen(UI.chapterComplete);refreshChapterMenu();
 }
 function isMouseBattleMode(){return !interfaceTouchDevice&&uiPrefs.controlMode==='mouse'&&state==='game'&&running&&!paused&&!dying}
@@ -244,6 +256,7 @@ function chooseCore(){
 }
 function die(){
  audioSystem?.play('death');
+ IWSave?.clearCheckpoint?.();
  saveRunRecord('战机损毁');
  running=false;dying=false;state='death';setSystemMenuVisible(false);UI.hud.classList.add('hidden');UI.timerPanel.classList.add('hidden');UI.touch.classList.add('hidden');showScreen(UI.death);
  const nextPilotId=pilotId+1;
@@ -304,6 +317,7 @@ function toast(text,priority='normal'){
 }
 
 $('#systemMenuButton').onclick=openPauseMenu;const resumeButton=$('#resumeButton');if(resumeButton){resumeButton.onclick=closePauseMenu;resumeButton.addEventListener('pointerup',e=>{e.preventDefault();closePauseMenu()},{passive:false})}$('#restartButton').onclick=restartCurrentRun;$('#titleButton').onclick=returnToTitle;
+$('#saveProgressButton').onclick=()=>{const cp=createRunCheckpoint();if(!cp)return;const hint=$('#saveProgressHint');if(hint)hint.textContent=`已保存 · ${formatRunTime(cp.elapsed)}`;refreshChapterMenu();toast('当前行动已保存','important')};
 $('#controlsButton').onclick=()=>$('#controlsPanel').classList.toggle('hidden');
 $('#gameSettingsButton').onclick=()=>{settingsReturnState='pause';showScreen(UI.settings);refreshPauseToggles()};
 $('#sfxSetting')?.addEventListener('change',e=>{uiPrefs.sfx=e.target.checked;audioSystem.setEnabled('sfx',uiPrefs.sfx);refreshPauseToggles()});
@@ -320,7 +334,7 @@ UI.barrierBox?.setAttribute('role','button');UI.barrierBox?.setAttribute('tabind
 const activateHudBarrier=e=>{if(e){e.preventDefault();e.stopPropagation()}if(touchDevice&&state==='game'&&running&&!paused&&!dying)pulse()};
 UI.barrierBox?.addEventListener('pointerup',activateHudBarrier,{passive:false});
 UI.barrierBox?.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&touchDevice)activateHudBarrier(e)});
-$('#startButton').onclick=beginGame;$('#newGameButton').onclick=()=>{IWSave.markIntroSeen();refreshChapterMenu();startStory()};const skipStoryButton=$('#skipStory');const skipStoryNow=e=>{if(e){e.preventDefault();e.stopPropagation()}IWSave.markIntroSeen();beginGame()};skipStoryButton.onclick=skipStoryNow;skipStoryButton.addEventListener('pointerup',skipStoryNow);skipStoryButton.addEventListener('touchend',skipStoryNow,{passive:false});$('#storyRoll').addEventListener('animationend',()=>{IWSave.markIntroSeen();beginGame()});$('#syncRestartButton').onclick=()=>{pilotId++;localStorage.setItem('infinityWingsPilotIdV2',String(pilotId));IWSave.data.profile.pilotId=pilotId;IWSave.commit();$('#archiveCloneCount').textContent='当前驾驶员编号：#'+String(pilotId).padStart(6,'0');beginGame()};$('#deathMenuButton').onclick=returnToTitle;$('#bombButton').onclick=pulse;
+$('#startButton').onclick=()=>beginGame(Boolean(IWSave.data.runCheckpoint));$('#newGameButton').onclick=()=>{IWSave.clearCheckpoint();IWSave.markIntroSeen();refreshChapterMenu();startStory()};const skipStoryButton=$('#skipStory');const skipStoryNow=e=>{if(e){e.preventDefault();e.stopPropagation()}IWSave.markIntroSeen();beginGame()};skipStoryButton.onclick=skipStoryNow;skipStoryButton.addEventListener('pointerup',skipStoryNow);skipStoryButton.addEventListener('touchend',skipStoryNow,{passive:false});$('#storyRoll').addEventListener('animationend',()=>{IWSave.markIntroSeen();beginGame()});$('#syncRestartButton').onclick=()=>{pilotId++;localStorage.setItem('infinityWingsPilotIdV2',String(pilotId));IWSave.data.profile.pilotId=pilotId;IWSave.clearCheckpoint();$('#archiveCloneCount').textContent='当前驾驶员编号：#'+String(pilotId).padStart(6,'0');beginGame()};$('#deathMenuButton').onclick=returnToTitle;$('#bombButton').onclick=pulse;
 $('#archiveButton').onclick=()=>{showScreen(UI.archive);$('#archiveCloneCount').textContent='当前驾驶员编号：#'+String(pilotId).padStart(6,'0');renderArchiveHome()};document.querySelectorAll('[data-archive-view]').forEach(button=>button.onclick=()=>renderArchiveView(button.dataset.archiveView));$('#archiveBack').onclick=renderArchiveHome;$('#settingsButton').onclick=()=>{settingsReturnState='menu';showScreen(UI.settings);refreshPauseToggles()};
 document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>showScreen(UI.menu));
 $('#chapterCompleteButton').onclick=()=>{state='menu';refreshChapterMenu();showScreen(UI.menu)};

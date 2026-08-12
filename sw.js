@@ -1,9 +1,9 @@
-const CACHE='iw-cache-9.07-menu-layout-v3';
+const CACHE='iw-cache-9.07-run-checkpoint-v4';
 const ASSETS=[
   './',
   './index.html',
-  './style.css?v=9.07.2',
-  './game.js?v=9.07.2',
+  './style.css?v=9.07.3',
+  './game.js?v=9.07.3',
   './manifest.webmanifest',
   './apple-touch-icon.png',
   './favicon.png',

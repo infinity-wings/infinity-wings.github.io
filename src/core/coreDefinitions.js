@@ -32,25 +32,25 @@ function defineCore(core) {
 
 const CORE_DEFINITIONS = Object.freeze({
   main: defineCore({
-    id: 'main', name: '主炮源核', shortName: '主炮', category: CORE_CATEGORIES.WEAPON,
+    id: 'main', name: '动能源核', shortName: '动能', category: CORE_CATEGORIES.WEAPON,
     role: '稳定连续输出',
     levels: [
     {
-        name: "主炮Ⅰ",
+        name: "动能Ⅰ",
         description: "主炮升级为双弹道。"
     },
     {
-        name: "主炮Ⅱ",
+        name: "动能Ⅱ",
         description: "主炮升级为三弹道。"
     },
     {
-        name: "主炮Ⅲ",
+        name: "动能Ⅲ",
         description: "强化三弹道，子弹更粗，伤害提升。"
     }
 ]
   }),
   laser: defineCore({
-    id: 'laser', name: '激光源核', shortName: '激光', category: CORE_CATEGORIES.WEAPON,
+    id: 'laser', name: '光能源核', shortName: '光能', category: CORE_CATEGORIES.WEAPON,
     role: '蓄能贯穿输出',
     levels: [
       { name: '裂隙蓄能炮', description: '蓄力1.2秒后持续照射2秒，冷却9秒。' },
@@ -59,7 +59,7 @@ const CORE_DEFINITIONS = Object.freeze({
     ]
   }),
   drone: defineCore({
-    id: 'drone', name: '无人机源核', shortName: '无人机', category: CORE_CATEGORIES.WEAPON,
+    id: 'drone', name: '协同源核', shortName: '协同', category: CORE_CATEGORIES.WEAPON,
     role: '编队火力覆盖',
     levels: [
       { name: '护航单元', description: '获得一架向前射击的护航无人机。' },
@@ -68,7 +68,7 @@ const CORE_DEFINITIONS = Object.freeze({
     ]
   }),
   missile: defineCore({
-    id: 'missile', name: '导弹源核', shortName: '导弹', category: CORE_CATEGORIES.WEAPON,
+    id: 'missile', name: '制导源核', shortName: '制导', category: CORE_CATEGORIES.WEAPON,
     role: '追踪爆发输出',
     levels: [
       { name: '追踪弹舱', description: '周期性发射一枚高机动追踪导弹。' },
@@ -77,7 +77,7 @@ const CORE_DEFINITIONS = Object.freeze({
     ]
   }),
   thunder: defineCore({
-    id: 'thunder', name: '雷电源核', shortName: '雷电', category: CORE_CATEGORIES.WEAPON,
+    id: 'thunder', name: '电磁源核', shortName: '电磁', category: CORE_CATEGORIES.WEAPON,
     role: '连锁清场输出',
     levels: [
       { name: '电弧发生器', description: '普通弹命中有18%概率，向220范围内最多2个敌人连续跳跃。' },

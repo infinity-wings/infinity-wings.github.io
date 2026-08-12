@@ -46,13 +46,13 @@ function saveRunRecord(reason='战机损毁'){
 }
 function formatRunTime(seconds){seconds=Math.max(0,Math.floor(seconds||0));return String(Math.floor(seconds/60)).padStart(2,'0')+':'+String(seconds%60).padStart(2,'0')}
 const HANGAR_FIGHTERS=[
- {id:'infinity',name:'无限之翼',type:'初始战机',asset:'assets/ships/player-fighter-v4.png',condition:'初始编队机体'},
- {id:'laser',name:'曙光棱镜',type:'激光原核战机',asset:'assets/ships/story-fighters/laser-core-fighter-v1.png',condition:'寻找激光战机遗骸'},
- {id:'drone',name:'苍穹蜂群',type:'无人机原核战机',asset:'assets/ships/story-fighters/drone-core-fighter-v1.png',condition:'寻找无人机战机遗骸'},
- {id:'missile',name:'赤焰壁垒',type:'导弹原核战机',asset:'assets/ships/story-fighters/missile-core-fighter-v1.png',condition:'寻找导弹战机遗骸'},
- {id:'thunder',name:'天穹雷翼',type:'雷电原核战机',asset:'assets/ships/story-fighters/thunder-core-fighter-v2.png',condition:'寻找雷电战机遗骸'}
+ {id:'infinity',name:'无限之翼',core:'动能源核',asset:'assets/ships/player-fighter-v4.png',description:'最后一架仍能出击的人类战机，承载着幸存者最后的希望。稳定的动能主炮让它能够适应漫长而未知的远征。'},
+ {id:'laser',name:'曙光棱镜',core:'光能源核',asset:'assets/ships/story-fighters/laser-core-fighter-v1.png',description:'以高密度光束贯穿敌阵的高速歼击机，曾负责为舰队打开通往裂隙深处的航路。'},
+ {id:'drone',name:'苍穹蜂群',core:'协同源核',asset:'assets/ships/story-fighters/drone-core-fighter-v1.png',description:'搭载分布式无人战斗群的指挥机，以多单元协同作战覆盖整个交战空域。'},
+ {id:'missile',name:'赤焰壁垒',core:'制导源核',asset:'assets/ships/story-fighters/missile-core-fighter-v1.png',description:'重装远程打击机，可同时锁定多个高威胁目标并发动饱和制导攻击。'},
+ {id:'thunder',name:'天穹雷翼',core:'电磁源核',asset:'assets/ships/story-fighters/thunder-core-fighter-v2.png',description:'操纵高压电弧与电磁场的广域压制机，能够让雷暴在敌军编队之间连续传导。'}
 ];
-function renderHangar(){const grid=$('#hangarGrid');if(!grid)return;const unlocked=new Set(IWSave.data.progression.fighters||['infinity']);grid.innerHTML=HANGAR_FIGHTERS.map(f=>{const known=unlocked.has(f.id);return `<article class="hangar-card ${known?'unlocked':'locked'}">${known?`<div class="hangar-model"><img src="${f.asset}" alt="${f.name}"></div><div class="hangar-card-copy"><small>${f.type}</small><h3>${f.name}</h3><p>已录入永久机库，可供后续出击配置。</p><b>已解锁</b></div>`:`<div class="hangar-missing" aria-hidden="true">?</div><div class="hangar-card-copy"><h3>该战机出发后已失联</h3><p>暂未寻找到遗骸，最后信号仍在无限裂隙深处回响。</p><b>等待寻回</b></div>`}</article>`}).join('')}
+function renderHangar(){const grid=$('#hangarGrid');if(!grid)return;const unlocked=new Set(IWSave.data.progression.fighters||['infinity']);grid.innerHTML=HANGAR_FIGHTERS.map(f=>{const known=unlocked.has(f.id);return `<article class="hangar-card ${known?'unlocked':'locked'}">${known?`<div class="hangar-model"><img src="${f.asset}" alt="${f.name}"></div><div class="hangar-card-copy"><small>主要源核 · ${f.core}</small><h3>${f.name}</h3><p>${f.description}</p><b>已解锁</b></div>`:`<div class="hangar-missing" aria-hidden="true">?</div><div class="hangar-card-copy"><h3>该战机出发后已失联</h3><p>暂未寻找到遗骸，最后信号仍在无限裂隙深处回响。</p><b>等待寻回</b></div>`}</article>`}).join('')}
 function renderArchiveHome(){document.querySelector('#archiveHome').classList.remove('hidden');document.querySelector('#archiveDetail').classList.add('hidden');}
 function drawEnemyArchivePreview(canvas,type){
  const c=canvas?.getContext?.('2d');if(!c||typeof drawEnemyShip!=='function')return;

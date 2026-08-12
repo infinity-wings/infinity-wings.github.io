@@ -1,8 +1,8 @@
-const CACHE='iw-cache-9.07-hangar-layout-v5';
+const CACHE='iw-cache-9.07-core-names-v6';
 const ASSETS=[
   './',
   './index.html',
-  './style.css?v=9.07.4',
+  './style.css?v=9.07.5',
   './game.js?v=9.07.3',
   './manifest.webmanifest',
   './apple-touch-icon.png',

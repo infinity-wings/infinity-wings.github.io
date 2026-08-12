@@ -1074,11 +1074,12 @@ function update(dt){
    const force=920;p.vx+=dx/dist*force*dt;p.vy+=dy/dist*force*dt;
   }
   if(p.type==='repair'){p.vy=Math.max(125,Math.min(165,p.vy));p.vx+=Math.sin((p.age||0)*2.4+p.x*.03)*4*dt}
+  else if(p.type==='awakeningModule'){p.vy=Math.max(62,Math.min(88,p.vy));p.vx+=Math.sin((p.age||0)*1.8)*7*dt}
   const drag=xpPickup&&p.age>.22?1:.985;p.vx*=Math.pow(drag,dt*60);p.vy*=Math.pow(drag,dt*60);
   p.x+=p.vx*dt;p.y+=p.vy*dt;
   const playerMoveSpeed=Math.hypot(player.vx||0,player.vy||0);
   const collectRadius=xpPickup?Math.min(86,48+playerMoveSpeed*.08):p.r+player.r+8;
-  if(dist<collectRadius){if(p.type==='eventXp'||p.type==='xpShard'){if(!build.debugLockXp)xp+=p.xp||18;particles.push({x:player.x,y:player.y,vx:0,vy:-30,life:.35,max:.35,r:4,type:'thunder'});}else if(p.type==='repairShard'){audioSystem?.play('pickup');awakeningSystem.collectRepairShard(p.value||1);}else if(player.hp>=player.maxHp-1){audioSystem?.play('pickup');addBarrierCharge(6)}else{audioSystem?.play('pickup');player.hp=Math.min(player.maxHp,player.hp+p.heal)}pickups.splice(i,1);continue}
+  if(dist<collectRadius){if(p.type==='eventXp'||p.type==='xpShard'){if(!build.debugLockXp)xp+=p.xp||18;particles.push({x:player.x,y:player.y,vx:0,vy:-30,life:.35,max:.35,r:4,type:'thunder'});}else if(p.type==='repairShard'){audioSystem?.play('pickup');awakeningSystem.collectRepairShard(p.value||1);}else if(p.type==='awakeningModule'){audioSystem?.play('awakening');pickups.splice(i,1);setTimeout(()=>{if(!awakeningSystem.pending&&awakeningSystem.eligibleCores().length)awakeningSystem.openModule()},0);continue}else if(player.hp>=player.maxHp-1){audioSystem?.play('pickup');addBarrierCharge(6)}else{audioSystem?.play('pickup');player.hp=Math.min(player.maxHp,player.hp+p.heal)}pickups.splice(i,1);continue}
   if(p.life<=0||p.y>H+30)pickups.splice(i,1)
  }
  for(let i=lightningArcs.length-1;i>=0;i--){lightningArcs[i].life-=dt;if(lightningArcs[i].life<=0)lightningArcs.splice(i,1)}

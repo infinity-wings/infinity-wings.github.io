@@ -1,9 +1,9 @@
-const CACHE='iw-cache-9.08-targeting-clean-laser-v36';
+const CACHE='iw-cache-9.09-awakening-module-v37';
 const ASSETS=[
   './',
   './index.html',
-  './style.css?v=9.08.9',
-  './game.js?v=9.08.9',
+  './style.css?v=9.09.0',
+  './game.js?v=9.09.0',
   './manifest.webmanifest',
   './apple-touch-icon.png',
   './favicon.png',

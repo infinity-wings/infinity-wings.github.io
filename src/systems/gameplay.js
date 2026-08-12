@@ -546,9 +546,9 @@ function droneShoot(d){
 }
 function laserStats(level){
  return [null,
-  {count:1,width:8,charge:.7,duration:2,cooldown:3,dps:58},
-  {count:1,width:12,charge:.55,duration:2.5,cooldown:2.5,dps:84},
-  {count:2,width:9,charge:.4,duration:3,cooldown:2,dps:78}
+  {count:1,width:8,charge:.7,duration:2.5,cooldown:3,dps:58},
+  {count:1,width:12,charge:.55,duration:3,cooldown:2.5,dps:84},
+  {count:2,width:9,charge:.4,duration:3.5,cooldown:2,dps:78}
  ][level];
 }
 function laserEmitterPositions(level){

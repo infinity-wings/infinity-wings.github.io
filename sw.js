@@ -1,9 +1,9 @@
-const CACHE='iw-cache-9.07-main-lanes-v20';
+const CACHE='iw-cache-9.07-main-fire-rate-v21';
 const ASSETS=[
   './',
   './index.html',
-  './style.css?v=9.07.17',
-  './game.js?v=9.07.17',
+  './style.css?v=9.07.18',
+  './game.js?v=9.07.18',
   './manifest.webmanifest',
   './apple-touch-icon.png',
   './favicon.png',

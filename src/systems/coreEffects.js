@@ -11,7 +11,7 @@ class CoreEffectsSystem {
     this.manager = manager;
     this.baseStats = Object.freeze({
       damage: 11,
-      fireRate: 190
+      fireRate: 220
     });
 
     this.manager.on('levelChanged', () => this.applyPlayerStats());

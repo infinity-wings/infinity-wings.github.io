@@ -363,7 +363,7 @@ function drawDrone(d){
  ctx.save();ctx.translate(pos.x,pos.y+recoil);ctx.rotate(-bank*.09);
  if(shipSpriteReady(shipSpriteAssets.drone)){
   const swarm=d.mode==='drone_swarm',heavy=d.mode==='drone_heavy',width=heavy?64:swarm?34:46,height=heavy?58:swarm?31:42;
-  const droneImage=getMobileRenderSprite(heavy?getTintedShipSprite(shipSpriteAssets.drone,'#6c87c8',.2):swarm?getTintedShipSprite(shipSpriteAssets.drone,'#62efff',.16):shipSpriteAssets.drone);
+  const droneImage=getMobileRenderSprite(heavy?getTintedShipSprite(shipSpriteAssets.drone,'#6c87c8',.2,512):swarm?getTintedShipSprite(shipSpriteAssets.drone,'#62efff',.16,512):shipSpriteAssets.drone,512);
   ctx.save();ctx.globalAlpha=.99;ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(droneImage,-width/2,-height/2,width,height);ctx.restore();
   ctx.save();ctx.globalCompositeOperation='lighter';ctx.shadowBlur=heavy?15:10;ctx.shadowColor='#59ddff';ctx.fillStyle='#dfffff';const engineY=height*.39;for(const engineX of heavy?[-11,11]:[-7,7]){ctx.beginPath();ctx.ellipse(engineX,engineY,heavy?2.2:1.5,heavy?6:4,0,0,Math.PI*2);ctx.fill()}ctx.restore();ctx.restore();return;
  }
@@ -411,7 +411,7 @@ function drawTexturedEnemyOnly(e,pulse,hpRatio){
  const image=e.boss?bossImage:e.bossGuard?shipSpriteAssets.guard:(shipSpriteAssets.enemies[e.type]||shipSpriteAssets.enemies.scout);if(!shipSpriteReady(image))return false;
  const bossProfile=e.boss?bossVisualProfile(e):null;
  const styledImage=e.boss?(e.bossArtKey?image:getTintedShipSprite(image,bossProfile.tint,e.awakenedBoss?.27:.17)):image;
- const renderImage=getMobileRenderSprite(styledImage,e.bossArtKey?512:256);
+ const renderImage=getMobileRenderSprite(styledImage,512);
  let [width,height]=e.boss?(e.bossRenderSize||[196,144]):e.bossGuard?[78,66]:(enemySpriteSizes[e.type]||enemySpriteSizes.scout);const contentBounds=e.boss&&e.bossArtKey?getOpaqueSpriteBounds(renderImage):null;if(contentBounds){height=width*contentBounds.height/Math.max(1,contentBounds.width)}
  if(e.shield>0){const shieldPulse=1+Math.sin(e.age*6)*.025,shieldAlpha=.48+.28*Math.min(1,e.shield/Math.max(1,e.maxShield||e.shield));enemyModelCtx.save();enemyModelCtx.scale(1,-1);if(!drawShieldSprite(enemyModelCtx,shieldSpriteAssets.enemy,0,0,(width+24)*shieldPulse,(Math.max(width,height)+24)*shieldPulse,shieldAlpha,elapsed*.06)){enemyModelCtx.strokeStyle='rgba(91,224,255,.85)';enemyModelCtx.lineWidth=3;enemyModelCtx.beginPath();enemyModelCtx.arc(0,0,e.r+9,0,Math.PI*2);enemyModelCtx.stroke()}enemyModelCtx.restore()}
  const entryProgress=e.bossEntering?Math.min(1,(e.bossEntryTime||0)/(e.bossIntroTravel||1.7)):1,entryPulse=.72+.28*Math.sin(elapsed*18);
@@ -539,7 +539,7 @@ function drawShip(x,y,color,pose=null){
 
  const selectedPlayerImage=shipSpriteAssets.players[window.IWSave?.data?.profile?.selectedFighter]||shipSpriteAssets.player;
  if(shipSpriteReady(selectedPlayerImage)){
-  const spriteAlpha=pose?.alpha??.99,playerImage=getMobileRenderSprite(pose?.bodyColor?getTintedShipSprite(selectedPlayerImage,pose.bodyColor,.42):selectedPlayerImage,512);ctx.save();ctx.globalAlpha=spriteAlpha;ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(playerImage,-39,-46,78,88);ctx.restore();drawPlayerSpriteGlow(pose?.color||color,spriteAlpha);ctx.restore();return;
+  const spriteAlpha=pose?.alpha??.99,playerImage=pose?.bodyColor?getTintedShipSprite(selectedPlayerImage,pose.bodyColor,.42,768):selectedPlayerImage,bounds=getOpaqueSpriteBounds(playerImage);let drawW=88,drawH=88;if(bounds){const ratio=bounds.width/Math.max(1,bounds.height);if(ratio>=1)drawH=drawW/ratio;else drawW=drawH*ratio}ctx.save();ctx.globalAlpha=spriteAlpha;ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.filter='contrast(1.08) saturate(1.04)';if(bounds)ctx.drawImage(playerImage,bounds.x,bounds.y,bounds.width,bounds.height,-drawW/2,-drawH/2,drawW,drawH);else ctx.drawImage(playerImage,-drawW/2,-drawH/2,drawW,drawH);ctx.restore();drawPlayerSpriteGlow(pose?.color||color,spriteAlpha);ctx.restore();return;
  }
 
  // 横滚透视：压低的一侧更宽、更暗并稍向下；抬高的一侧更窄、更亮并稍向上。

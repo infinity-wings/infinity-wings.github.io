@@ -280,7 +280,7 @@ function drawPlayerLaserBeam(b,lowFx=false){
  ctx.shadowBlur=18;ctx.strokeStyle=violet?'rgba(159,124,255,.58)':'rgba(54,218,255,.58)';ctx.lineWidth=width*2.05;path();ctx.stroke();
  ctx.shadowBlur=10;ctx.strokeStyle=violet?'rgba(229,214,255,.94)':'rgba(198,252,255,.94)';ctx.lineWidth=Math.max(2.2,width*.82);path();ctx.stroke();
  ctx.shadowBlur=5;ctx.strokeStyle=`rgba(255,255,255,${.88+.1*pulse})`;ctx.lineWidth=Math.max(1.2,width*.28);path();ctx.stroke();
- if(!lowFx){ctx.globalAlpha=.52+.28*pulse;ctx.shadowBlur=8;ctx.strokeStyle=violet?'rgba(197,171,255,.72)':'rgba(132,246,255,.72)';ctx.lineWidth=Math.max(1,width*.11);for(const side of [-1,1]){path(side*width*.84);ctx.stroke()}ctx.strokeStyle='#fff';ctx.lineWidth=1;for(let y=(elapsed*150)%42;y<height-12;y+=42){const nodeIndex=Math.max(0,Math.min(nodes.length-1,Math.round((1-y/height)*(nodes.length-1)))),x=nodes[nodeIndex],flow=width*.78;ctx.globalAlpha=.28+.34*pulse;ctx.beginPath();ctx.moveTo(x-flow,y+4);ctx.lineTo(x+flow,y-4);ctx.stroke()}}
+ if(!lowFx){ctx.globalAlpha=.52+.28*pulse;ctx.shadowBlur=8;ctx.strokeStyle=violet?'rgba(197,171,255,.72)':'rgba(132,246,255,.72)';ctx.lineWidth=Math.max(1,width*.11);for(const side of [-1,1]){path(side*width*.84);ctx.stroke()}}
  ctx.globalAlpha=.72+.22*pulse;ctx.shadowBlur=16;ctx.strokeStyle=violet?'#c5a9ff':'#96f7ff';ctx.lineWidth=Math.max(1.2,width*.16);ctx.beginPath();ctx.ellipse(muzzleX,height,Math.max(7,width*1.35),Math.max(3,width*.42),0,0,Math.PI*2);ctx.stroke();ctx.globalAlpha=.8*lifeRatio;ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(muzzleX,height,Math.max(2.3,width*.3),0,Math.PI*2);ctx.fill();ctx.restore();
 }
 

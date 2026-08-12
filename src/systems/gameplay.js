@@ -474,9 +474,9 @@ function fireProjectionLaserVolley(){
 }
 function fireProjectionMissileVolley(){
  const inherited=projectionCoreLevel();if(inherited.coreId!=='missile')return;
- const stats=missileStats(inherited.level),targets=enemies.filter(e=>e.hp>0).sort((a,b)=>a.y-b.y);
+ const stats=missileStats(inherited.level);
  clonePositions().forEach((clone,index)=>{
-  for(let shot=0;shot<stats.count;shot++){const side=shot%2?1:-1,target=targets[(index+shot)%Math.max(1,targets.length)]||null;missiles.push({x:clone.x+side*(10+Math.floor(shot/2)*5),y:clone.y-7,vx:side*55,vy:-180,target,life:4.2,level:inherited.level,trail:0,count:stats.count,damage:stats.damage*clone.damageScale,radius:stats.radius,speed:stats.speed,turn:stats.turn,projectionInherited:true})}
+  const targets=enemiesByDistance(clone.x,clone.y);for(let shot=0;shot<stats.count;shot++){const side=shot%2?1:-1,target=targets[shot%Math.max(1,targets.length)]||null;missiles.push({x:clone.x+side*(10+Math.floor(shot/2)*5),y:clone.y-7,vx:side*55,vy:-180,target,life:4.2,level:inherited.level,trail:0,count:stats.count,damage:stats.damage*clone.damageScale,radius:stats.radius,speed:stats.speed,turn:stats.turn,projectionInherited:true})}
  });
 }
 function fireProjectionDroneVolley(){
@@ -590,17 +590,17 @@ function updateLaserCore(dt,level){
  }else if(state.phase==='firing'&&state.timer<=0){state.phase='cooldown';state.timer=stats.cooldown;state.total=stats.cooldown;}
 }
 function missileStats(level){return [null,{count:1,damage:58,radius:54,speed:275,turn:4.8,cooldown:3.05},{count:2,damage:72,radius:68,speed:310,turn:6.2,cooldown:2.55},{count:4,damage:86,radius:82,speed:345,turn:7.8,cooldown:2.05}][level]}
+function enemiesByDistance(x,y){return enemies.filter(e=>e.hp>0&&!e.bossRetreating).sort((a,b)=>{const adx=a.x-x,ady=a.y-y,bdx=b.x-x,bdy=b.y-y;return adx*adx+ady*ady-(bdx*bdx+bdy*bdy)})}
 function fireMissiles(level){
  audioSystem?.play('missile');
  const stats=missileStats(level);if(!stats)return;
- const targets=enemies.filter(e=>e.hp>0).sort((a,b)=>a.y-b.y);
  const launchers=[{x:player.x,y:player.y,scale:1}];
- for(const launcher of launchers)for(let i=0;i<stats.count;i++){
+ for(const launcher of launchers){const targets=enemiesByDistance(launcher.x,launcher.y);for(let i=0;i<stats.count;i++){
  const side=i%2?1:-1,target=targets[i%Math.max(1,targets.length)]||null;
   const launchX=launcher.x+side*(16+Math.floor(i/2)*7),launchY=launcher.y-4;
   missiles.push({x:launchX,y:launchY,vx:side*(65+Math.floor(i/2)*20),vy:-185,target,life:4.2,level,trail:0,...stats,damage:stats.damage*launcher.scale});
   for(let p=0;p<3+level;p++)particles.push({x:launchX+(Math.random()-.5)*7,y:launchY+8,vx:side*(20+Math.random()*30),vy:75+Math.random()*85,life:.22+Math.random()*.16,max:.38,r:1.8+level*.45,type:'missileLaunch',missileLevel:level});
- }
+ }}
 }
 function explodeMissile(m){
  audioSystem?.play(m.awakening==='missile_hunter'?'explosionLarge':'explosionSmall');

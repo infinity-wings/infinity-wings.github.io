@@ -1,9 +1,9 @@
-const CACHE='iw-cache-9.08-projection-inherit-v34';
+const CACHE='iw-cache-9.08-targeting-clean-laser-v36';
 const ASSETS=[
   './',
   './index.html',
-  './style.css?v=9.08.8',
-  './game.js?v=9.08.8',
+  './style.css?v=9.08.9',
+  './game.js?v=9.08.9',
   './manifest.webmanifest',
   './apple-touch-icon.png',
   './favicon.png',

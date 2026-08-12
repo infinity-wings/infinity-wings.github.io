@@ -146,6 +146,7 @@ class CoreManager {
   getUpgradeCandidates() {
     const awakening = window.IWAwakeningSystem;
     return CORE_LIST
+      .filter(core => isCoreAvailable(core.id) || this.owns(core.id))
       .filter(core => !this.isMaxLevel(core.id))
       .filter(core => !awakening?.isCoreAwakened(core.id))
       .map(core => ({

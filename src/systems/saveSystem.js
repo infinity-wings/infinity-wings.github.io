@@ -13,8 +13,9 @@ const saveSystem={
  recordRun(record){this.data.profile.totalRuns++;this.data.progression.highestThreat=Math.max(this.data.progression.highestThreat,record.threatIndex||0);this.data.records=[record,...this.data.records].slice(0,20);this.commit()},
  saveCheckpoint(checkpoint){this.data.runCheckpoint={...checkpoint,savedAt:new Date().toISOString()};this.commit();return this.data.runCheckpoint},
  clearCheckpoint(){this.data.runCheckpoint=null;this.commit()},
+ unlockFighter(id){const allowed=['infinity','laser','drone','missile','thunder'];if(!allowed.includes(id))return false;const fighters=this.data.progression.fighters;if(fighters.includes(id))return false;fighters.push(id);this.commit();return true},
  unlockAllFighters(){this.data.progression.fighters=['infinity','laser','drone','missile','thunder'];return this.commit()},
- completeChapterOne(){if(this.data.story.chapterOneCompleted)return false;Object.assign(this.data.story,{chapterOneCompleted:true,chapterTwoUnlocked:true,currentChapter:2,wrecksFound:4,wrecks:[true,true,true,true]});this.commit();return true},
+ completeChapterOne(){if(this.data.story.chapterOneCompleted)return false;Object.assign(this.data.story,{chapterOneCompleted:true,chapterTwoUnlocked:true,currentChapter:2,wrecksFound:4,wrecks:[true,true,true,true]});this.data.progression.fighters=['infinity','laser','drone','missile','thunder'];this.commit();return true},
  export(){this.commit();return JSON.stringify(this.data,null,2)},
  import(text){const parsed=JSON.parse(text);if(!parsed||typeof parsed!=='object'||!parsed.story)throw new Error('无效的无限之翼存档');this.data=iwNormalizeSave(parsed);return this.commit()},
  clear(){localStorage.removeItem(IW_SAVE_KEY);this.data=iwDefaultSave();this.migrationPending=false;return this.commit()}

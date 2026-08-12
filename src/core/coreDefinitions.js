@@ -136,6 +136,14 @@ const CORE_DEFINITIONS = Object.freeze({
 
 const CORE_LIST = Object.freeze(Object.values(CORE_DEFINITIONS));
 const CORE_IDS = Object.freeze(CORE_LIST.map(core => core.id));
+const FIGHTER_CORE_UNLOCKS = Object.freeze({main:'infinity',laser:'laser',drone:'drone',missile:'missile',thunder:'thunder'});
+
+function isCoreAvailable(id) {
+  const fighterId = FIGHTER_CORE_UNLOCKS[id];
+  if (!fighterId || fighterId === 'infinity') return true;
+  const fighters = window.IWSave?.data?.progression?.fighters;
+  return Array.isArray(fighters) && fighters.includes(fighterId);
+}
 
 function getCoreDefinition(id) {
   return CORE_DEFINITIONS[id] || null;

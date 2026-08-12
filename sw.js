@@ -1,9 +1,9 @@
-const CACHE='iw-cache-9.07-core-names-v6';
+const CACHE='iw-cache-9.07-fighter-core-unlocks-v7';
 const ASSETS=[
   './',
   './index.html',
   './style.css?v=9.07.5',
-  './game.js?v=9.07.3',
+  './game.js?v=9.07.4',
   './manifest.webmanifest',
   './apple-touch-icon.png',
   './favicon.png',

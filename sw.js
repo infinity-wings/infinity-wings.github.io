@@ -1,9 +1,9 @@
-const CACHE='iw-cache-9.08-laser-sharp-fighters-v28';
+const CACHE='iw-cache-9.08-laser-visual-v29';
 const ASSETS=[
   './',
   './index.html',
-  './style.css?v=9.08.2',
-  './game.js?v=9.08.2',
+  './style.css?v=9.08.3',
+  './game.js?v=9.08.3',
   './manifest.webmanifest',
   './apple-touch-icon.png',
   './favicon.png',

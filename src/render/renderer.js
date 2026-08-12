@@ -179,7 +179,7 @@ function draw(){
  withRenderState('激光蓄力层',()=>drawLaserChargeEffect());
  withRenderState('核心防御层',()=>drawCoreDefenseEffects(lowFx));
  for(const b of bullets){
-  if(b.laser){ctx.save();ctx.globalCompositeOperation='lighter';ctx.shadowBlur=24+(b.level||1)*7;ctx.shadowColor=b.level===3?'#8d6cff':'#55eaff';ctx.fillStyle='rgba(68,196,255,.13)';ctx.fillRect(b.x-b.w*2.7,0,b.w*5.4,b.h);ctx.fillStyle='rgba(110,232,255,.48)';ctx.fillRect(b.x-b.w,0,b.w*2,b.h);ctx.fillStyle='rgba(239,255,255,.98)';ctx.fillRect(b.x-b.w*.34,0,b.w*.68,b.h);ctx.restore()}
+  if(b.laser)drawPlayerLaserBeam(b,lowFx)
   else if(b.source==='drone'){
    ctx.save();ctx.globalCompositeOperation='lighter';
    if(b.awakening==='drone_heavy'){
@@ -268,6 +268,18 @@ function drawLaserChargeEffect(){
   ctx.strokeStyle=`rgba(118,94,255,${.35+.45*progress})`;ctx.lineWidth=1.2;ctx.beginPath();ctx.arc(0,0,radius+6,-elapsed*4,-elapsed*4+Math.PI*1.25);ctx.stroke();
   ctx.strokeStyle=`rgba(154,241,255,${.12+.28*progress})`;ctx.lineWidth=.7+progress;ctx.beginPath();ctx.moveTo(0,-y);ctx.lineTo(0,-radius-8);ctx.stroke();ctx.restore();
  }
+}
+
+function drawPlayerLaserBeam(b,lowFx=false){
+ const level=Math.max(1,b.level||1),height=Math.max(1,b.h||0),width=Math.max(3,b.w||8),lifeRatio=Math.max(0,Math.min(1,(b.life||0)/Math.max(.01,b.maxLife||1)));
+ const pulse=.84+.16*Math.sin(elapsed*24+(b.emitterIndex||0)*1.7),violet=level===3;
+ const outer=violet?'rgba(112,82,255,.18)':'rgba(35,195,255,.16)',edge=violet?'rgba(164,135,255,.72)':'rgba(67,222,255,.72)',core=violet?'#f5efff':'#efffff';
+ ctx.save();ctx.translate(Math.round(b.x),0);ctx.globalCompositeOperation='lighter';
+ const aura=ctx.createLinearGradient(-width*3.2,0,width*3.2,0);aura.addColorStop(0,'rgba(0,0,0,0)');aura.addColorStop(.32,outer);aura.addColorStop(.5,violet?'rgba(184,145,255,.38)':'rgba(82,233,255,.34)');aura.addColorStop(.68,outer);aura.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=aura;ctx.fillRect(-width*3.2,0,width*6.4,height);
+ ctx.shadowBlur=18+level*5;ctx.shadowColor=violet?'#8f6cff':'#48e5ff';const body=ctx.createLinearGradient(-width*1.15,0,width*1.15,0);body.addColorStop(0,'rgba(35,119,255,0)');body.addColorStop(.18,edge);body.addColorStop(.42,core);body.addColorStop(.5,'#fff');body.addColorStop(.58,core);body.addColorStop(.82,edge);body.addColorStop(1,'rgba(35,119,255,0)');ctx.fillStyle=body;ctx.fillRect(-width*1.15,0,width*2.3,height);
+ ctx.shadowBlur=8;ctx.fillStyle=`rgba(255,255,255,${.9*pulse})`;ctx.fillRect(-Math.max(1,width*.2),0,Math.max(2,width*.4),height);
+ if(!lowFx){ctx.shadowBlur=9;ctx.lineWidth=Math.max(1,width*.12);ctx.lineCap='round';for(const side of [-1,1]){ctx.strokeStyle=violet?'rgba(197,171,255,.7)':'rgba(132,246,255,.7)';ctx.beginPath();for(let y=height;y>=0;y-=12){const x=side*(width*.78+Math.sin(y*.075-elapsed*13+side)*width*.32);y===height?ctx.moveTo(x,y):ctx.lineTo(x,y)}ctx.stroke()}ctx.globalAlpha=.5+.35*pulse;ctx.strokeStyle='#fff';ctx.lineWidth=1;for(let y=(elapsed*170)%34;y<height;y+=34){ctx.beginPath();ctx.moveTo(-width*.7,y);ctx.lineTo(width*.7,y-7);ctx.stroke()}}
+ ctx.globalAlpha=.72+.22*pulse;ctx.shadowBlur=16;ctx.strokeStyle=violet?'#c5a9ff':'#96f7ff';ctx.lineWidth=Math.max(1.2,width*.16);ctx.beginPath();ctx.ellipse(0,height,Math.max(7,width*1.35),Math.max(3,width*.42),0,0,Math.PI*2);ctx.stroke();ctx.globalAlpha=.8*lifeRatio;ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(0,height,Math.max(2.3,width*.3),0,Math.PI*2);ctx.fill();ctx.restore();
 }
 
 function drawLightningArc(arc){

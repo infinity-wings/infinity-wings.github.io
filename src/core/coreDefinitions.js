@@ -37,15 +37,15 @@ const CORE_DEFINITIONS = Object.freeze({
     levels: [
     {
         name: "动能Ⅰ",
-        description: "启用单弹道动能主炮。"
+        description: "启用低射速单弹道动能主炮。"
     },
     {
         name: "动能Ⅱ",
-        description: "主炮升级为双弹道，并小幅强化弹头。"
+        description: "主炮升级为双弹道，并提高射速与弹头威力。"
     },
     {
         name: "动能Ⅲ",
-        description: "主炮升级为强化三弹道，子弹更粗，伤害提升。"
+        description: "主炮升级为高速强化三弹道，子弹更粗，伤害提升。"
     }
 ]
   }),

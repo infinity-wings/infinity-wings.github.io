@@ -11,7 +11,7 @@ class CoreEffectsSystem {
     this.manager = manager;
     this.baseStats = Object.freeze({
       damage: 11,
-      fireRate: 220
+      fireRate: 315
     });
 
     this.manager.on('levelChanged', () => this.applyPlayerStats());
@@ -55,6 +55,7 @@ class CoreEffectsSystem {
   player.mainBulletCount = [1, 1, 2, 3][level] || 1;
   player.mainBulletSize = [1, 1, 1.08, 1.25][level] || 1;
   player.mainBulletDamageScale = [1, 1, 1.08, 1.25][level] || 1;
+  player.fireRate = [315, 315, 265, 220][level] || 315;
   }
 
   getDebugState() {

@@ -45,7 +45,7 @@ function reset(){
  hp:100,
  maxHp:100,
  damage:11,
- fireRate:220,
+ fireRate:315,
  fireCd:0,
  inv:0,
  vx:0,
@@ -83,7 +83,7 @@ function displayedThreatLevel(){
 function combatPower(){
  const corePower=CORE_IDS.reduce((sum,id)=>sum+coreManager.getLevel(id),0);
  const weaponPower=coreManager.getLevel('laser')*1.4+coreManager.getLevel('drone')*1.25+coreManager.getLevel('missile')*1.35+coreManager.getLevel('thunder')+coreManager.getLevel('blast')*.8;
- const gunPower=Math.max(0,(player.damage-11)/5)+Math.max(0,(220-player.fireRate)/35)+(player.mainBulletCount-1)*1.2;
+ const gunPower=Math.max(0,(player.damage-11)/5)+Math.max(0,(315-player.fireRate)/35)+(player.mainBulletCount-1)*1.2;
  return corePower*.42+weaponPower+gunPower+Math.max(0,level-1)*.18;
 }
 function recentKillRate(){

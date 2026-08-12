@@ -1,9 +1,9 @@
-const CACHE='iw-cache-9.05-boss-core-overlay-v1';
+const CACHE='iw-cache-9.06-stage-boss-director-v1';
 const ASSETS=[
   './',
   './index.html',
-  './style.css?v=9.05.0',
-  './game.js?v=9.05.0',
+  './style.css?v=9.06.0',
+  './game.js?v=9.06.0',
   './manifest.webmanifest',
   './apple-touch-icon.png',
   './favicon.png',

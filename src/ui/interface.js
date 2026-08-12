@@ -10,7 +10,7 @@ const ENEMY_ARCHIVE_DATA={
  raider:{name:'侧翼突袭机',baseHp:36,attack:'高速横穿连射',damage:'连射弹 7 / 接触 16',xp:12,desc:'从左右两侧进入战场，快速穿越交战区域。'},
  carrier:{name:'分裂母机',baseHp:165,attack:'射击并在击毁后释放3架小型机',damage:'子弹 10 / 接触 16',xp:26,desc:'大型载机，死亡后仍会制造新的威胁。'},
  jammer:{name:'干扰机',baseHp:62,attack:'紫色减速干扰弹',damage:'干扰弹 10 / 接触 16',xp:17,desc:'命中后暂时降低玩家移动速度，不影响武器。'},
- boss:{name:'六级 Boss 总览',baseHp:'1953–14159+',attack:'连续波次弹幕、召唤与可躲避激光',damage:'子弹 13–20 / 激光 24–28',xp:'255–1640+',desc:'危险等级 I、II 为前哨；III 至 Ω 各有投影与真身两次遭遇。'},
+ boss:{name:'六级 Boss 总览',baseHp:'1953–14159+',attack:'连续波次弹幕、召唤与可躲避激光',damage:'子弹 13–20 / 激光 24–28',xp:'255–1640+',desc:'六个危险等级各有一只实体 Boss，按当前阶段战斗进度出现。'},
  'boss-1':{name:'危险 I · 重甲先锋［前哨］',baseHp:'1953+',attack:'连续扇形、环形弹幕',damage:'13–20',xp:480,desc:'1分30秒出现的前期小型 Boss，30秒后撤离。'},
  'boss-2':{name:'危险 II · 弹幕母机［前哨］',baseHp:'2695+',attack:'连续扇形、环形弹幕',damage:'13–20',xp:660,desc:'3分30秒出现的第二前哨，使用放大的现役载机模型。'},
  'boss-3':{name:'危险 III · 裂隙猎手［投影］',baseHp:'2883+',attack:'扇形连射、瞄准弹',damage:'14–17',xp:405,desc:'真身的相位投影，固定在战场上方；60秒未击毁会自行消散。'},
@@ -265,7 +265,7 @@ function updateBarrierDangerHint(dt){
 
 function updateUI(){
  if(UI.timer)UI.timer.textContent=formatRunTime(elapsed);
- UI.hpText.textContent=`${Math.ceil(player?.hp||0)} / ${player?.maxHp||100}`;UI.hpFill.style.width=Math.max(0,(player?.hp||0)/(player?.maxHp||100)*100)+'%';UI.xpFill.style.width=(build?.allCoresMax?100:xp/nextXp*100)+'%';UI.xpFill.classList.toggle('maxed',Boolean(build?.allCoresMax));UI.score.textContent=score;UI.level.textContent=level;UI.threat.textContent=THREAT_ROMAN[threatLevel()];
+ UI.hpText.textContent=`${Math.ceil(player?.hp||0)} / ${player?.maxHp||100}`;UI.hpFill.style.width=Math.max(0,(player?.hp||0)/(player?.maxHp||100)*100)+'%';UI.xpFill.style.width=(build?.allCoresMax?100:xp/nextXp*100)+'%';UI.xpFill.classList.toggle('maxed',Boolean(build?.allCoresMax));UI.score.textContent=score;UI.level.textContent=level;UI.threat.textContent=THREAT_ROMAN[typeof displayedThreatLevel==='function'?displayedThreatLevel():threatLevel()];
  const barrierLeft=Math.max(0,bombs||0);UI.barrierCount.textContent=`剩余 ${barrierLeft} 次`;UI.touchBarrierCount.textContent=`剩余 ${barrierLeft} 次`;if(UI.barrierChargeFill)UI.barrierChargeFill.style.width=Math.max(0,Math.min(100,build?.barrierCharge||0))+'%';
  [...UI.barrierCores.children].forEach((core,i)=>{const active=i<barrierLeft;core.classList.toggle('active',active);core.classList.toggle('spent',!active&&!core.classList.contains('consuming'))});
  [...UI.touchBarrierCores.children].forEach((core,i)=>core.classList.toggle('active',i<barrierLeft));

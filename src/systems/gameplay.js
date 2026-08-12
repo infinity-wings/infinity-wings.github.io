@@ -456,47 +456,54 @@ function playerShoot(){
  fireMainWeapon(player.x,muzzleY,'player');
  player.recoil=1;
 }
-function projectionOwnsCore(coreId){return coreId==='main'||coreManager.getRawLevel(coreId)>0||Boolean(awakeningSystem.get(coreId));}
+function sortiePrimaryCore(){return({infinity:'main',laser:'laser',drone:'drone',missile:'missile',thunder:'thunder'})[IWSave?.data?.profile?.selectedFighter||'infinity']||'main'}
+function projectionCoreLevel(){const coreId=sortiePrimaryCore();return{coreId,level:Math.max(1,coreManager.getLevel(coreId))}}
 function fireProjectionMainVolley(){
- if(!projectionOwnsCore('main'))return;
- const hasBlast=projectionOwnsCore('blast'),hasThunder=projectionOwnsCore('thunder');
+ const inherited=projectionCoreLevel();if(inherited.coreId!=='main')return;
  for(const clone of clonePositions()){
-  const projectile={x:clone.x,y:clone.y-43,vx:clone.spread||0,vy:-650,r:3.2,d:player.damage*clone.damageScale,source:'clone',life:2.4,projectionInherited:true};
-  if(hasBlast)projectile.blastLevel=1;
-  if(hasThunder)projectile.thunderLevel=1;
-  bullets.push(projectile);
+  fireMainWeapon(clone.x,clone.y-43,'clone',clone.damageScale,{projectionInherited:true});
  }
 }
 function fireProjectionLaserVolley(){
- if(!projectionOwnsCore('laser'))return;
- const stats=laserStats(1);
+ const inherited=projectionCoreLevel();if(inherited.coreId!=='laser')return;
+ const stats=laserStats(inherited.level);
  clonePositions().forEach((clone,index)=>{
-  bullets.push({laser:true,x:clone.x,y:0,w:stats.width*.72,h:clone.y-20,life:stats.duration,maxLife:stats.duration,d:stats.dps*clone.damageScale,level:1,source:'clone',emitterOffset:0,emitterIndex:index,projectionInherited:true});
+  bullets.push({laser:true,x:clone.x,y:0,w:stats.width*.72,h:clone.y-20,life:stats.duration,maxLife:stats.duration,d:stats.dps*clone.damageScale,level:inherited.level,source:'clone',emitterOffset:0,emitterIndex:index,projectionInherited:true,visualNodes:Array(9).fill(clone.x)});
  });
  if(clonePositions().length)shake=Math.max(shake,3);
 }
 function fireProjectionMissileVolley(){
- if(!projectionOwnsCore('missile'))return;
- const stats=missileStats(1),targets=enemies.filter(e=>e.hp>0).sort((a,b)=>a.y-b.y);
+ const inherited=projectionCoreLevel();if(inherited.coreId!=='missile')return;
+ const stats=missileStats(inherited.level),targets=enemies.filter(e=>e.hp>0).sort((a,b)=>a.y-b.y);
  clonePositions().forEach((clone,index)=>{
-  const side=index%2?1:-1,target=targets[index%Math.max(1,targets.length)]||null;
-  missiles.push({x:clone.x+side*12,y:clone.y-7,vx:side*55,vy:-180,target,life:4.2,level:1,trail:0,count:1,damage:stats.damage*clone.damageScale,radius:stats.radius,speed:stats.speed,turn:stats.turn,projectionInherited:true});
+  for(let shot=0;shot<stats.count;shot++){const side=shot%2?1:-1,target=targets[(index+shot)%Math.max(1,targets.length)]||null;missiles.push({x:clone.x+side*(10+Math.floor(shot/2)*5),y:clone.y-7,vx:side*55,vy:-180,target,life:4.2,level:inherited.level,trail:0,count:stats.count,damage:stats.damage*clone.damageScale,radius:stats.radius,speed:stats.speed,turn:stats.turn,projectionInherited:true})}
  });
+}
+function fireProjectionDroneVolley(){
+ const inherited=projectionCoreLevel();if(inherited.coreId!=='drone')return;
+ const stats=[null,{count:2,damage:.5},{count:3,damage:.62},{count:4,damage:.75}][inherited.level];
+ for(const clone of clonePositions())for(let shot=0;shot<stats.count;shot++){const offset=(shot-(stats.count-1)/2)*9;bullets.push({x:clone.x+offset,y:clone.y-38,vx:offset*.7,vy:-620,r:2.8,d:player.damage*stats.damage*clone.damageScale,source:'clone',life:2.4,projectionInherited:true})}
+}
+function fireProjectionThunderVolley(){
+ const inherited=projectionCoreLevel();if(inherited.coreId!=='thunder')return;
+ const chainCount=[0,2,3,5][inherited.level],range=[0,230,285,350][inherited.level],damage=player.damage*[0,.72,.88,1.06][inherited.level];
+ for(const clone of clonePositions()){let from=clone;const available=enemies.filter(e=>e.hp>0&&Math.hypot(e.x-clone.x,e.y-clone.y)<=range).sort((a,b)=>Math.hypot(a.x-clone.x,a.y-clone.y)-Math.hypot(b.x-clone.x,b.y-clone.y)).slice(0,chainCount);for(const target of available){createLightningArc(from,target,inherited.level);if(damageEnemy(target,damage*clone.damageScale)){const index=enemies.indexOf(target);if(index>=0)enemies.splice(index,1)}from=target}}
 }
 function updateProjectionInheritedSkills(dt){
  const active=(build.projectionActive||0)>0&&clonePositions().length>0;
  if(!active){build.projectionMainCd=0;build.projectionMissileCd=0;build.projectionLaserState={phase:'idle',timer:0};return;}
  build.projectionMainCd-=dt;
- if(build.projectionMainCd<=0){fireProjectionMainVolley();build.projectionMainCd=.28;}
- if(projectionOwnsCore('missile')){
+ const inherited=projectionCoreLevel();
+ if(build.projectionMainCd<=0){if(inherited.coreId==='main')fireProjectionMainVolley();else if(inherited.coreId==='drone')fireProjectionDroneVolley();else if(inherited.coreId==='thunder')fireProjectionThunderVolley();build.projectionMainCd=inherited.coreId==='thunder'?[0,2.1,1.75,1.35][inherited.level]:inherited.coreId==='drone'?[0,.34,.3,.26][inherited.level]:.28;}
+ if(inherited.coreId==='missile'){
   build.projectionMissileCd-=dt;
-  if(build.projectionMissileCd<=0){fireProjectionMissileVolley();build.projectionMissileCd=missileStats(1).cooldown;}
+  if(build.projectionMissileCd<=0){fireProjectionMissileVolley();build.projectionMissileCd=missileStats(inherited.level).cooldown;}
  }
- if(projectionOwnsCore('laser')){
+ if(inherited.coreId==='laser'){
   const state=build.projectionLaserState||{phase:'idle',timer:0};state.timer-=dt;
-  if(state.phase==='idle'||state.phase==='cooldown'&&state.timer<=0){state.phase='charging';state.timer=laserStats(1).charge;state.total=state.timer;}
-  else if(state.phase==='charging'&&state.timer<=0){fireProjectionLaserVolley();state.phase='firing';state.timer=laserStats(1).duration;state.total=state.timer;}
-  else if(state.phase==='firing'&&state.timer<=0){state.phase='cooldown';state.timer=laserStats(1).cooldown;state.total=state.timer;}
+  if(state.phase==='idle'||state.phase==='cooldown'&&state.timer<=0){state.phase='charging';state.timer=laserStats(inherited.level).charge;state.total=state.timer;}
+  else if(state.phase==='charging'&&state.timer<=0){fireProjectionLaserVolley();state.phase='firing';state.timer=laserStats(inherited.level).duration;state.total=state.timer;}
+  else if(state.phase==='firing'&&state.timer<=0){state.phase='cooldown';state.timer=laserStats(inherited.level).cooldown;state.total=state.timer;}
   build.projectionLaserState=state;
  }
 }

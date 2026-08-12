@@ -104,14 +104,9 @@ const uiPrefs={
 };
 let settingsReturnState='menu';
 function refreshChapterMenu(){
- const save=IWSave.data,story=save.story,completed=story.chapterOneCompleted;
- const bossCount=completed?6:Math.max(0,Math.min(6,save.progression.defeated.filter(id=>['boss-1','boss-2','boss-4','boss-6','boss-8','boss-10'].includes(id)).length));
- const wrecks=Math.max(0,Math.min(4,story.wrecksFound||0)),progress=completed?100:Math.round((bossCount/6*.7+wrecks/4*.3)*100);
- $('#chapterProgressText').textContent=completed?'第一章完成 · 第二章已解锁':`Boss ${bossCount}/6 · 战机遗骸 ${wrecks}/4`;
- $('#chapterProgressFill').style.width=progress+'%';
- $('#chapterTwoLock').textContent=story.chapterTwoUnlocked?'已解锁 · 内容开发中':'完成第一章后解锁';
- $('#continueButton').classList.toggle('hidden',!story.introSeen);
- $('#startButton span').textContent=story.introSeen?'重新观看序章':'点击开始游戏';
+ $('#startButton').disabled=false;
+ $('#startButton').classList.remove('unavailable');
+ $('#startButton span').textContent='继续游戏';
  refreshSaveStatus();
 }
 function refreshSaveStatus(){const el=$('#saveStatusText');if(!el)return;const save=IWSave.data;el.textContent=`V${save.version} · ${save.profile.totalRuns} 次行动 · ${new Date(save.updatedAt).toLocaleString('zh-CN')}`}
@@ -325,7 +320,7 @@ UI.barrierBox?.setAttribute('role','button');UI.barrierBox?.setAttribute('tabind
 const activateHudBarrier=e=>{if(e){e.preventDefault();e.stopPropagation()}if(touchDevice&&state==='game'&&running&&!paused&&!dying)pulse()};
 UI.barrierBox?.addEventListener('pointerup',activateHudBarrier,{passive:false});
 UI.barrierBox?.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&touchDevice)activateHudBarrier(e)});
-$('#startButton').onclick=()=>{IWSave.markIntroSeen();refreshChapterMenu();startStory()};$('#continueButton').onclick=beginGame;const skipStoryButton=$('#skipStory');const skipStoryNow=e=>{if(e){e.preventDefault();e.stopPropagation()}IWSave.markIntroSeen();beginGame()};skipStoryButton.onclick=skipStoryNow;skipStoryButton.addEventListener('pointerup',skipStoryNow);skipStoryButton.addEventListener('touchend',skipStoryNow,{passive:false});$('#storyRoll').addEventListener('animationend',()=>{IWSave.markIntroSeen();beginGame()});$('#syncRestartButton').onclick=()=>{pilotId++;localStorage.setItem('infinityWingsPilotIdV2',String(pilotId));IWSave.data.profile.pilotId=pilotId;IWSave.commit();$('#archiveCloneCount').textContent='当前驾驶员编号：#'+String(pilotId).padStart(6,'0');beginGame()};$('#deathMenuButton').onclick=returnToTitle;$('#bombButton').onclick=pulse;
+$('#startButton').onclick=beginGame;$('#newGameButton').onclick=()=>{IWSave.markIntroSeen();refreshChapterMenu();startStory()};const skipStoryButton=$('#skipStory');const skipStoryNow=e=>{if(e){e.preventDefault();e.stopPropagation()}IWSave.markIntroSeen();beginGame()};skipStoryButton.onclick=skipStoryNow;skipStoryButton.addEventListener('pointerup',skipStoryNow);skipStoryButton.addEventListener('touchend',skipStoryNow,{passive:false});$('#storyRoll').addEventListener('animationend',()=>{IWSave.markIntroSeen();beginGame()});$('#syncRestartButton').onclick=()=>{pilotId++;localStorage.setItem('infinityWingsPilotIdV2',String(pilotId));IWSave.data.profile.pilotId=pilotId;IWSave.commit();$('#archiveCloneCount').textContent='当前驾驶员编号：#'+String(pilotId).padStart(6,'0');beginGame()};$('#deathMenuButton').onclick=returnToTitle;$('#bombButton').onclick=pulse;
 $('#archiveButton').onclick=()=>{showScreen(UI.archive);$('#archiveCloneCount').textContent='当前驾驶员编号：#'+String(pilotId).padStart(6,'0');renderArchiveHome()};document.querySelectorAll('[data-archive-view]').forEach(button=>button.onclick=()=>renderArchiveView(button.dataset.archiveView));$('#archiveBack').onclick=renderArchiveHome;$('#settingsButton').onclick=()=>{settingsReturnState='menu';showScreen(UI.settings);refreshPauseToggles()};
 document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>showScreen(UI.menu));
 $('#chapterCompleteButton').onclick=()=>{state='menu';refreshChapterMenu();showScreen(UI.menu)};

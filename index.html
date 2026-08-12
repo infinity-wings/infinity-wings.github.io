@@ -16,7 +16,7 @@
   <link rel="preload" as="image" href="assets/menu/menu-space-background-desktop.jpg" media="(pointer:fine)" fetchpriority="high" />
   <link rel="preload" as="image" href="assets/menu/menu-title-logo.PNG" />
   <link rel="preload" as="image" href="assets/menu/menu-fighter-rear-v2.png" />
-  <link rel="stylesheet" href="style.css?v=9.07.0" />
+  <link rel="stylesheet" href="style.css?v=9.07.1" />
 </head>
 <body>
   <script>
@@ -103,11 +103,6 @@
         </div>
 
         <div class="menu-actions hologram-actions">
-          <div id="chapterProgress" class="chapter-progress" aria-live="polite">
-            <div><small>当前章节</small><b>第一章 · 最后的羽翼</b></div>
-            <span id="chapterProgressText">行动尚未开始</span>
-            <div class="chapter-progress-bar"><i id="chapterProgressFill"></i></div>
-          </div>
           <div class="menu-secondary-grid">
             <button id="hangarButton" class="menu-button hologram-small" type="button">
               <svg class="menu-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V8l8-4 8 4v11M7 19v-7h10v7M9 9h6"/></svg>
@@ -127,11 +122,10 @@
             </button>
           </div>
           <button id="startButton" class="primary-action hologram-start">
-            <span>点击开始游戏</span>
-            <small>TAP TO DEPLOY</small>
+            <span>继续游戏</span>
+            <small>CONTINUE</small>
           </button>
-          <button id="continueButton" class="continue-action hidden" type="button"><b>继续行动</b><small>跳过已同步序章，立即出击</small></button>
-          <div class="chapter-locks"><span><b>第二章 · 舰队重建</b><i id="chapterTwoLock">完成第一章后解锁</i></span><span><b>无限裂隙</b><i>完成第二章并集结五架战机后解锁</i></span></div>
+          <button id="newGameButton" class="continue-action" type="button"><b>开始新游戏</b><small>NEW GAME</small></button>
           <div class="menu-project-mark" aria-hidden="true">
             <b>ALPHA 9.07</b>
           </div>
@@ -210,7 +204,7 @@
       </section>
 
       <section id="chapterCompleteScreen" class="screen hidden modal-screen chapter-complete-screen">
-        <div class="panel chapter-complete-panel"><div class="panel-kicker"><span>CHAPTER COMPLETE</span>章节完成</div><h2>第一章 · 最后的羽翼</h2><p>终焉信号已经消散，四架失联战机的搜寻坐标已写入永久档案。</p><div class="chapter-result"><span>最终 Boss<b>已击毁</b></span><span>章节进度<b>100%</b></span><span>新章节<b>第二章已解锁</b></span></div><button id="chapterCompleteButton" class="primary-action"><span>返回主菜单</span><small>保存并结束本次行动</small></button></div>
+        <div class="panel chapter-complete-panel"><div class="panel-kicker"><span>MISSION COMPLETE</span>航程节点完成</div><h2>终焉信号已经消散</h2><p>失联战机的搜寻坐标已写入永久档案，一条未知航路正在展开。</p><div class="chapter-result"><span>终焉核心<b>已击毁</b></span><span>同步状态<b>已保存</b></span><span>未知航路<b>已开放</b></span></div><button id="chapterCompleteButton" class="primary-action"><span>返回主菜单</span><small>保存并结束本次行动</small></button></div>
       </section>
 
       <section id="migrationScreen" class="screen hidden modal-screen migration-screen">
@@ -283,7 +277,7 @@
       document.documentElement.style.setProperty('--iw-world-height', String(logicalHeight));
     })();
   </script>
-  <script src="game.js?v=9.07.0"></script>
+  <script src="game.js?v=9.07.1"></script>
   <script>if('serviceWorker' in navigator){addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));}</script>
 </body>
 </html>

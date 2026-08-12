@@ -411,7 +411,7 @@ function drawTexturedEnemyOnly(e,pulse,hpRatio){
  // 所有 Boss 投影使用相同的慢速全息闪烁；频率低，但明暗差必须足以和实体区分。
  enemyModelCtx.globalAlpha=spriteAlpha*(e.projectionBoss?.53+.25*Math.sin(elapsed*3.2+(e.bossStage||0)*.6):1);
  enemyModelCtx.imageSmoothingEnabled=true;enemyModelCtx.imageSmoothingQuality='high';if(contentBounds)enemyModelCtx.drawImage(renderImage,contentBounds.x,contentBounds.y,contentBounds.width,contentBounds.height,-width/2,-height/2,width,height);else enemyModelCtx.drawImage(renderImage,-width/2,-height/2,width,height);enemyModelCtx.restore();
- const coreColor=e.boss?(e.awakenedBoss?'#ff5fd7':bossProfile.core):e.bossGuard?'#ff79dc':e.type==='support'?'#5deaff':e.type==='sniper'||e.type==='raider'?'#ffe171':e.type==='carrier'||e.type==='jammer'?'#c477ff':e.type==='heavy'||e.type==='barrage'?'#ff9b45':'#ff526f';enemyCore(0,e.boss?-4:-3,e.boss?8:Math.max(3.2,width*.075),coreColor,pulse);return true;
+ if(!(e.boss&&e.bossArtKey)){const coreColor=e.boss?(e.awakenedBoss?'#ff5fd7':bossProfile.core):e.bossGuard?'#ff79dc':e.type==='support'?'#5deaff':e.type==='sniper'||e.type==='raider'?'#ffe171':e.type==='carrier'||e.type==='jammer'?'#c477ff':e.type==='heavy'||e.type==='barrage'?'#ff9b45':'#ff526f';enemyCore(0,e.boss?-4:-3,e.boss?8:Math.max(3.2,width*.075),coreColor,pulse)}return true;
 }
 function drawEnemyShip(e,targetCtx=null){
  const previousEnemyModelCtx=enemyModelCtx;if(targetCtx)enemyModelCtx=targetCtx;

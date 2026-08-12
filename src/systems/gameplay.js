@@ -345,11 +345,12 @@ function createLightningArc(from,to,level=1){
 }
 function fireThunderCore(level){
  const stats=getThunderCoreStats();if(!stats||!enemies.length)return false;
+ const blastLevel=coreManager.getLevel('blast');
  let from={x:player.x,y:player.y-18},fired=false;const struck=new Set();
  for(let step=0;step<stats.chains;step++){
   const target=enemies.filter(enemy=>enemy.hp>0&&!enemy.bossRetreating&&!struck.has(enemy)&&Math.hypot(enemy.x-from.x,enemy.y-from.y)<=stats.range).sort((a,b)=>Math.hypot(a.x-from.x,a.y-from.y)-Math.hypot(b.x-from.x,b.y-from.y))[0];
   if(!target)break;fired=true;struck.add(target);createLightningArc(from,target,level);const nextFrom={x:target.x,y:target.y};
-  if(damageEnemy(target,stats.damage)){const index=enemies.indexOf(target);if(index>=0)enemies.splice(index,1)}from=nextFrom;
+  if(damageEnemy(target,stats.damage))removeKilledEnemy(target,stats.damage,blastLevel);from=nextFrom;
  }
  if(fired){audioSystem?.play('thunder');shake=Math.max(shake,level===3?6:4)}return fired;
 }
@@ -486,15 +487,23 @@ function fireProjectionDroneVolley(){
 }
 function fireProjectionThunderVolley(){
  const inherited=projectionCoreLevel();if(inherited.coreId!=='thunder')return;
- const chainCount=[0,2,3,5][inherited.level],range=[0,230,285,350][inherited.level],damage=player.damage*[0,.72,.88,1.06][inherited.level];
- for(const clone of clonePositions()){let from=clone;const available=enemies.filter(e=>e.hp>0&&Math.hypot(e.x-clone.x,e.y-clone.y)<=range).sort((a,b)=>Math.hypot(a.x-clone.x,a.y-clone.y)-Math.hypot(b.x-clone.x,b.y-clone.y)).slice(0,chainCount);for(const target of available){createLightningArc(from,target,inherited.level);if(damageEnemy(target,damage*clone.damageScale)){const index=enemies.indexOf(target);if(index>=0)enemies.splice(index,1)}from=target}}
+ const stats=getThunderCoreStats();if(!stats)return;
+ const chainCount=stats.chains,range=stats.range,damage=stats.damage;
+ const blastLevel=coreManager.getLevel('blast');
+ for(const clone of clonePositions()){
+  let from=clone;const struck=new Set();
+  for(let step=0;step<chainCount;step++){
+   const target=enemies.filter(e=>e.hp>0&&!e.bossRetreating&&!struck.has(e)&&Math.hypot(e.x-from.x,e.y-from.y)<=range).sort((a,b)=>Math.hypot(a.x-from.x,a.y-from.y)-Math.hypot(b.x-from.x,b.y-from.y))[0];
+   if(!target)break;struck.add(target);createLightningArc(from,target,inherited.level);const arcDamage=damage*clone.damageScale;if(damageEnemy(target,arcDamage))removeKilledEnemy(target,arcDamage,blastLevel);from={x:target.x,y:target.y};
+  }
+ }
 }
 function updateProjectionInheritedSkills(dt){
  const active=(build.projectionActive||0)>0&&clonePositions().length>0;
  if(!active){build.projectionMainCd=0;build.projectionMissileCd=0;build.projectionLaserState={phase:'idle',timer:0};return;}
  build.projectionMainCd-=dt;
  const inherited=projectionCoreLevel();
- if(build.projectionMainCd<=0){if(inherited.coreId==='main')fireProjectionMainVolley();else if(inherited.coreId==='drone')fireProjectionDroneVolley();else if(inherited.coreId==='thunder')fireProjectionThunderVolley();build.projectionMainCd=inherited.coreId==='thunder'?[0,2.1,1.75,1.35][inherited.level]:inherited.coreId==='drone'?[0,.34,.3,.26][inherited.level]:.28;}
+ if(build.projectionMainCd<=0){if(inherited.coreId==='main')fireProjectionMainVolley();else if(inherited.coreId==='drone')fireProjectionDroneVolley();else if(inherited.coreId==='thunder')fireProjectionThunderVolley();build.projectionMainCd=inherited.coreId==='thunder'?getThunderCoreStats().cooldown:inherited.coreId==='drone'?[0,.34,.3,.26][inherited.level]:.28;}
  if(inherited.coreId==='missile'){
   build.projectionMissileCd-=dt;
   if(build.projectionMissileCd<=0){fireProjectionMissileVolley();build.projectionMissileCd=missileStats(inherited.level).cooldown;}

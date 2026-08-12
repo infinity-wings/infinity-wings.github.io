@@ -1717,3 +1717,9 @@ body.touch-device #topTimer.top-run-timer{
   body.mobile-portrait-device #hud .hud-row{gap:12px}
   body.mobile-portrait-device #hud .hud-row.minor>#barrierBox{flex-basis:230px!important;width:230px!important}
 }
+/* Persistent fleet hangar */
+.hangar-screen{overflow:auto;padding:clamp(18px,4vw,52px)}
+.hangar-panel{width:min(980px,94vw);margin:auto;padding:clamp(18px,3vw,34px);background:linear-gradient(150deg,rgba(5,23,39,.97),rgba(4,12,28,.96));border:1px solid rgba(91,218,255,.42);box-shadow:0 22px 70px #000a}
+.hangar-head{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(92,213,248,.25);padding-bottom:14px}.hangar-head span{color:#5fddff;letter-spacing:.24em}.hangar-head h2{margin:.25em 0 0}.hangar-head button{border:1px solid #39738a;background:#092238;color:#dff9ff;padding:9px 18px}.hangar-intro{color:#90adbd}
+.hangar-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.hangar-card{display:grid;grid-template-columns:42% 1fr;min-height:150px;border:1px solid rgba(80,190,224,.28);background:rgba(8,30,47,.7);overflow:hidden}.hangar-model{display:grid;place-items:center;background:radial-gradient(circle,rgba(53,185,228,.13),transparent 67%)}.hangar-model img{display:block;width:92%;max-height:145px;object-fit:contain}.hangar-card-copy{padding:15px}.hangar-card-copy small{color:#62dfff}.hangar-card-copy h3{margin:.3em 0;color:#f0fbff}.hangar-card-copy p{font-size:13px;color:#94aeba;line-height:1.5}.hangar-card-copy b{color:#6ee8ff}.hangar-card.locked .hangar-model img{filter:brightness(.12) saturate(0);opacity:.68}.hangar-card.locked .hangar-card-copy b{color:#637986}
+@media(max-width:680px){.hangar-grid{grid-template-columns:1fr}.hangar-card{min-height:132px}.hangar-model img{max-height:125px}}

@@ -24,6 +24,10 @@ CoreDebugMenu.prototype.render=function(...args){const result=renderCoreDebugMen
 const originalDebugRender=CoreDebugMenu.prototype.render;
 CoreDebugMenu.prototype.render=function(...args){
  const result=originalDebugRender.apply(this,args);
+ if(this.root&&!this.root.querySelector('[data-action="unlock-fighters"]')){
+  const actions=this.root.querySelector('.iw-debug-actions');
+  if(actions){const button=document.createElement('button');button.dataset.action='unlock-fighters';button.textContent='解锁所有战机';button.onclick=()=>{IWSave.unlockAllFighters();toast('五架战机已写入永久机库','important');this.render()};actions.appendChild(button)}
+ }
  this.root?.querySelectorAll('[data-threat]').forEach(button=>button.onclick=()=>{
   const previous=threatLevel();build.debugThreatLevel=button.dataset.threat==='auto'?null:Number(button.dataset.threat);const current=threatLevel();
   if(typeof syncBossDirectorTier==='function')syncBossDirectorTier(true);

@@ -45,6 +45,14 @@ function saveRunRecord(reason='战机损毁'){
  IWSave?.recordRun?.({time:Math.floor(elapsed),score,level,threat:THREAT_ROMAN[threatLevel()],threatIndex:threatLevel(),reason,date:new Date().toLocaleDateString('zh-CN'),pilot:pilotId});
 }
 function formatRunTime(seconds){seconds=Math.max(0,Math.floor(seconds||0));return String(Math.floor(seconds/60)).padStart(2,'0')+':'+String(seconds%60).padStart(2,'0')}
+const HANGAR_FIGHTERS=[
+ {id:'infinity',name:'无限之翼',type:'初始战机',asset:'assets/ships/player-fighter-v4.png',condition:'初始编队机体'},
+ {id:'laser',name:'曙光棱镜',type:'激光原核战机',asset:'assets/ships/story-fighters/laser-core-fighter-v1.png',condition:'寻找激光战机遗骸'},
+ {id:'drone',name:'苍穹蜂群',type:'无人机原核战机',asset:'assets/ships/story-fighters/drone-core-fighter-v1.png',condition:'寻找无人机战机遗骸'},
+ {id:'missile',name:'赤焰壁垒',type:'导弹原核战机',asset:'assets/ships/story-fighters/missile-core-fighter-v1.png',condition:'寻找导弹战机遗骸'},
+ {id:'thunder',name:'天穹雷翼',type:'雷电原核战机',asset:'assets/ships/story-fighters/thunder-core-fighter-v2.png',condition:'寻找雷电战机遗骸'}
+];
+function renderHangar(){const grid=$('#hangarGrid');if(!grid)return;const unlocked=new Set(IWSave.data.progression.fighters||['infinity']);grid.innerHTML=HANGAR_FIGHTERS.map(f=>{const known=unlocked.has(f.id);return `<article class="hangar-card ${known?'unlocked':'locked'}"><div class="hangar-model"><img src="${f.asset}" alt="${known?f.name:'未解锁战机'}"></div><div class="hangar-card-copy"><small>${known?f.type:'SIGNAL LOCKED'}</small><h3>${known?f.name:'未知战机'}</h3><p>${known?'已录入永久机库，可供后续出击配置。':f.condition}</p><b>${known?'已解锁':'未解锁'}</b></div></article>`}).join('')}
 function renderArchiveHome(){document.querySelector('#archiveHome').classList.remove('hidden');document.querySelector('#archiveDetail').classList.add('hidden');}
 function drawEnemyArchivePreview(canvas,type){
  const c=canvas?.getContext?.('2d');if(!c||typeof drawEnemyShip!=='function')return;
@@ -336,6 +344,7 @@ UI.barrierBox?.addEventListener('pointerup',activateHudBarrier,{passive:false});
 UI.barrierBox?.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&touchDevice)activateHudBarrier(e)});
 $('#startButton').onclick=()=>beginGame(Boolean(IWSave.data.runCheckpoint));$('#newGameButton').onclick=()=>{IWSave.clearCheckpoint();IWSave.markIntroSeen();refreshChapterMenu();startStory()};const skipStoryButton=$('#skipStory');const skipStoryNow=e=>{if(e){e.preventDefault();e.stopPropagation()}IWSave.markIntroSeen();beginGame()};skipStoryButton.onclick=skipStoryNow;skipStoryButton.addEventListener('pointerup',skipStoryNow);skipStoryButton.addEventListener('touchend',skipStoryNow,{passive:false});$('#storyRoll').addEventListener('animationend',()=>{IWSave.markIntroSeen();beginGame()});$('#syncRestartButton').onclick=()=>{pilotId++;localStorage.setItem('infinityWingsPilotIdV2',String(pilotId));IWSave.data.profile.pilotId=pilotId;IWSave.clearCheckpoint();$('#archiveCloneCount').textContent='当前驾驶员编号：#'+String(pilotId).padStart(6,'0');beginGame()};$('#deathMenuButton').onclick=returnToTitle;$('#bombButton').onclick=pulse;
 $('#archiveButton').onclick=()=>{showScreen(UI.archive);$('#archiveCloneCount').textContent='当前驾驶员编号：#'+String(pilotId).padStart(6,'0');renderArchiveHome()};document.querySelectorAll('[data-archive-view]').forEach(button=>button.onclick=()=>renderArchiveView(button.dataset.archiveView));$('#archiveBack').onclick=renderArchiveHome;$('#settingsButton').onclick=()=>{settingsReturnState='menu';showScreen(UI.settings);refreshPauseToggles()};
+$('#hangarButton').onclick=()=>{renderHangar();showScreen(UI.hangar)};
 document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>showScreen(UI.menu));
 $('#chapterCompleteButton').onclick=()=>{state='menu';refreshChapterMenu();showScreen(UI.menu)};
 $('#migrationConfirmButton').onclick=()=>{IWSave.migrate();pilotId=IWSave.data.profile.pilotId;refreshChapterMenu();state='menu';showScreen(UI.menu);toast('旧版作战档案迁移完成','important')};

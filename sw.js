@@ -1,9 +1,9 @@
-const CACHE='iw-cache-9.07-tablet-hangar-v25';
+const CACHE='iw-cache-9.08-tablet-hangar-v26';
 const ASSETS=[
   './',
   './index.html',
-  './style.css?v=9.07.22',
-  './game.js?v=9.07.22',
+  './style.css?v=9.08.0',
+  './game.js?v=9.08.0',
   './manifest.webmanifest',
   './apple-touch-icon.png',
   './favicon.png',

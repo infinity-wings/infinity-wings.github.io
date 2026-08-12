@@ -1,9 +1,9 @@
-const CACHE='iw-cache-9.07-five-fighter-grid-v15';
+const CACHE='iw-cache-9.07-five-fighter-grid-v16';
 const ASSETS=[
   './',
   './index.html',
-  './style.css?v=9.07.12',
-  './game.js?v=9.07.12',
+  './style.css?v=9.07.13',
+  './game.js?v=9.07.13',
   './manifest.webmanifest',
   './apple-touch-icon.png',
   './favicon.png',

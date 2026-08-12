@@ -3,7 +3,7 @@ const $=s=>document.querySelector(s);
 const canvas=$('#game'),ctx=canvas.getContext('2d');
 const W=canvas.width,H=canvas.height,SAFE_BOTTOM=120;
 const UI={
- boot:$('#bootScreen'),menu:$('#menuScreen'),story:$('#storyScreen'),core:$('#coreScreen'),archive:$('#archiveScreen'),settings:$('#settingsScreen'),death:$('#deathScreen'),pause:$('#pauseScreen'),
+ boot:$('#bootScreen'),menu:$('#menuScreen'),story:$('#storyScreen'),core:$('#coreScreen'),archive:$('#archiveScreen'),settings:$('#settingsScreen'),death:$('#deathScreen'),pause:$('#pauseScreen'),chapterComplete:$('#chapterCompleteScreen'),migration:$('#migrationScreen'),
  hud:$('#hud'),timerPanel:$('#topTimer'),touch:$('#touchControls'),toast:$('#toast'),threatFlash:$('#threatFlash'),
  hpText:$('#hpText'),hpFill:$('#hpFill'),xpFill:$('#xpFill'),score:$('#scoreText'),level:$('#levelText'),threat:$('#threatText'),timer:$('#timerText'),
  barrierBox:$('#barrierBox'),barrierCount:$('#barrierCount'),barrierChargeFill:$('#barrierChargeFill'),barrierCores:$('#barrierCores'),touchBarrierCount:$('#touchBarrierCount'),touchBarrierCores:$('#touchBarrierCores'),bombButton:$('#bombButton'),systemMenuButton:$('#systemMenuButton')

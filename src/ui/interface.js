@@ -22,11 +22,12 @@ const ENEMY_ARCHIVE_DATA={
  'boss-9':{name:'危险 Ω · 终焉核心［投影］',baseHp:'4750+',attack:'双层新星、瞄准弹、定点激光',damage:'17–28',xp:630,desc:'最终 Boss 的全息先兆，拥有三种攻击方式。'},
  'boss-10':{name:'危险 Ω · 终焉核心［真身］',baseHp:'14159+',attack:'强化扇形、强化环形、新星、扫射激光、终焉齐射',damage:'17–28',xp:'1640+',desc:'约14分30秒抵达的最终 Boss，宽度覆盖几乎整个上方战区。'}
 };
-function readArchiveSet(key){try{return new Set(JSON.parse(localStorage.getItem(key)||'[]'))}catch{return new Set()}}
+function readArchiveSet(key){const field=key===ARCHIVE_KEYS.enemies?'enemies':key===ARCHIVE_KEYS.defeated?'defeated':null;if(field&&window.IWSave&&IWSave.data.progression[field]?.length)return new Set(IWSave.data.progression[field]);try{return new Set(JSON.parse(localStorage.getItem(key)||'[]'))}catch{return new Set()}}
 function writeArchiveSet(key,set){localStorage.setItem(key,JSON.stringify([...set]))}
-function markEnemyEncounter(type){const set=readArchiveSet(ARCHIVE_KEYS.enemies);if(!set.has(type)){set.add(type);writeArchiveSet(ARCHIVE_KEYS.enemies,set)}}
-function markEnemyDefeated(type){const set=readArchiveSet(ARCHIVE_KEYS.defeated);if(!set.has(type)){set.add(type);writeArchiveSet(ARCHIVE_KEYS.defeated,set)}}
+function markEnemyEncounter(type){const set=readArchiveSet(ARCHIVE_KEYS.enemies);if(!set.has(type)){set.add(type);writeArchiveSet(ARCHIVE_KEYS.enemies,set);if(window.IWSave){IWSave.data.progression.enemies=[...set];IWSave.commit()}}}
+function markEnemyDefeated(type){const set=readArchiveSet(ARCHIVE_KEYS.defeated);if(!set.has(type)){set.add(type);writeArchiveSet(ARCHIVE_KEYS.defeated,set);if(window.IWSave){IWSave.data.progression.defeated=[...set];IWSave.commit()}}}
 function readCoreArchive(){
+ if(window.IWSave&&Object.keys(IWSave.data.progression.cores||{}).length)return {...IWSave.data.progression.cores};
  try{
   const raw=JSON.parse(localStorage.getItem(ARCHIVE_KEYS.cores)||'{}');
   if(raw&&typeof raw==='object'&&!Array.isArray(raw))return raw;
@@ -36,11 +37,12 @@ function readCoreArchive(){
  if(Object.keys(migrated).length)localStorage.setItem(ARCHIVE_KEYS.cores,JSON.stringify(migrated));
  return migrated;
 }
-function markCoreUnlocked(id,level=1){const archive=readCoreArchive();archive[id]=Math.max(Number(archive[id])||0,Math.max(1,Math.min(3,Number(level)||1)));localStorage.setItem(ARCHIVE_KEYS.cores,JSON.stringify(archive))}
-function getRunRecords(){try{return JSON.parse(localStorage.getItem(ARCHIVE_KEYS.records)||'[]')}catch{return []}}
+function markCoreUnlocked(id,level=1){const archive=readCoreArchive();archive[id]=Math.max(Number(archive[id])||0,Math.max(1,Math.min(3,Number(level)||1)));localStorage.setItem(ARCHIVE_KEYS.cores,JSON.stringify(archive));if(window.IWSave){IWSave.data.progression.cores=archive;IWSave.commit()}}
+function getRunRecords(){if(window.IWSave&&IWSave.data.records.length)return IWSave.data.records;try{return JSON.parse(localStorage.getItem(ARCHIVE_KEYS.records)||'[]')}catch{return []}}
 function saveRunRecord(reason='战机损毁'){
  const records=getRunRecords();records.unshift({time:Math.floor(elapsed),score,level,threat:THREAT_ROMAN[threatLevel()],reason,date:new Date().toLocaleDateString('zh-CN'),pilot:pilotId});
  localStorage.setItem(ARCHIVE_KEYS.records,JSON.stringify(records.slice(0,20)));
+ IWSave?.recordRun?.({time:Math.floor(elapsed),score,level,threat:THREAT_ROMAN[threatLevel()],threatIndex:threatLevel(),reason,date:new Date().toLocaleDateString('zh-CN'),pilot:pilotId});
 }
 function formatRunTime(seconds){seconds=Math.max(0,Math.floor(seconds||0));return String(Math.floor(seconds/60)).padStart(2,'0')+':'+String(seconds%60).padStart(2,'0')}
 function renderArchiveHome(){document.querySelector('#archiveHome').classList.remove('hidden');document.querySelector('#archiveDetail').classList.add('hidden');}
@@ -101,6 +103,22 @@ const uiPrefs={
  controlMode:localStorage.getItem('iwControlMode')==='keyboard'?'keyboard':'mouse'
 };
 let settingsReturnState='menu';
+function refreshChapterMenu(){
+ const save=IWSave.data,story=save.story,completed=story.chapterOneCompleted;
+ const bossCount=completed?6:Math.max(0,Math.min(6,save.progression.defeated.filter(id=>['boss-1','boss-2','boss-4','boss-6','boss-8','boss-10'].includes(id)).length));
+ const wrecks=Math.max(0,Math.min(4,story.wrecksFound||0)),progress=completed?100:Math.round((bossCount/6*.7+wrecks/4*.3)*100);
+ $('#chapterProgressText').textContent=completed?'第一章完成 · 第二章已解锁':`Boss ${bossCount}/6 · 战机遗骸 ${wrecks}/4`;
+ $('#chapterProgressFill').style.width=progress+'%';
+ $('#chapterTwoLock').textContent=story.chapterTwoUnlocked?'已解锁 · 内容开发中':'完成第一章后解锁';
+ $('#continueButton').classList.toggle('hidden',!story.introSeen);
+ $('#startButton span').textContent=story.introSeen?'重新观看序章':'点击开始游戏';
+ refreshSaveStatus();
+}
+function refreshSaveStatus(){const el=$('#saveStatusText');if(!el)return;const save=IWSave.data;el.textContent=`V${save.version} · ${save.profile.totalRuns} 次行动 · ${new Date(save.updatedAt).toLocaleString('zh-CN')}`}
+function showChapterComplete(){
+ if(!IWSave.completeChapterOne())return;
+ running=false;paused=false;state='chapterComplete';UI.hud.classList.add('hidden');UI.timerPanel.classList.add('hidden');UI.touch.classList.add('hidden');setSystemMenuVisible(false);showScreen(UI.chapterComplete);refreshChapterMenu();
+}
 function isMouseBattleMode(){return !interfaceTouchDevice&&uiPrefs.controlMode==='mouse'&&state==='game'&&running&&!paused&&!dying}
 function refreshMouseCursorState(){
  const active=isMouseBattleMode()&&document.pointerLockElement===canvas;
@@ -301,15 +319,21 @@ $('#touchSensitivitySetting')?.addEventListener('input',e=>{const value=Math.max
 $('#controlModeSetting')?.addEventListener('change',e=>{uiPrefs.controlMode=e.target.value==='mouse'?'mouse':'keyboard';localStorage.setItem('iwControlMode',uiPrefs.controlMode);releaseMouseLock();for(const key of Object.keys(keys))keys[key]=false;refreshPauseToggles();toast(uiPrefs.controlMode==='mouse'?'已切换为鼠标控制，返回战场后点击启用':'已切换为键盘控制')});
 refreshPauseToggles();
 document.addEventListener('click',e=>{if(e.target.closest('button'))audioSystem?.play('ui')});
-$('#settingsBackButton').onclick=()=>{if(settingsReturnState==='pause'){showScreen(UI.pause);setSystemMenuVisible(false)}else showScreen(UI.menu)};
+$('#settingsBackButton').onclick=()=>{if(settingsReturnState==='pause'){showScreen(UI.pause);setSystemMenuVisible(false)}else{refreshChapterMenu();showScreen(UI.menu)}};
 // HUD 内的亚空间屏障在移动端直接作为按钮使用；独立圆形按钮不再显示。
 UI.barrierBox?.setAttribute('role','button');UI.barrierBox?.setAttribute('tabindex','0');UI.barrierBox?.setAttribute('aria-label','启动亚空间屏障');
 const activateHudBarrier=e=>{if(e){e.preventDefault();e.stopPropagation()}if(touchDevice&&state==='game'&&running&&!paused&&!dying)pulse()};
 UI.barrierBox?.addEventListener('pointerup',activateHudBarrier,{passive:false});
 UI.barrierBox?.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&touchDevice)activateHudBarrier(e)});
-$('#startButton').onclick=startStory;const skipStoryButton=$('#skipStory');const skipStoryNow=e=>{if(e){e.preventDefault();e.stopPropagation()}beginGame()};skipStoryButton.onclick=skipStoryNow;skipStoryButton.addEventListener('pointerup',skipStoryNow);skipStoryButton.addEventListener('touchend',skipStoryNow,{passive:false});$('#storyRoll').addEventListener('animationend',beginGame);$('#syncRestartButton').onclick=()=>{pilotId++;localStorage.setItem('infinityWingsPilotIdV2',String(pilotId));$('#archiveCloneCount').textContent='当前驾驶员编号：#'+String(pilotId).padStart(6,'0');beginGame()};$('#deathMenuButton').onclick=returnToTitle;$('#bombButton').onclick=pulse;
+$('#startButton').onclick=()=>{IWSave.markIntroSeen();refreshChapterMenu();startStory()};$('#continueButton').onclick=beginGame;const skipStoryButton=$('#skipStory');const skipStoryNow=e=>{if(e){e.preventDefault();e.stopPropagation()}IWSave.markIntroSeen();beginGame()};skipStoryButton.onclick=skipStoryNow;skipStoryButton.addEventListener('pointerup',skipStoryNow);skipStoryButton.addEventListener('touchend',skipStoryNow,{passive:false});$('#storyRoll').addEventListener('animationend',()=>{IWSave.markIntroSeen();beginGame()});$('#syncRestartButton').onclick=()=>{pilotId++;localStorage.setItem('infinityWingsPilotIdV2',String(pilotId));IWSave.data.profile.pilotId=pilotId;IWSave.commit();$('#archiveCloneCount').textContent='当前驾驶员编号：#'+String(pilotId).padStart(6,'0');beginGame()};$('#deathMenuButton').onclick=returnToTitle;$('#bombButton').onclick=pulse;
 $('#archiveButton').onclick=()=>{showScreen(UI.archive);$('#archiveCloneCount').textContent='当前驾驶员编号：#'+String(pilotId).padStart(6,'0');renderArchiveHome()};document.querySelectorAll('[data-archive-view]').forEach(button=>button.onclick=()=>renderArchiveView(button.dataset.archiveView));$('#archiveBack').onclick=renderArchiveHome;$('#settingsButton').onclick=()=>{settingsReturnState='menu';showScreen(UI.settings);refreshPauseToggles()};
 document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>showScreen(UI.menu));
+$('#chapterCompleteButton').onclick=()=>{state='menu';refreshChapterMenu();showScreen(UI.menu)};
+$('#migrationConfirmButton').onclick=()=>{IWSave.migrate();pilotId=IWSave.data.profile.pilotId;refreshChapterMenu();state='menu';showScreen(UI.menu);toast('旧版作战档案迁移完成','important')};
+$('#exportSaveButton').onclick=()=>{const blob=new Blob([IWSave.export()],{type:'application/json'}),link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download=`infinity-wings-save-${new Date().toISOString().slice(0,10)}.json`;link.click();setTimeout(()=>URL.revokeObjectURL(link.href),500);toast('永久存档已导出')};
+$('#importSaveButton').onclick=()=>$('#importSaveFile').click();
+$('#importSaveFile').onchange=async e=>{const file=e.target.files?.[0];if(!file)return;try{IWSave.import(await file.text());pilotId=IWSave.data.profile.pilotId;refreshChapterMenu();toast('永久存档导入成功','important')}catch(error){toast(error.message||'存档导入失败','important')}e.target.value=''};
+$('#clearSaveButton').onclick=()=>{if(!confirm('确定清除永久存档吗？此操作无法撤销。'))return;if(!confirm('再次确认：章节、图鉴与行动记录都会被清除。'))return;IWSave.clear();pilotId=1;localStorage.setItem('infinityWingsPilotIdV2','1');refreshChapterMenu();toast('永久存档已清除','important')};
 addEventListener('keydown',e=>{
  if(uiPrefs.controlMode==='keyboard'||touchDevice)keys[e.key]=true;
  if(state==='core'){

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
-  <title>无限之翼 · Alpha 9.06</title>
+  <title>无限之翼 · Alpha 9.07</title>
   <meta name="theme-color" content="#050816" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black" />
@@ -16,7 +16,7 @@
   <link rel="preload" as="image" href="assets/menu/menu-space-background-desktop.jpg" media="(pointer:fine)" fetchpriority="high" />
   <link rel="preload" as="image" href="assets/menu/menu-title-logo.PNG" />
   <link rel="preload" as="image" href="assets/menu/menu-fighter-rear-v2.png" />
-  <link rel="stylesheet" href="style.css?v=9.06.0" />
+  <link rel="stylesheet" href="style.css?v=9.07.0" />
 </head>
 <body>
   <script>
@@ -103,6 +103,11 @@
         </div>
 
         <div class="menu-actions hologram-actions">
+          <div id="chapterProgress" class="chapter-progress" aria-live="polite">
+            <div><small>当前章节</small><b>第一章 · 最后的羽翼</b></div>
+            <span id="chapterProgressText">行动尚未开始</span>
+            <div class="chapter-progress-bar"><i id="chapterProgressFill"></i></div>
+          </div>
           <div class="menu-secondary-grid">
             <button id="hangarButton" class="menu-button hologram-small" type="button">
               <svg class="menu-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V8l8-4 8 4v11M7 19v-7h10v7M9 9h6"/></svg>
@@ -125,8 +130,10 @@
             <span>点击开始游戏</span>
             <small>TAP TO DEPLOY</small>
           </button>
+          <button id="continueButton" class="continue-action hidden" type="button"><b>继续行动</b><small>跳过已同步序章，立即出击</small></button>
+          <div class="chapter-locks"><span><b>第二章 · 舰队重建</b><i id="chapterTwoLock">完成第一章后解锁</i></span><span><b>无限裂隙</b><i>完成第二章并集结五架战机后解锁</i></span></div>
           <div class="menu-project-mark" aria-hidden="true">
-            <b>ALPHA 9.06</b>
+            <b>ALPHA 9.07</b>
           </div>
         </div>
       </section>
@@ -193,8 +200,21 @@
           <label class="setting-volume"><span><b>触控灵敏度</b><output id="touchSensitivityValue">150%</output></span><input id="touchSensitivitySetting" type="range" min="80" max="220" step="5" value="150" /></label>
           <label class="setting-select desktop-control-setting"><span><b>电脑版控制方式</b><small>鼠标模式下光标会自动隐藏</small></span><select id="controlModeSetting"><option value="keyboard">键盘控制</option><option value="mouse">鼠标控制</option></select></label>
           <label class="setting-row"><span>自动射击</span><input type="checkbox" checked disabled /></label>
+          <div class="save-management">
+            <header><b>永久存档</b><span id="saveStatusText">正在读取……</span></header>
+            <div class="save-actions"><button id="exportSaveButton" type="button">导出存档</button><button id="importSaveButton" type="button">导入存档</button><button id="clearSaveButton" class="danger" type="button">清除存档</button></div>
+            <input id="importSaveFile" class="hidden" type="file" accept="application/json,.json" />
+          </div>
           <button id="settingsBackButton" class="menu-button full">返回</button>
         </div>
+      </section>
+
+      <section id="chapterCompleteScreen" class="screen hidden modal-screen chapter-complete-screen">
+        <div class="panel chapter-complete-panel"><div class="panel-kicker"><span>CHAPTER COMPLETE</span>章节完成</div><h2>第一章 · 最后的羽翼</h2><p>终焉信号已经消散，四架失联战机的搜寻坐标已写入永久档案。</p><div class="chapter-result"><span>最终 Boss<b>已击毁</b></span><span>章节进度<b>100%</b></span><span>新章节<b>第二章已解锁</b></span></div><button id="chapterCompleteButton" class="primary-action"><span>返回主菜单</span><small>保存并结束本次行动</small></button></div>
+      </section>
+
+      <section id="migrationScreen" class="screen hidden modal-screen migration-screen">
+        <div class="panel"><div class="panel-kicker"><span>SAVE MIGRATION</span>存档升级</div><h2>检测到旧版作战档案</h2><p>源核、敌军图鉴、行动记录和驾驶员编号将合并到 Alpha 9.07 永久存档。旧数据不会被删除。</p><button id="migrationConfirmButton" class="primary-action"><span>迁移并继续</span><small>建立新的章节存档</small></button></div>
       </section>
 
 
@@ -219,7 +239,7 @@
             <div><kbd>ESC / P</kbd><span>打开或关闭系统菜单</span></div>
             <div><kbd>1 / 2 / 3</kbd><span>选择源核</span></div>
           </div>
-          <div class="pause-footer"><span>INFINITY WINGS · RIFT OS</span><b>ALPHA 9.06</b></div>
+          <div class="pause-footer"><span>INFINITY WINGS · RIFT OS</span><b>ALPHA 9.07</b></div>
         </div>
       </section>
 
@@ -263,7 +283,7 @@
       document.documentElement.style.setProperty('--iw-world-height', String(logicalHeight));
     })();
   </script>
-  <script src="game.js?v=9.06.0"></script>
+  <script src="game.js?v=9.07.0"></script>
   <script>if('serviceWorker' in navigator){addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));}</script>
 </body>
 </html>

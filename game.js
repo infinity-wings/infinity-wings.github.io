@@ -3,9 +3,10 @@
 (() => {
   if (window.__IW_MODULE_LOADER_STARTED__) return;
   window.__IW_MODULE_LOADER_STARTED__ = true;
-  const version = '9.06.0';
+  const version = '9.07.0';
   const files = [
     './src/bootstrap.js',
+    './src/systems/saveSystem.js',
     './src/core/coreDefinitions.js',
     './src/core/fusionTable.js',
     './src/core/awakeningDefinitions.js',

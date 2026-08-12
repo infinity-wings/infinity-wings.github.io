@@ -1,9 +1,9 @@
-const CACHE='iw-cache-9.06-stage-boss-director-v1';
+const CACHE='iw-cache-9.07-chapter-save-v1';
 const ASSETS=[
   './',
   './index.html',
-  './style.css?v=9.06.0',
-  './game.js?v=9.06.0',
+  './style.css?v=9.07.0',
+  './game.js?v=9.07.0',
   './manifest.webmanifest',
   './apple-touch-icon.png',
   './favicon.png',

@@ -1,9 +1,9 @@
-const CACHE='iw-cache-9.07-drone-formation-v24';
+const CACHE='iw-cache-9.07-tablet-hangar-v25';
 const ASSETS=[
   './',
   './index.html',
-  './style.css?v=9.07.21',
-  './game.js?v=9.07.21',
+  './style.css?v=9.07.22',
+  './game.js?v=9.07.22',
   './manifest.webmanifest',
   './apple-touch-icon.png',
   './favicon.png',

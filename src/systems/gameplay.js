@@ -324,9 +324,9 @@ function getThunderCoreStats(){
  const thunderLevel=coreManager.getLevel('thunder');
  if(thunderLevel<=0)return null;
  return [null,
-  {level:1,chains:2,range:260,damage:38,cooldown:2.8},
-  {level:2,chains:3,range:310,damage:58,cooldown:2.8},
-  {level:3,chains:5,range:370,damage:72,cooldown:1.75}
+  {level:1,chains:2,range:260,damage:38,cooldown:1.6},
+  {level:2,chains:3,range:310,damage:58,cooldown:1.4},
+  {level:3,chains:5,range:370,damage:72,cooldown:1.0}
  ][thunderLevel];
 }
 function applyThunderPayload(projectile){

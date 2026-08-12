@@ -1,9 +1,9 @@
-const CACHE='iw-cache-9.07-sharp-fighter-render-v12';
+const CACHE='iw-cache-9.07-thunder-cooldown-v13';
 const ASSETS=[
   './',
   './index.html',
   './style.css?v=9.07.7',
-  './game.js?v=9.07.9',
+  './game.js?v=9.07.10',
   './manifest.webmanifest',
   './apple-touch-icon.png',
   './favicon.png',

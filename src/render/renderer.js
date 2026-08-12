@@ -1,5 +1,12 @@
 const shipSpriteAssets={
  player:Object.assign(new Image(),{src:'assets/ships/player-fighter-v4.png'}),
+ players:{
+  infinity:Object.assign(new Image(),{src:'assets/ships/player-fighter-v4.png'}),
+  laser:Object.assign(new Image(),{src:'assets/ships/story-fighters/laser-core-fighter-v1.png'}),
+  drone:Object.assign(new Image(),{src:'assets/ships/story-fighters/drone-core-fighter-v1.png'}),
+  missile:Object.assign(new Image(),{src:'assets/ships/story-fighters/missile-core-fighter-v1.png'}),
+  thunder:Object.assign(new Image(),{src:'assets/ships/story-fighters/thunder-core-fighter-v2.png'})
+ },
  drone:Object.assign(new Image(),{src:'assets/ships/player-drone-v1.png'}),
  enemies:{
   scout:Object.assign(new Image(),{src:'assets/ships/enemy-scout-v3.png'}),
@@ -33,7 +40,7 @@ const spaceLandmarkAssets={
  planetTexture:Object.assign(new Image(),{src:'assets/backgrounds/landmarks/distant-planet-v1.png'}),
  wreckTexture:Object.assign(new Image(),{src:'assets/backgrounds/landmarks/station-wreck-v1.png'})
 };
-for(const image of [shipSpriteAssets.player,shipSpriteAssets.drone,shipSpriteAssets.guard,shipSpriteAssets.boss,...Object.values(shipSpriteAssets.bosses),...Object.values(shipSpriteAssets.enemies),...Object.values(shieldSpriteAssets),deepSpaceBackgroundAsset,...Object.values(spaceLandmarkAssets)])image.decoding='async';
+for(const image of [shipSpriteAssets.player,...Object.values(shipSpriteAssets.players),shipSpriteAssets.drone,shipSpriteAssets.guard,shipSpriteAssets.boss,...Object.values(shipSpriteAssets.bosses),...Object.values(shipSpriteAssets.enemies),...Object.values(shieldSpriteAssets),deepSpaceBackgroundAsset,...Object.values(spaceLandmarkAssets)])image.decoding='async';
 const tintedShipSpriteCache=new Map();
 const mobileRenderSpriteCache=new WeakMap();
 const opaqueSpriteBoundsCache=new WeakMap();
@@ -413,7 +420,8 @@ function drawTexturedEnemyOnly(e,pulse,hpRatio){
  // 所有 Boss 投影使用相同的慢速全息闪烁；频率低，但明暗差必须足以和实体区分。
  enemyModelCtx.globalAlpha=spriteAlpha*(e.projectionBoss?.53+.25*Math.sin(elapsed*3.2+(e.bossStage||0)*.6):1);
  enemyModelCtx.imageSmoothingEnabled=true;enemyModelCtx.imageSmoothingQuality='high';if(contentBounds)enemyModelCtx.drawImage(renderImage,contentBounds.x,contentBounds.y,contentBounds.width,contentBounds.height,-width/2,-height/2,width,height);else enemyModelCtx.drawImage(renderImage,-width/2,-height/2,width,height);enemyModelCtx.restore();
- if(!(e.boss&&e.bossArtKey)){const coreColor=e.boss?(e.awakenedBoss?'#ff5fd7':bossProfile.core):e.bossGuard?'#ff79dc':e.type==='support'?'#5deaff':e.type==='sniper'||e.type==='raider'?'#ffe171':e.type==='carrier'||e.type==='jammer'?'#c477ff':e.type==='heavy'||e.type==='barrage'?'#ff9b45':'#ff526f';enemyCore(0,e.boss?-4:-3,e.boss?8:Math.max(3.2,width*.075),coreColor,pulse)}return true;
+ // Boss 贴图自身已经包含反应堆细节，不再叠加程序绘制的白色核心光点。
+ if(!e.boss){const coreColor=e.bossGuard?'#ff79dc':e.type==='support'?'#5deaff':e.type==='sniper'||e.type==='raider'?'#ffe171':e.type==='carrier'||e.type==='jammer'?'#c477ff':e.type==='heavy'||e.type==='barrage'?'#ff9b45':'#ff526f';enemyCore(0,-3,Math.max(3.2,width*.075),coreColor,pulse)}return true;
 }
 function drawEnemyShip(e,targetCtx=null){
  const previousEnemyModelCtx=enemyModelCtx;if(targetCtx)enemyModelCtx=targetCtx;
@@ -530,8 +538,9 @@ function drawShip(x,y,color,pose=null){
  }
  ctx.restore();
 
- if(shipSpriteReady(shipSpriteAssets.player)){
-  const spriteAlpha=pose?.alpha??.99,playerImage=getMobileRenderSprite(pose?.bodyColor?getTintedShipSprite(shipSpriteAssets.player,pose.bodyColor,.42):shipSpriteAssets.player,512);ctx.save();ctx.globalAlpha=spriteAlpha;ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(playerImage,-39,-46,78,88);ctx.restore();drawPlayerSpriteGlow(pose?.color||color,spriteAlpha);ctx.restore();return;
+ const selectedPlayerImage=shipSpriteAssets.players[window.IWSave?.data?.profile?.selectedFighter]||shipSpriteAssets.player;
+ if(shipSpriteReady(selectedPlayerImage)){
+  const spriteAlpha=pose?.alpha??.99,playerImage=getMobileRenderSprite(pose?.bodyColor?getTintedShipSprite(selectedPlayerImage,pose.bodyColor,.42):selectedPlayerImage,512);ctx.save();ctx.globalAlpha=spriteAlpha;ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(playerImage,-39,-46,78,88);ctx.restore();drawPlayerSpriteGlow(pose?.color||color,spriteAlpha);ctx.restore();return;
  }
 
  // 横滚透视：压低的一侧更宽、更暗并稍向下；抬高的一侧更窄、更亮并稍向上。

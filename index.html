@@ -145,6 +145,15 @@
         </div>
       </section>
 
+      <section id="fighterSelectScreen" class="screen hidden fighter-select-screen">
+        <div class="panel fighter-select-panel">
+          <header class="hangar-head"><div><span>SORTIE CONFIGURATION</span><h2>选择出击战机</h2></div><button id="fighterSelectBack" type="button">返回</button></header>
+          <p class="hangar-intro">选择本次行动使用的战机。机体搭载的主要源核将在战斗中开放。</p>
+          <div id="fighterSelectGrid" class="fighter-select-grid"></div>
+          <button id="fighterDeployButton" class="primary-action fighter-deploy" type="button"><span>确认出击</span><small>DEPLOY</small></button>
+        </div>
+      </section>
+
       <section id="storyScreen" class="screen hidden story-screen">
         <button id="skipStory" class="skip-button" type="button" aria-label="跳过剧情">跳过</button>
         <div class="story-fade top"></div>
@@ -291,7 +300,7 @@
       document.documentElement.style.setProperty('--iw-world-height', String(logicalHeight));
     })();
   </script>
-  <script src="game.js?v=9.07.4"></script>
+  <script src="game.js?v=9.07.5"></script>
   <script>if('serviceWorker' in navigator){addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));}</script>
 </body>
 </html>

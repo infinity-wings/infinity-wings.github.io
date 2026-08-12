@@ -1,9 +1,9 @@
-const CACHE='iw-cache-9.07-fighter-core-unlocks-v7';
+const CACHE='iw-cache-9.07-boss-timing-fighter-select-v8';
 const ASSETS=[
   './',
   './index.html',
   './style.css?v=9.07.5',
-  './game.js?v=9.07.4',
+  './game.js?v=9.07.5',
   './manifest.webmanifest',
   './apple-touch-icon.png',
   './favicon.png',
@@ -18,6 +18,10 @@ const ASSETS=[
   './assets/backgrounds/landmarks/distant-planet-v1.png',
   './assets/backgrounds/landmarks/station-wreck-v1.png',
   './assets/ships/player-fighter-v4.png',
+  './assets/ships/story-fighters/laser-core-fighter-v1.png',
+  './assets/ships/story-fighters/drone-core-fighter-v1.png',
+  './assets/ships/story-fighters/missile-core-fighter-v1.png',
+  './assets/ships/story-fighters/thunder-core-fighter-v2.png',
   './assets/ships/player-drone-v1.png',
   './assets/ships/enemy-scout-v3.png',
   './assets/ships/enemy-heavy-v1.png',

@@ -68,7 +68,9 @@ bullets=resetEntityArray('bullets',bullets);missiles=resetEntityArray('missiles'
 }
 function threatLevel(){
  if(Number.isInteger(build?.debugThreatLevel))return Math.max(0,Math.min(5,build.debugThreatLevel));
- const thresholds=[0,120,240,390,540,720];
+ // 六段章节节奏：前哨分别在 02:30、04:00 抵达，最终阶段约 13:00 开放，
+ // 为最终 Boss 的入场留出时间，使其稳定在约 14:15–15:00 出现。
+ const thresholds=[0,180,330,480,630,780];
  let timeTier=0;for(let i=1;i<thresholds.length;i++)if(elapsed>=thresholds[i])timeTier=i;
  // 时间只决定下一阶段何时具备开放资格；当前 Boss 未结算时不能越级。
  const gateTier=Math.max(0,Math.min(5,(build?.bossClearedTier??-1)+1));
@@ -225,9 +227,12 @@ function syncBossDirectorTier(force=false){const tier=Math.max(0,Math.min(5,thre
 function advanceBossDirector(number){const queue=BOSS_ENCOUNTERS_BY_TIER[build.bossDirectorTier]||[];if(queue[build.bossDirectorIndex]===number){build.bossDirectorIndex++;build.bossClearedTier=Math.max(build.bossClearedTier??-1,build.bossDirectorTier)}build.bossDirectorProgress=0;build.bossPendingNumber=0;build.bossPendingTimer=0;build.bossWarningShownFor=0}
 function maybeSpawnStageBoss(dt=0){
  syncBossDirectorTier();if(enemies.some(e=>e.boss)||battleEventSystem.warning||battleEventSystem.active)return;
- const queue=BOSS_ENCOUNTERS_BY_TIER[build.bossDirectorTier]||[],number=queue[build.bossDirectorIndex];if(!number)return;
- const required=8;
- if(!build.bossPendingNumber&&build.bossDirectorProgress>=required){build.bossPendingNumber=number;build.bossPendingTimer=5;build.bossWarningShownFor=number;audioSystem?.play('ui');toast('有一股强大的力量正在靠近','important')}
+ const queue=BOSS_ENCOUNTERS_BY_TIER[build.bossDirectorTier]||[],number=queue[build.bossDirectorIndex];if(!number)return;const encounter=BOSS_ENCOUNTERS[number-1];
+ // 前两名前哨使用明确的章节时间点；后续实体 Boss 使用本阶段击毁进度，
+ // 因而测试跳转危险等级也不会触发低阶段的旧定时 Boss。
+ const required=encounter?.tier>=6?72:58;
+ const ready=number===1?elapsed>=145:number===2?elapsed>=235:build.bossDirectorProgress>=required;
+ if(!build.bossPendingNumber&&ready){build.bossPendingNumber=number;build.bossPendingTimer=5;build.bossWarningShownFor=number;audioSystem?.play('ui');toast('有一股强大的力量正在靠近','important')}
  if(build.bossPendingNumber){build.bossPendingTimer=Math.max(0,build.bossPendingTimer-dt);if(build.bossPendingTimer<=0)spawnBoss(build.bossPendingNumber)}
 }
 function spawnBoss(number=currentStageNumber(),options={}){

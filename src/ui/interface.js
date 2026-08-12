@@ -11,8 +11,8 @@ const ENEMY_ARCHIVE_DATA={
  carrier:{name:'分裂母机',baseHp:165,attack:'射击并在击毁后释放3架小型机',damage:'子弹 10 / 接触 16',xp:26,desc:'大型载机，死亡后仍会制造新的威胁。'},
  jammer:{name:'干扰机',baseHp:62,attack:'紫色减速干扰弹',damage:'干扰弹 10 / 接触 16',xp:17,desc:'命中后暂时降低玩家移动速度，不影响武器。'},
  boss:{name:'六级 Boss 总览',baseHp:'1953–14159+',attack:'连续波次弹幕、召唤与可躲避激光',damage:'子弹 13–20 / 激光 24–28',xp:'255–1640+',desc:'六个危险等级各有一只实体 Boss，按当前阶段战斗进度出现。'},
- 'boss-1':{name:'危险 I · 重甲先锋［前哨］',baseHp:'1953+',attack:'连续扇形、环形弹幕',damage:'13–20',xp:480,desc:'1分30秒出现的前期小型 Boss，30秒后撤离。'},
- 'boss-2':{name:'危险 II · 弹幕母机［前哨］',baseHp:'2695+',attack:'连续扇形、环形弹幕',damage:'13–20',xp:660,desc:'3分30秒出现的第二前哨，使用放大的现役载机模型。'},
+ 'boss-1':{name:'危险 I · 重甲先锋［前哨］',baseHp:'1953+',attack:'连续扇形、环形弹幕',damage:'13–20',xp:480,desc:'2分30秒出现的前期小型 Boss，30秒后撤离。'},
+ 'boss-2':{name:'危险 II · 弹幕母机［前哨］',baseHp:'2695+',attack:'连续扇形、环形弹幕',damage:'13–20',xp:660,desc:'4分钟出现的第二前哨，使用放大的现役载机模型。'},
  'boss-3':{name:'危险 III · 裂隙猎手［投影］',baseHp:'2883+',attack:'扇形连射、瞄准弹',damage:'14–17',xp:405,desc:'真身的相位投影，固定在战场上方；60秒未击毁会自行消散。'},
  'boss-4':{name:'危险 III · 裂隙猎手［真身］',baseHp:'5544+',attack:'强化扇形、瞄准弹、定点激光',damage:'17–28',xp:840,desc:'宽体真身占据上方空域，以连续波次压迫闪避空间。'},
  'boss-5':{name:'危险 IV · 赤钢战争堡垒［投影］',baseHp:'3505+',attack:'强化扇形、环形齐射',damage:'18–20',xp:480,desc:'战争堡垒的全息投影，60秒后相位消散。'},
@@ -53,6 +53,19 @@ const HANGAR_FIGHTERS=[
  {id:'thunder',name:'天穹雷翼',core:'电磁源核',asset:'assets/ships/story-fighters/thunder-core-fighter-v2.png',description:'操纵高压电弧与电磁场的广域压制机，能够让雷暴在敌军编队之间连续传导。'}
 ];
 function renderHangar(){const grid=$('#hangarGrid');if(!grid)return;const unlocked=new Set(IWSave.data.progression.fighters||['infinity']);grid.innerHTML=HANGAR_FIGHTERS.map(f=>{const known=unlocked.has(f.id);return `<article class="hangar-card ${known?'unlocked':'locked'}">${known?`<div class="hangar-model"><img src="${f.asset}" alt="${f.name}"></div><div class="hangar-card-copy"><small>主要源核 · ${f.core}</small><h3>${f.name}</h3><p>${f.description}</p><b>已解锁</b></div>`:`<div class="hangar-missing" aria-hidden="true">?</div><div class="hangar-card-copy"><h3>该战机出发后已失联</h3><p>暂未寻找到遗骸，最后信号仍在无限裂隙深处回响。</p><b>等待寻回</b></div>`}</article>`}).join('')}
+let pendingSortieAction=null,pendingFighterId='infinity';
+function unlockedHangarFighters(){const unlocked=new Set(IWSave.data.progression.fighters||['infinity']);return HANGAR_FIGHTERS.filter(f=>unlocked.has(f.id))}
+function renderFighterSelection(){
+ const grid=$('#fighterSelectGrid'),available=unlockedHangarFighters();if(!grid)return;
+ const saved=IWSave.data.profile.selectedFighter;pendingFighterId=available.some(f=>f.id===saved)?saved:(available[0]?.id||'infinity');
+ grid.innerHTML=available.map(f=>`<button class="fighter-select-card ${f.id===pendingFighterId?'selected':''}" type="button" data-fighter-id="${f.id}"><span class="fighter-select-model"><img src="${f.asset}" alt="${f.name}"></span><span class="fighter-select-copy"><small>${f.core}</small><b>${f.name}</b><i>${f.description}</i></span></button>`).join('');
+ grid.querySelectorAll('[data-fighter-id]').forEach(card=>card.onclick=()=>{pendingFighterId=card.dataset.fighterId;grid.querySelectorAll('.fighter-select-card').forEach(item=>item.classList.toggle('selected',item===card))});
+}
+function requestSortie(action){
+ const available=unlockedHangarFighters();
+ if(available.length<2){IWSave.selectFighter(available[0]?.id||'infinity');action();return}
+ pendingSortieAction=action;renderFighterSelection();showScreen(UI.fighterSelect);
+}
 function renderArchiveHome(){document.querySelector('#archiveHome').classList.remove('hidden');document.querySelector('#archiveDetail').classList.add('hidden');}
 function drawEnemyArchivePreview(canvas,type){
  const c=canvas?.getContext?.('2d');if(!c||typeof drawEnemyShip!=='function')return;
@@ -342,7 +355,7 @@ UI.barrierBox?.setAttribute('role','button');UI.barrierBox?.setAttribute('tabind
 const activateHudBarrier=e=>{if(e){e.preventDefault();e.stopPropagation()}if(touchDevice&&state==='game'&&running&&!paused&&!dying)pulse()};
 UI.barrierBox?.addEventListener('pointerup',activateHudBarrier,{passive:false});
 UI.barrierBox?.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&touchDevice)activateHudBarrier(e)});
-$('#startButton').onclick=()=>beginGame(Boolean(IWSave.data.runCheckpoint));$('#newGameButton').onclick=()=>{IWSave.clearCheckpoint();IWSave.markIntroSeen();refreshChapterMenu();startStory()};const skipStoryButton=$('#skipStory');const skipStoryNow=e=>{if(e){e.preventDefault();e.stopPropagation()}IWSave.markIntroSeen();beginGame()};skipStoryButton.onclick=skipStoryNow;skipStoryButton.addEventListener('pointerup',skipStoryNow);skipStoryButton.addEventListener('touchend',skipStoryNow,{passive:false});$('#storyRoll').addEventListener('animationend',()=>{IWSave.markIntroSeen();beginGame()});$('#syncRestartButton').onclick=()=>{pilotId++;localStorage.setItem('infinityWingsPilotIdV2',String(pilotId));IWSave.data.profile.pilotId=pilotId;IWSave.clearCheckpoint();$('#archiveCloneCount').textContent='当前驾驶员编号：#'+String(pilotId).padStart(6,'0');beginGame()};$('#deathMenuButton').onclick=returnToTitle;$('#bombButton').onclick=pulse;
+$('#startButton').onclick=()=>requestSortie(()=>beginGame(Boolean(IWSave.data.runCheckpoint)));$('#newGameButton').onclick=()=>requestSortie(()=>{IWSave.clearCheckpoint();IWSave.markIntroSeen();refreshChapterMenu();startStory()});$('#fighterSelectBack').onclick=()=>{pendingSortieAction=null;showScreen(UI.menu)};$('#fighterDeployButton').onclick=()=>{IWSave.selectFighter(pendingFighterId);const action=pendingSortieAction;pendingSortieAction=null;if(action)action()};const skipStoryButton=$('#skipStory');const skipStoryNow=e=>{if(e){e.preventDefault();e.stopPropagation()}IWSave.markIntroSeen();beginGame()};skipStoryButton.onclick=skipStoryNow;skipStoryButton.addEventListener('pointerup',skipStoryNow);skipStoryButton.addEventListener('touchend',skipStoryNow,{passive:false});$('#storyRoll').addEventListener('animationend',()=>{IWSave.markIntroSeen();beginGame()});$('#syncRestartButton').onclick=()=>{pilotId++;localStorage.setItem('infinityWingsPilotIdV2',String(pilotId));IWSave.data.profile.pilotId=pilotId;IWSave.clearCheckpoint();$('#archiveCloneCount').textContent='当前驾驶员编号：#'+String(pilotId).padStart(6,'0');beginGame()};$('#deathMenuButton').onclick=returnToTitle;$('#bombButton').onclick=pulse;
 $('#archiveButton').onclick=()=>{showScreen(UI.archive);$('#archiveCloneCount').textContent='当前驾驶员编号：#'+String(pilotId).padStart(6,'0');renderArchiveHome()};document.querySelectorAll('[data-archive-view]').forEach(button=>button.onclick=()=>renderArchiveView(button.dataset.archiveView));$('#archiveBack').onclick=renderArchiveHome;$('#settingsButton').onclick=()=>{settingsReturnState='menu';showScreen(UI.settings);refreshPauseToggles()};
 $('#hangarButton').onclick=()=>{renderHangar();showScreen(UI.hangar)};
 document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>showScreen(UI.menu));

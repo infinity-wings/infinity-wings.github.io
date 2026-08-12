@@ -524,9 +524,10 @@ function droneFormationOffset(slot,count,mode='standard'){
   return formation[slot]||{x:0,y:46};
  }
  if(mode==='drone_heavy')return [{x:-34,y:-38},{x:34,y:-38}][slot]||{x:0,y:-38};
- if(count===1)return {x:0,y:38};
- if(count===2)return [{x:-48,y:22},{x:48,y:22}][slot]||{x:0,y:30};
- return [{x:-66,y:5},{x:-27,y:36},{x:27,y:36},{x:66,y:5}][slot]||{x:0,y:35};
+ const wideDroneFighter=(IWSave?.data?.profile?.selectedFighter||'infinity')==='drone';
+ if(count===1)return {x:wideDroneFighter?-58:0,y:wideDroneFighter?4:38};
+ if(count===2)return [{x:wideDroneFighter?-62:-48,y:wideDroneFighter?2:22},{x:wideDroneFighter?62:48,y:wideDroneFighter?2:22}][slot]||{x:0,y:30};
+ return [{x:wideDroneFighter?-72:-66,y:0},{x:wideDroneFighter?-48:-27,y:34},{x:wideDroneFighter?48:27,y:34},{x:wideDroneFighter?72:66,y:0}][slot]||{x:0,y:35};
 }
 function dronePosition(d){
  return {x:Number.isFinite(d.x)?d.x:player.x,y:Number.isFinite(d.y)?d.y:player.y+30};

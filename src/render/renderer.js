@@ -1,11 +1,11 @@
 const shipSpriteAssets={
  player:Object.assign(new Image(),{src:'assets/ships/player-fighter-v4.png'}),
  players:{
-  infinity:Object.assign(new Image(),{src:'assets/ships/player-fighter-v4.png'}),
-  laser:Object.assign(new Image(),{src:'assets/ships/story-fighters/laser-core-fighter-v1.png'}),
-  drone:Object.assign(new Image(),{src:'assets/ships/story-fighters/drone-core-fighter-v1.png'}),
-  missile:Object.assign(new Image(),{src:'assets/ships/story-fighters/missile-core-fighter-v1.png'}),
-  thunder:Object.assign(new Image(),{src:'assets/ships/story-fighters/thunder-core-fighter-v2.png'})
+  infinity:Object.assign(new Image(),{src:'assets/ships/combat/infinity-combat-v1.png'}),
+  laser:Object.assign(new Image(),{src:'assets/ships/combat/laser-combat-v1.png'}),
+  drone:Object.assign(new Image(),{src:'assets/ships/combat/drone-combat-v1.png'}),
+  missile:Object.assign(new Image(),{src:'assets/ships/combat/missile-combat-v1.png'}),
+  thunder:Object.assign(new Image(),{src:'assets/ships/combat/thunder-combat-v1.png'})
  },
  drone:Object.assign(new Image(),{src:'assets/ships/player-drone-v1.png'}),
  enemies:{
@@ -235,11 +235,11 @@ function draw(){
  for(const e of enemies){try{withRenderState('敌机模型',()=>drawEnemyShip(e));if(e.boss&&!e.bossRetreating&&!e.bossEntering){ctx.save();ctx.fillStyle='#dbeaff';ctx.font='bold 12px system-ui';ctx.textAlign='center';const timer=!e.persistentBoss&&Number.isFinite(e.bossTimeLeft)?` · ${Math.max(0,Math.ceil(e.bossTimeLeft))}秒`:'';const role=e.projectionBoss?'投影':e.miniBoss?'前哨':'真身';ctx.fillText(`危险等级 ${THREAT_ROMAN[Math.max(0,(e.bossStage||1)-1)]} · ${e.bossName||'Boss'} [${role}]${timer}`,W/2,21);ctx.fillStyle='#18233b';ctx.fillRect(55,28,W-110,12);ctx.fillStyle=e.projectionBoss?'#7a8cff':e.awakenedBoss?'#ff5fd7':'#a767ff';ctx.fillRect(55,28,(W-110)*Math.max(0,Math.min(1,(finite(e.hp,0)/Math.max(1,finite(e.max,1))))),12);ctx.restore()}}catch(error){console.warn('敌机绘制已跳过',error,e)}}
  const bossIntro=enemies.find(e=>e.boss&&e.bossEntering&&!e.bossRetreating&&(e.bossEntryTime||0)>=(e.bossIntroTravel||1.7));
  if(bossIntro){const travel=bossIntro.bossIntroTravel||1.7,total=bossIntro.bossIntroDuration||3.7,p=Math.max(0,Math.min(1,((bossIntro.bossEntryTime||0)-travel)/Math.max(.01,total-travel))),alpha=Math.min(1,p*6)*Math.min(1,(1-p)*7),role=bossIntro.projectionBoss?'投影':bossIntro.miniBoss?'前哨':'真身';ctx.save();ctx.globalAlpha=alpha;ctx.fillStyle='rgba(0,6,18,.62)';ctx.fillRect(0,H*.48,W,92);ctx.textAlign='center';ctx.fillStyle=bossIntro.projectionBoss?'#a8b9ff':'#bcefff';ctx.font='800 11px system-ui';ctx.fillText(`危险等级 ${THREAT_ROMAN[Math.max(0,(bossIntro.bossStage||1)-1)]} · ${role}`,W/2,H*.48+22);ctx.shadowBlur=20;ctx.shadowColor=bossIntro.projectionBoss?'#7583ff':'#55dfff';ctx.fillStyle='#fff';ctx.font='900 26px system-ui';ctx.fillText(bossIntro.bossName||'未知强敌',W/2,H*.48+56);ctx.shadowBlur=0;ctx.fillStyle='rgba(194,228,240,.9)';ctx.font='700 10px system-ui';ctx.fillText('高能反应确认 · 准备交战',W/2,H*.48+78);ctx.restore()}
- for(const d of drones){try{withRenderState('无人机模型',()=>drawDrone(d))}catch(error){console.warn('无人机绘制已跳过',error,d)}}
  try{drawHeavyEscortShield()}catch(error){console.warn('护航盾绘制已跳过',error)}
  try{drawAwakenedFrontShield()}catch(error){console.warn('前盾绘制已跳过',error)}
  if(!dying){for(const clone of clonePositions()){try{ctx.save();ctx.globalAlpha=finite(clone.alpha,.54);drawShip(finite(clone.x,player.x),finite(clone.y,player.y),clone.color||'#b474ff',clone)}catch(error){console.warn('投影绘制已跳过',error,clone)}finally{ctx.restore()}}}
  if(!dying&&player&&Number.isFinite(player.x)&&Number.isFinite(player.y)){try{withRenderState('玩家模型',()=>drawShip(player.x,player.y,'#5ce1ff'))}catch(error){console.warn('玩家模型绘制已跳过',error)}}
+ for(const d of drones){try{withRenderState('无人机模型',()=>drawDrone(d))}catch(error){console.warn('无人机绘制已跳过',error,d)}}
  try{battleEventSystem.draw();battleEventSystem.drawMeteorTextures();battleEventSystem.drawMeteorWarnings()}catch(error){console.warn('随机事件绘制已跳过',error)}
  try{awakeningSystem.draw()}catch(error){console.warn('觉醒效果绘制已跳过',error)}
  if(deathFade>0){ctx.fillStyle=`rgba(0,0,0,${deathFade})`;ctx.fillRect(0,0,W,H)}
@@ -528,8 +528,11 @@ function drawShip(x,y,color,pose=null){
   ctx.restore();
  }
  ctx.save();ctx.globalCompositeOperation='lighter';ctx.shadowBlur=20;ctx.shadowColor=color;
- const synchronizedFlame=12+movement*10+thrust*12+Math.sin(elapsed*26)*1.7;
- for(const [ex,ey,power] of [[-9,21,1],[-3,23,.72],[3,23,.72],[9,21,1]]){
+ const fighterId=isPlayer?(window.IWSave?.data?.profile?.selectedFighter||'infinity'):'infinity';
+ const engineLayouts={infinity:[[-9,21,1],[-3,23,.76],[3,23,.76],[9,21,1]],laser:[[-15,19,.9],[0,26,1.18],[15,19,.9]],drone:[[-21,18,.92],[-8,28,1.12],[8,28,1.12],[21,18,.92]],missile:[[-24,20,.82],[-9,28,1.08],[9,28,1.08],[24,20,.82]],thunder:[[-18,20,.9],[-6,27,1.05],[6,27,1.05],[18,20,.9]]};
+ const synchronizedFlame=16+movement*11+thrust*13+Math.sin(elapsed*26)*1.7;
+ ctx.shadowBlur=27;ctx.shadowColor='#55dfff';
+ for(const [ex,ey,power] of engineLayouts[fighterId]||engineLayouts.infinity){
   const flame=synchronizedFlame*power*flicker;
   const g=ctx.createLinearGradient(ex,ey,ex,ey+flame);
   g.addColorStop(0,'rgba(245,255,255,.98)');g.addColorStop(.24,'rgba(91,225,255,.96)');g.addColorStop(.62,'rgba(33,111,255,.72)');g.addColorStop(1,'rgba(20,70,255,0)');

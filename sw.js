@@ -1,9 +1,9 @@
-const CACHE='iw-cache-9.07-infinity-fire-rate-v17';
+const CACHE='iw-cache-9.07-combat-fighters-v19';
 const ASSETS=[
   './',
   './index.html',
-  './style.css?v=9.07.14',
-  './game.js?v=9.07.14',
+  './style.css?v=9.07.16',
+  './game.js?v=9.07.16',
   './manifest.webmanifest',
   './apple-touch-icon.png',
   './favicon.png',

@@ -1,9 +1,9 @@
-const CACHE='iw-cache-9.07-laser-cooldown-v23';
+const CACHE='iw-cache-9.07-drone-formation-v24';
 const ASSETS=[
   './',
   './index.html',
-  './style.css?v=9.07.20',
-  './game.js?v=9.07.20',
+  './style.css?v=9.07.21',
+  './game.js?v=9.07.21',
   './manifest.webmanifest',
   './apple-touch-icon.png',
   './favicon.png',

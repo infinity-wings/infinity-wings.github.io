@@ -503,7 +503,7 @@ function updateProjectionInheritedSkills(dt){
 function syncAttackCoreState(){
  const droneAwakening=awakeningSystem.get('drone');
  const droneLevel=coreManager.getLevel('drone');
- const desired=droneAwakening?.id==='drone_swarm'?8:droneAwakening?.id==='drone_heavy'?2:([0,1,2,4][droneLevel]||0);
+ const desired=droneAwakening?.id==='drone_swarm'?8:droneAwakening?.id==='drone_heavy'?2:([0,2,3,4][droneLevel]||0);
  const mode=droneAwakening?.id||'standard';
  if(build.droneVolleyMode!==mode){build.droneVolleyMode=mode;build.droneVolleyCd=90;}
  while(drones.length<desired){
@@ -515,7 +515,7 @@ function syncAttackCoreState(){
   ?{fireRate:520,damageScale:.23,mode:'drone_swarm'}
   :droneAwakening?.id==='drone_heavy'
    ?{fireRate:1020,damageScale:1.82,mode:'drone_heavy'}
-   :([null,{fireRate:340,damageScale:.55,mode:'standard'},{fireRate:300,damageScale:.48,mode:'standard'},{fireRate:275,damageScale:.34,mode:'standard'}][droneLevel]);
+   :([null,{fireRate:340,damageScale:.5,mode:'standard'},{fireRate:300,damageScale:.62,mode:'standard'},{fireRate:260,damageScale:.75,mode:'standard'}][droneLevel]);
  if(droneStats)drones.forEach((d,i)=>Object.assign(d,droneStats,{slot:i}));
 }
 function droneFormationOffset(slot,count,mode='standard'){
@@ -525,9 +525,9 @@ function droneFormationOffset(slot,count,mode='standard'){
  }
  if(mode==='drone_heavy')return [{x:-34,y:-38},{x:34,y:-38}][slot]||{x:0,y:-38};
  const wideDroneFighter=(IWSave?.data?.profile?.selectedFighter||'infinity')==='drone';
- if(count===1)return {x:wideDroneFighter?-58:0,y:wideDroneFighter?4:38};
- if(count===2)return [{x:wideDroneFighter?-62:-48,y:wideDroneFighter?2:22},{x:wideDroneFighter?62:48,y:wideDroneFighter?2:22}][slot]||{x:0,y:30};
- return [{x:wideDroneFighter?-72:-66,y:0},{x:wideDroneFighter?-48:-27,y:34},{x:wideDroneFighter?48:27,y:34},{x:wideDroneFighter?72:66,y:0}][slot]||{x:0,y:35};
+ const side=wideDroneFighter?66:52,front=wideDroneFighter?-58:-48,rear=wideDroneFighter?54:46;
+ const crossFormation=[{x:-side,y:4},{x:side,y:4},{x:0,y:front},{x:0,y:rear}];
+ return crossFormation[slot]||{x:0,y:rear};
 }
 function dronePosition(d){
  return {x:Number.isFinite(d.x)?d.x:player.x,y:Number.isFinite(d.y)?d.y:player.y+30};

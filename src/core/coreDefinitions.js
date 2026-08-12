@@ -62,9 +62,9 @@ const CORE_DEFINITIONS = Object.freeze({
     id: 'drone', name: '协同源核', shortName: '协同', category: CORE_CATEGORIES.WEAPON,
     role: '编队火力覆盖',
     levels: [
-      { name: '护航单元', description: '获得一架向前射击的护航无人机。' },
-      { name: '双机编队', description: '扩展为两架无人机，形成稳定平行火力。' },
-      { name: '四机战斗编队', description: '扩展为四架无人机，单发伤害降低但总火力显著提高。' }
+      { name: '双翼护航', description: '在机身左右部署两架护航无人机。' },
+      { name: '锋矢编队', description: '在前方增加一架无人机，并提高全体无人机伤害与射速。' },
+      { name: '四向协同', description: '在后方增加一架无人机，再次强化全体无人机伤害与射速。' }
     ]
   }),
   missile: defineCore({

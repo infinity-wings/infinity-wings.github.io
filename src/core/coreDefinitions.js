@@ -53,9 +53,9 @@ const CORE_DEFINITIONS = Object.freeze({
     id: 'laser', name: '光能源核', shortName: '光能', category: CORE_CATEGORIES.WEAPON,
     role: '蓄能贯穿输出',
     levels: [
-      { name: '裂隙蓄能炮', description: '蓄力1.2秒后持续照射2秒，冷却9秒。' },
-      { name: '聚焦透镜', description: '缩短蓄力与冷却，光束更粗并持续2.5秒。' },
-      { name: '双束歼灭阵列', description: '快速蓄力后发射双束激光，持续3秒并大幅强化伤害。' }
+      { name: '裂隙蓄能炮', description: '蓄力1秒后持续照射2秒，冷却6秒。' },
+      { name: '聚焦透镜', description: '蓄力0.8秒，冷却5秒，光束更粗并持续2.5秒。' },
+      { name: '双束歼灭阵列', description: '蓄力0.55秒后发射双束激光，持续3秒，冷却4秒。' }
     ]
   }),
   drone: defineCore({

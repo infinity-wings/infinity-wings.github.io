@@ -1,9 +1,9 @@
-const CACHE='iw-cache-9.07-main-fire-growth-v22';
+const CACHE='iw-cache-9.07-laser-cooldown-v23';
 const ASSETS=[
   './',
   './index.html',
-  './style.css?v=9.07.19',
-  './game.js?v=9.07.19',
+  './style.css?v=9.07.20',
+  './game.js?v=9.07.20',
   './manifest.webmanifest',
   './apple-touch-icon.png',
   './favicon.png',

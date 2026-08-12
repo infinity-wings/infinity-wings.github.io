@@ -16,7 +16,7 @@
   <link rel="preload" as="image" href="assets/menu/menu-space-background-desktop.jpg" media="(pointer:fine)" fetchpriority="high" />
   <link rel="preload" as="image" href="assets/menu/menu-title-logo.PNG" />
   <link rel="preload" as="image" href="assets/menu/menu-fighter-rear-v2.png" />
-  <link rel="stylesheet" href="style.css?v=9.07.7" />
+  <link rel="stylesheet" href="style.css?v=9.07.12" />
 </head>
 <body>
   <script>
@@ -150,6 +150,7 @@
           <header class="hangar-head"><div><span>SORTIE CONFIGURATION</span><h2>选择出击战机</h2></div><button id="fighterSelectBack" type="button">返回</button></header>
           <p class="hangar-intro">选择本次行动使用的战机。机体搭载的主要源核将在战斗中开放。</p>
           <div id="fighterSelectGrid" class="fighter-select-grid"></div>
+          <div id="fighterSelectSummary" class="fighter-select-summary" aria-live="polite"></div>
           <button id="fighterDeployButton" class="primary-action fighter-deploy" type="button"><span>确认出击</span><small>DEPLOY</small></button>
         </div>
       </section>
@@ -300,7 +301,7 @@
       document.documentElement.style.setProperty('--iw-world-height', String(logicalHeight));
     })();
   </script>
-  <script src="game.js?v=9.07.10"></script>
+  <script src="game.js?v=9.07.12"></script>
   <script>if('serviceWorker' in navigator){addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));}</script>
 </body>
 </html>

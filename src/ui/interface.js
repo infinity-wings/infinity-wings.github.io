@@ -54,8 +54,9 @@ function unlockedHangarFighters(){const unlocked=new Set(IWSave.data.progression
 function renderFighterSelection(){
  const grid=$('#fighterSelectGrid'),available=unlockedHangarFighters();if(!grid)return;
  const saved=IWSave.data.profile.selectedFighter;pendingFighterId=available.some(f=>f.id===saved)?saved:(available[0]?.id||'infinity');
- grid.innerHTML=available.map(f=>`<button class="fighter-select-card ${f.id===pendingFighterId?'selected':''}" type="button" data-fighter-id="${f.id}"><span class="fighter-select-model"><img src="${f.asset}" alt="${f.name}"></span><span class="fighter-select-copy"><small>${f.core}</small><b>${f.name}</b><i>${f.description}</i></span></button>`).join('');
- grid.querySelectorAll('[data-fighter-id]').forEach(card=>card.onclick=()=>{pendingFighterId=card.dataset.fighterId;grid.querySelectorAll('.fighter-select-card').forEach(item=>item.classList.toggle('selected',item===card))});
+ const updateSummary=()=>{const fighter=available.find(f=>f.id===pendingFighterId),summary=$('#fighterSelectSummary');if(summary&&fighter)summary.innerHTML=`<b>${fighter.name}</b><span>${fighter.core} · ${fighter.description}</span>`};
+ grid.innerHTML=available.map(f=>`<button class="fighter-select-card ${f.id===pendingFighterId?'selected':''}" type="button" data-fighter-id="${f.id}"><span class="fighter-select-model"><img src="${f.asset}" alt="${f.name}"></span><span class="fighter-select-copy"><small>${f.core}</small><b>${f.name}</b></span></button>`).join('');
+ grid.querySelectorAll('[data-fighter-id]').forEach(card=>card.onclick=()=>{pendingFighterId=card.dataset.fighterId;grid.querySelectorAll('.fighter-select-card').forEach(item=>item.classList.toggle('selected',item===card));updateSummary()});updateSummary();
 }
 function requestSortie(action){
  const available=unlockedHangarFighters();

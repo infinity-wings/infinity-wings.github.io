@@ -13,14 +13,10 @@ const ENEMY_ARCHIVE_DATA={
  boss:{name:'六级 Boss 总览',baseHp:'1953–14159+',attack:'连续波次弹幕、召唤与可躲避激光',damage:'子弹 13–20 / 激光 24–28',xp:'255–1640+',desc:'六个危险等级各有一只实体 Boss，按当前阶段战斗进度出现。'},
  'boss-1':{name:'危险 I · 重甲先锋［前哨］',baseHp:'1953+',attack:'连续扇形、环形弹幕',damage:'13–20',xp:480,desc:'2分30秒出现的前期小型 Boss，30秒后撤离。'},
  'boss-2':{name:'危险 II · 弹幕母机［前哨］',baseHp:'2695+',attack:'连续扇形、环形弹幕',damage:'13–20',xp:660,desc:'4分钟出现的第二前哨，使用放大的现役载机模型。'},
- 'boss-3':{name:'危险 III · 裂隙猎手［投影］',baseHp:'2883+',attack:'扇形连射、瞄准弹',damage:'14–17',xp:405,desc:'真身的相位投影，固定在战场上方；60秒未击毁会自行消散。'},
- 'boss-4':{name:'危险 III · 裂隙猎手［真身］',baseHp:'5544+',attack:'强化扇形、瞄准弹、定点激光',damage:'17–28',xp:840,desc:'宽体真身占据上方空域，以连续波次压迫闪避空间。'},
- 'boss-5':{name:'危险 IV · 赤钢战争堡垒［投影］',baseHp:'3505+',attack:'强化扇形、环形齐射',damage:'18–20',xp:480,desc:'战争堡垒的全息投影，60秒后相位消散。'},
- 'boss-6':{name:'危险 IV · 赤钢战争堡垒［真身］',baseHp:'6741+',attack:'强化扇形、强化环形、扫射激光',damage:'18–28',xp:1020,desc:'固定封锁战场上沿，以更长的连续齐射形成火力墙。'},
- 'boss-7':{name:'危险 V · 虚空航母［投影］',baseHp:'4128+',attack:'强化环形、召唤护航机',damage:'18–20',xp:555,desc:'虚空航母投影，会在60秒内持续投放护航单位。'},
- 'boss-8':{name:'危险 V · 虚空航母［真身］',baseHp:'7938+',attack:'强化环形、召唤、连续弹雨',damage:'16–20',xp:1460,desc:'巨型宽体航母，控制战场上方并持续制造额外目标。'},
- 'boss-9':{name:'危险 Ω · 终焉核心［投影］',baseHp:'4750+',attack:'双层新星、瞄准弹、定点激光',damage:'17–28',xp:630,desc:'最终 Boss 的全息先兆，拥有三种攻击方式。'},
- 'boss-10':{name:'危险 Ω · 终焉核心［真身］',baseHp:'14159+',attack:'强化扇形、强化环形、新星、扫射激光、终焉齐射',damage:'17–28',xp:'1640+',desc:'约14分30秒抵达的最终 Boss，宽度覆盖几乎整个上方战区。'}
+ 'boss-3':{name:'危险 III · 裂隙猎手',baseHp:'5544+',attack:'强化扇形、瞄准弹、定点激光',damage:'17–28',xp:840,desc:'宽体实体占据上方空域，以连续波次压迫闪避空间。'},
+ 'boss-4':{name:'危险 IV · 赤钢战争堡垒',baseHp:'6741+',attack:'强化扇形、强化环形、扫射激光',damage:'18–28',xp:1020,desc:'固定封锁战场上沿，以更长的连续齐射形成火力墙。'},
+ 'boss-5':{name:'危险 V · 虚空航母',baseHp:'7938+',attack:'强化环形、召唤、连续弹雨',damage:'16–20',xp:1460,desc:'巨型宽体航母，控制战场上方并持续制造额外目标。'},
+ 'boss-6':{name:'危险 Ω · 终焉核心',baseHp:'14159+',attack:'强化扇形、强化环形、新星、扫射激光、终焉齐射',damage:'17–28',xp:'1640+',desc:'约14分30秒抵达的最终 Boss，宽度覆盖几乎整个上方战区。'}
 };
 function readArchiveSet(key){const field=key===ARCHIVE_KEYS.enemies?'enemies':key===ARCHIVE_KEYS.defeated?'defeated':null;if(field&&window.IWSave&&IWSave.data.progression[field]?.length)return new Set(IWSave.data.progression[field]);try{return new Set(JSON.parse(localStorage.getItem(key)||'[]'))}catch{return new Set()}}
 function writeArchiveSet(key,set){localStorage.setItem(key,JSON.stringify([...set]))}

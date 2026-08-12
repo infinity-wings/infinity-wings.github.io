@@ -64,7 +64,7 @@ function reset(){
  mainBulletSize:1,
  mainBulletDamageScale:1
 };
-bullets=resetEntityArray('bullets',bullets);missiles=resetEntityArray('missiles',missiles);enemies=[];enemyBullets=resetEntityArray('enemyBullets',enemyBullets);enemyLasers=[];particles=resetEntityArray('particles',particles);blastWaves=[];lightningArcs=[];drones=[];pickups=resetEntityArray('pickups',pickups);score=0;level=1;xp=0;nextXp=50;bombs=3;build={laserState:{phase:'cooldown',timer:1.8,level:0},missileCd:1.4,chronoActive:0,chronoCd:8,levelUpLock:0,killWindow:[],spawnBurst:0,lastEnemyUnlock:1,lastLandmarkThreat:0,barrierCharge:0,shieldLayers:0,shieldRecharge:0,lastHitAt:-99,projectionActive:0,projectionCd:0,projectionLevel:0,projectionMirrorSide:1,projectionCacheFrame:-1,projectionCacheLevel:0,projectionCache:[],projectionMode:'none',projectionMainCd:0,projectionMissileCd:0,projectionLaserState:{phase:'idle',timer:0},debugLockHp:false,debugLockXp:false,debugThreatLevel:null,bossClearedTier:-1,bossDirectorTier:0,bossDirectorIndex:0,bossDirectorProgress:0,bossPendingNumber:0,bossPendingTimer:0,bossWarningShownFor:0,bossesDefeated:0,finalBossDefeated:false,firstEliteSpawned:false,droneVolleyCd:0,droneVolleyMode:'none',heavyEscortShieldActive:0,heavyEscortShieldCd:0,heavyEscortShieldDuration:4.5,heavyEscortShieldCooldown:9,awakeFrontShieldActive:0,awakeFrontShieldCd:0,awakeFrontShieldDuration:4,awakeFrontShieldCooldown:8,awakeFrontShieldBurstDone:false};coreManager.reset({silent:true});awakeningSystem.reset();battleEventSystem.reset();upgradeSystem.reset();rewindHistory=[];projectionHistory=[];elapsed=0;spawnCd=0;bossSpawned=false;dying=false;deathTimer=0;deathFade=0;spaceLandmarks.length=0;build.allCoresMax=false;updateUI();coreEffects.init()
+bullets=resetEntityArray('bullets',bullets);missiles=resetEntityArray('missiles',missiles);enemies=[];enemyBullets=resetEntityArray('enemyBullets',enemyBullets);enemyLasers=[];particles=resetEntityArray('particles',particles);blastWaves=[];lightningArcs=[];drones=[];pickups=resetEntityArray('pickups',pickups);score=0;level=1;xp=0;nextXp=50;bombs=3;build={laserState:{phase:'cooldown',timer:1.8,level:0},missileCd:1.4,chronoActive:0,chronoCd:8,levelUpLock:0,killWindow:[],spawnBurst:0,lastEnemyUnlock:1,lastLandmarkThreat:0,barrierCharge:0,shieldLayers:0,shieldRecharge:0,lastHitAt:-99,projectionActive:0,projectionCd:0,projectionLevel:0,projectionMirrorSide:1,projectionCacheFrame:-1,projectionCacheLevel:0,projectionCache:[],projectionMode:'none',projectionMainCd:0,projectionMissileCd:0,projectionLaserState:{phase:'idle',timer:0},debugLockHp:false,debugLockXp:false,debugThreatLevel:null,bossClearedTier:-1,bossDirectorTier:0,bossDirectorIndex:0,bossDirectorProgress:0,bossPendingNumber:0,bossPendingTimer:0,bossWarningShownFor:0,bossesDefeated:0,finalBossDefeated:false,firstEliteSpawned:false,droneVolleyCd:0,droneVolleyMode:'none',heavyEscortShieldActive:0,heavyEscortShieldCd:0,heavyEscortShieldDuration:4.5,heavyEscortShieldCooldown:9,awakeFrontShieldActive:0,awakeFrontShieldCd:0,awakeFrontShieldDuration:4,awakeFrontShieldCooldown:8,awakeFrontShieldBurstDone:false};coreManager.reset({silent:true});const sortieFighter=IWSave?.data?.profile?.selectedFighter||'infinity',sortieCore={infinity:'main',laser:'laser',drone:'drone',missile:'missile',thunder:'thunder'}[sortieFighter]||'main';coreManager.setLevel(sortieCore,1,{silent:true});awakeningSystem.reset();battleEventSystem.reset();upgradeSystem.reset();rewindHistory=[];projectionHistory=[];elapsed=0;spawnCd=0;bossSpawned=false;dying=false;deathTimer=0;deathFade=0;spaceLandmarks.length=0;build.allCoresMax=false;updateUI();coreEffects.init()
 }
 function threatLevel(){
  if(Number.isInteger(build?.debugThreatLevel))return Math.max(0,Math.min(5,build.debugThreatLevel));
@@ -208,21 +208,17 @@ function spawnEnemy(){
   const first=battleEventSystem.decorateSpawnedEnemy(makeEnemy(burstType));enemies.push(first);battleEventSystem.spawnMirrorPartner(first);const second=battleEventSystem.decorateSpawnedEnemy(makeEnemy(burstType));enemies.push(second);battleEventSystem.spawnMirrorPartner(second);
  }
 }
-const BOSS_TOTAL=10,BOSS_ENCOUNTERS_BY_TIER=[[1],[2],[4],[6],[8],[10]];
+const BOSS_TOTAL=6,BOSS_ENCOUNTERS_BY_TIER=[[1],[2],[3],[4],[5],[6]];
 const BOSS_ENCOUNTERS=[
  {tier:1,role:'mini',kind:'fortress',name:'重甲先锋',sprite:'heavy',duration:30,modes:['fan','ring'],size:[170,134],hit:[73,56],hp:2100,expectedCores:2,expectedDps:90},
  {tier:2,role:'mini',kind:'seraph',name:'弹幕母机',sprite:'barrage',duration:30,modes:['fan','ring'],size:[180,139],hit:[78,59],hp:3500,expectedCores:5,expectedDps:145},
- {tier:3,role:'projection',kind:'rift',name:'裂隙猎手',art:'iii',duration:60,modes:['fan','aimed'],size:[410,280],hit:[178,112],hp:8200,expectedCores:6,expectedDps:170},
  {tier:3,role:'entity',kind:'rift',name:'裂隙猎手',art:'iii',modes:['fanStrong','aimed','beam'],size:[422,288],hit:[184,116],hp:12200,expectedCores:8,expectedDps:220},
- {tier:4,role:'projection',kind:'fortress',name:'赤钢战争堡垒',art:'iv',duration:60,modes:['fanStrong','ring'],size:[414,282],hit:[180,113],hp:13800,expectedCores:9,expectedDps:275},
  {tier:4,role:'entity',kind:'fortress',name:'赤钢战争堡垒',art:'iv',modes:['fanStrong','ringStrong','sweep'],size:[426,290],hit:[186,117],hp:19800,expectedCores:11,expectedDps:340},
- {tier:5,role:'projection',kind:'seraph',name:'虚空航母',art:'v',duration:60,modes:['ringStrong','guard'],size:[410,346],hit:[178,139],hp:21000,expectedCores:12,expectedDps:405},
  {tier:5,role:'entity',kind:'seraph',name:'虚空航母',art:'v',modes:['ringStrong','guard','rain'],size:[422,356],hit:[184,143],hp:31500,expectedCores:14,expectedDps:485},
- {tier:6,role:'projection',kind:'omega',name:'终焉核心 Ω',art:'omega',duration:60,modes:['nova','aimed','beam'],size:[410,342],hit:[178,138],hp:31500,expectedCores:16,expectedDps:585},
  {tier:6,role:'entity',kind:'omega',name:'终焉核心 Ω',art:'omega',modes:['fanStrong','ringStrong','nova','sweep','finalBarrage'],size:[422,352],hit:[184,142],hp:60000,expectedCores:18,expectedDps:705,final:true}
 ];
 function currentStageNumber(){const queue=BOSS_ENCOUNTERS_BY_TIER[Math.max(0,Math.min(5,threatLevel()))]||[1];return queue[Math.max(0,Math.min(queue.length-1,build?.bossDirectorIndex||0))]}
-function bossNumberForThreat(tier=threatLevel()){return [1,2,4,6,8,10][Math.max(0,Math.min(5,tier))]}
+function bossNumberForThreat(tier=threatLevel()){return Math.max(1,Math.min(6,tier+1))}
 function syncBossDirectorTier(force=false){const tier=Math.max(0,Math.min(5,threatLevel()));if(!force&&build.bossDirectorTier===tier)return;build.bossDirectorTier=tier;build.bossDirectorIndex=0;build.bossDirectorProgress=0;build.bossPendingNumber=0;build.bossPendingTimer=0;build.bossWarningShownFor=0}
 function advanceBossDirector(number){const queue=BOSS_ENCOUNTERS_BY_TIER[build.bossDirectorTier]||[];if(queue[build.bossDirectorIndex]===number){build.bossDirectorIndex++;build.bossClearedTier=Math.max(build.bossClearedTier??-1,build.bossDirectorTier)}build.bossDirectorProgress=0;build.bossPendingNumber=0;build.bossPendingTimer=0;build.bossWarningShownFor=0}
 function maybeSpawnStageBoss(dt=0){
@@ -243,16 +239,15 @@ function spawnBoss(number=currentStageNumber(),options={}){
  enemies.length=0;
  const encounter=BOSS_ENCOUNTERS[number-1],kind=encounter.kind;
  const ownedCoreLevels=CORE_IDS.reduce((sum,id)=>sum+coreManager.getRawLevel(id),0);
- const projection=encounter.role==='projection',mini=encounter.role==='mini',persistent=!encounter.duration;
+ const projection=false,mini=encounter.role==='mini',persistent=!encounter.duration;
  // 每次遭遇的基础血量由该时间点的预计原核数量、标准构筑 DPS 和目标击杀时间反推。
  // 只有超过阶段预期的强化才追加少量耐久，避免普通玩家因动态缩放受到惩罚。
  const overbuild=Math.max(0,ownedCoreLevels-(encounter.expectedCores||0)),overbuildScale=1+Math.min(.24,overbuild*.03);
  const bossHp=Math.round(encounter.hp*overbuildScale);
- const volleyCount=mini?3:Math.min(8,encounter.tier+(projection?1:2));
+ const volleyCount=mini?3:Math.min(8,encounter.tier+2);
  const boss={type:'boss',boss:true,projectionBoss:projection,miniBoss:mini,fixedBoss:number>=3,awakenedBoss:encounter.tier>=5&&!projection,awakeningBoss:false,bossKind:kind,bossName:encounter.name,bossNumber:number,bossStage:encounter.tier,bossRole:encounter.role,bossArtKey:encounter.art,bossSpriteType:encounter.sprite,bossModes:encounter.modes,bossRenderSize:encounter.size,hitRx:encounter.hit[0],hitRy:encounter.hit[1],persistentBoss:persistent,bossTimeLeft:persistent?null:encounter.duration,finalBoss:!!encounter.final,x:W/2,y:-180,entryStartY:-180,targetY:number>=3?145:150,bossEntering:true,bossEntryTime:0,bossEntryFxCd:0,bossIntroTravel:1.7,bossIntroDuration:3.7,r:Math.max(encounter.hit[0],encounter.hit[1]),hp:bossHp,max:bossHp,v:28+encounter.tier*2,shoot:99999,dir:1,age:0,bossPhase:1,bossModeIndex:0,bossModeTimer:.9,bossModeMorph:0,bossVolleyCount:volleyCount,bossVolleyRemaining:volleyCount,bossActionCd:.65,guardWaveUsed:false};
  enemies.push(boss);
  if(encounter.final)toast('最终 Boss 降临 · 必须将其击毁','important');
- else if(projection)toast(`Boss 投影显现 · 60 秒内击破，否则消散`,'important');
  else if(mini)toast(`前期小型 Boss · ${encounter.duration} 秒限时歼灭`,'important');
  else toast(`危险等级 ${THREAT_ROMAN[encounter.tier-1]} · ${encounter.name} 真身降临`,'important');
  if(typeof markEnemyEncounter==='function'){markEnemyEncounter('boss');markEnemyEncounter(`boss-${number}`)}
@@ -440,6 +435,7 @@ function fireMainWeapon(x,y,source='player',damageScale=null,options={}){
 }
 
 function playerShoot(){
+ if((IWSave?.data?.profile?.selectedFighter||'infinity')!=='infinity')return;
  audioSystem?.play('shot');
  const mainAwakening=awakeningSystem.get('main');
  if(mainAwakening){awakeningSystem.fireMainAwakening(mainAwakening);player.recoil=1;return;}

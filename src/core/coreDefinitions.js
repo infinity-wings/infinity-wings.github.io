@@ -140,7 +140,8 @@ const FIGHTER_CORE_UNLOCKS = Object.freeze({main:'infinity',laser:'laser',drone:
 
 function isCoreAvailable(id) {
   const fighterId = FIGHTER_CORE_UNLOCKS[id];
-  if (!fighterId || fighterId === 'infinity') return true;
+  if (!fighterId) return true;
+  if (fighterId === 'infinity') return (window.IWSave?.data?.profile?.selectedFighter || 'infinity') === 'infinity';
   const fighters = window.IWSave?.data?.progression?.fighters;
   return Array.isArray(fighters) && fighters.includes(fighterId);
 }

@@ -1,9 +1,9 @@
-const CACHE='iw-cache-9.07-boss-timing-fighter-select-v8';
+const CACHE='iw-cache-9.07-signature-fighters-v10';
 const ASSETS=[
   './',
   './index.html',
-  './style.css?v=9.07.5',
-  './game.js?v=9.07.5',
+  './style.css?v=9.07.7',
+  './game.js?v=9.07.7',
   './manifest.webmanifest',
   './apple-touch-icon.png',
   './favicon.png',

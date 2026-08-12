@@ -410,15 +410,14 @@ function drawTexturedEnemyOnly(e,pulse,hpRatio){
  const bossImage=e.boss?(e.bossArtKey?shipSpriteAssets.bosses[`${e.bossArtKey}-entity`]:e.bossSpriteType?shipSpriteAssets.enemies[e.bossSpriteType]:shipSpriteAssets.boss):null;
  const image=e.boss?bossImage:e.bossGuard?shipSpriteAssets.guard:(shipSpriteAssets.enemies[e.type]||shipSpriteAssets.enemies.scout);if(!shipSpriteReady(image))return false;
  const bossProfile=e.boss?bossVisualProfile(e):null;
- const styledImage=e.boss?(e.bossArtKey?(e.projectionBoss?getTintedShipSprite(image,'#5e9dff',.34,512):image):getTintedShipSprite(image,bossProfile.tint,e.awakenedBoss?.27:.17)):image;
+ const styledImage=e.boss?(e.bossArtKey?image:getTintedShipSprite(image,bossProfile.tint,e.awakenedBoss?.27:.17)):image;
  const renderImage=getMobileRenderSprite(styledImage,e.bossArtKey?512:256);
  let [width,height]=e.boss?(e.bossRenderSize||[196,144]):e.bossGuard?[78,66]:(enemySpriteSizes[e.type]||enemySpriteSizes.scout);const contentBounds=e.boss&&e.bossArtKey?getOpaqueSpriteBounds(renderImage):null;if(contentBounds){height=width*contentBounds.height/Math.max(1,contentBounds.width)}
  if(e.shield>0){const shieldPulse=1+Math.sin(e.age*6)*.025,shieldAlpha=.48+.28*Math.min(1,e.shield/Math.max(1,e.maxShield||e.shield));enemyModelCtx.save();enemyModelCtx.scale(1,-1);if(!drawShieldSprite(enemyModelCtx,shieldSpriteAssets.enemy,0,0,(width+24)*shieldPulse,(Math.max(width,height)+24)*shieldPulse,shieldAlpha,elapsed*.06)){enemyModelCtx.strokeStyle='rgba(91,224,255,.85)';enemyModelCtx.lineWidth=3;enemyModelCtx.beginPath();enemyModelCtx.arc(0,0,e.r+9,0,Math.PI*2);enemyModelCtx.stroke()}enemyModelCtx.restore()}
  const entryProgress=e.bossEntering?Math.min(1,(e.bossEntryTime||0)/(e.bossIntroTravel||1.7)):1,entryPulse=.72+.28*Math.sin(elapsed*18);
  const spriteAlpha=e.bossRetreating?Math.max(.14,Math.min(1,(e.retreatTime||0)/1.6))*(.7+.3*Math.sin(elapsed*24)):e.bossEntering?(.22+.77*entryProgress)*entryPulse:.99;
  enemyModelCtx.save();enemyModelCtx.scale(1,-1);if(e.bossEntering){const travel=e.bossIntroTravel||1.7,total=e.bossIntroDuration||3.7,reveal=Math.max(0,Math.min(1,((e.bossEntryTime||0)-travel)/Math.max(.01,total-travel))),entryScale=(.78+.22*(1-Math.pow(1-entryProgress,3)))*(1+Math.sin(reveal*Math.PI)*.13);enemyModelCtx.scale(entryScale,entryScale)}
- // 所有 Boss 投影使用相同的慢速全息闪烁；频率低，但明暗差必须足以和实体区分。
- enemyModelCtx.globalAlpha=spriteAlpha*(e.projectionBoss?.53+.25*Math.sin(elapsed*3.2+(e.bossStage||0)*.6):1);
+ enemyModelCtx.globalAlpha=spriteAlpha;
  enemyModelCtx.imageSmoothingEnabled=true;enemyModelCtx.imageSmoothingQuality='high';if(contentBounds)enemyModelCtx.drawImage(renderImage,contentBounds.x,contentBounds.y,contentBounds.width,contentBounds.height,-width/2,-height/2,width,height);else enemyModelCtx.drawImage(renderImage,-width/2,-height/2,width,height);enemyModelCtx.restore();
  // Boss 贴图自身已经包含反应堆细节，不再叠加程序绘制的白色核心光点。
  if(!e.boss){const coreColor=e.bossGuard?'#ff79dc':e.type==='support'?'#5deaff':e.type==='sniper'||e.type==='raider'?'#ffe171':e.type==='carrier'||e.type==='jammer'?'#c477ff':e.type==='heavy'||e.type==='barrage'?'#ff9b45':'#ff526f';enemyCore(0,-3,Math.max(3.2,width*.075),coreColor,pulse)}return true;

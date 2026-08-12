@@ -16,7 +16,7 @@
   <link rel="preload" as="image" href="assets/menu/menu-space-background-desktop.jpg" media="(pointer:fine)" fetchpriority="high" />
   <link rel="preload" as="image" href="assets/menu/menu-title-logo.PNG" />
   <link rel="preload" as="image" href="assets/menu/menu-fighter-rear-v2.png" />
-  <link rel="stylesheet" href="style.css?v=9.07.1" />
+  <link rel="stylesheet" href="style.css?v=9.07.2" />
 </head>
 <body>
   <script>
@@ -103,6 +103,16 @@
         </div>
 
         <div class="menu-actions hologram-actions">
+          <div class="menu-game-grid">
+            <button id="startButton" class="menu-game-action" type="button">
+              <span>继续游戏</span>
+              <small>CONTINUE</small>
+            </button>
+            <button id="newGameButton" class="menu-game-action" type="button">
+              <span>开始新游戏</span>
+              <small>NEW GAME</small>
+            </button>
+          </div>
           <div class="menu-secondary-grid">
             <button id="hangarButton" class="menu-button hologram-small" type="button">
               <svg class="menu-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V8l8-4 8 4v11M7 19v-7h10v7M9 9h6"/></svg>
@@ -121,11 +131,6 @@
               <span>关于</span>
             </button>
           </div>
-          <button id="startButton" class="primary-action hologram-start">
-            <span>继续游戏</span>
-            <small>CONTINUE</small>
-          </button>
-          <button id="newGameButton" class="continue-action" type="button"><b>开始新游戏</b><small>NEW GAME</small></button>
           <div class="menu-project-mark" aria-hidden="true">
             <b>ALPHA 9.07</b>
           </div>
@@ -277,7 +282,7 @@
       document.documentElement.style.setProperty('--iw-world-height', String(logicalHeight));
     })();
   </script>
-  <script src="game.js?v=9.07.1"></script>
+  <script src="game.js?v=9.07.2"></script>
   <script>if('serviceWorker' in navigator){addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));}</script>
 </body>
 </html>

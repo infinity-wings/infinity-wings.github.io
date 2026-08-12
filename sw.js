@@ -1,9 +1,9 @@
-const CACHE='iw-cache-9.07-hidden-story-v2';
+const CACHE='iw-cache-9.07-menu-layout-v3';
 const ASSETS=[
   './',
   './index.html',
-  './style.css?v=9.07.1',
-  './game.js?v=9.07.1',
+  './style.css?v=9.07.2',
+  './game.js?v=9.07.2',
   './manifest.webmanifest',
   './apple-touch-icon.png',
   './favicon.png',

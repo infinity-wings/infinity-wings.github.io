@@ -3,8 +3,8 @@ const ARCHIVE_KEYS={cores:'iwArchiveCoreLevelsV2',legacyCores:'iwArchiveCoresV1'
 const ENEMY_ARCHIVE_DATA={
  scout:{name:'侦察战机',baseHp:25,attack:'直线等离子弹',damage:'子弹 10 / 接触 16',xp:7,desc:'基础敌军单位，速度较快，装甲薄弱。'},
  heavy:{name:'重甲战机',baseHp:95,attack:'低速高亮重弹',damage:'重弹 18 / 接触 16',xp:17,desc:'缓慢推进的高耐久单位，射击间隔较长。'},
- suicide:{name:'自爆战机',baseHp:30,attack:'接近后启动2.2秒自爆',damage:'自爆 24 / 接触 28',xp:11,desc:'进入警戒距离后追踪玩家并启动倒计时。'},
- sniper:{name:'狙击战机',baseHp:44,attack:'瞄准后高速射击',damage:'高速弹 13 / 接触 16',xp:18,desc:'保持中远距离，以精确射击压迫移动空间。'},
+ suicide:{name:'自爆战机',baseHp:68,attack:'从两侧突入，接近时加速闪烁后自爆',damage:'自爆 24 / 接触 28',xp:11,desc:'由战区两侧切入；越靠近玩家，警戒光环闪烁越快。'},
+ sniper:{name:'狙击战机',baseHp:44,attack:'锁定2秒后发射持续2秒的细激光',damage:'激光 13 / 接触 16',xp:18,desc:'锁定线会持续追踪玩家；激光发射后方向固定，可横向规避。'},
  support:{name:'护盾支援机',baseHp:72,attack:'为附近敌军补充护盾',damage:'接触 16',xp:13,desc:'自身攻击能力有限，但会显著提高编队生存力。'},
  barrage:{name:'弹幕载机',baseHp:105,attack:'扇形弹幕',damage:'弹幕 16 / 接触 16',xp:21,desc:'缓慢移动并周期释放多方向弹幕。'},
  raider:{name:'侧翼突袭机',baseHp:36,attack:'高速横穿连射',damage:'连射弹 7 / 接触 16',xp:12,desc:'从左右两侧进入战场，快速穿越交战区域。'},

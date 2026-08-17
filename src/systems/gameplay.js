@@ -120,11 +120,11 @@ function applyEnemyDurability(enemy){
 }
 function makeEnemy(type,side=false){
  const t=threatLevel(),power=combatPower();
- const fromLeft=side&&Math.random()<.5;
- const base={x:side?(fromLeft?-30:W+30):35+Math.random()*(W-70),y:side?70+Math.random()*Math.min(250,H*.38):-35,type,r:15,hp:25,max:25,v:120,shoot:1200+Math.random()*700,age:0,dir:fromLeft?1:-1,shield:0,maxShield:0};
+ const sideEntry=side||type==='raider'||type==='suicide',fromLeft=sideEntry&&Math.random()<.5;
+ const base={x:sideEntry?(fromLeft?-30:W+30):35+Math.random()*(W-70),y:sideEntry?70+Math.random()*Math.min(250,H*.38):-35,type,r:15,hp:25,max:25,v:120,shoot:1200+Math.random()*700,age:0,dir:fromLeft?1:-1,shield:0,maxShield:0};
  if(type==='heavy')Object.assign(base,{r:23,hp:95+t*12,max:95+t*12,v:42,shoot:1550});
- if(type==='suicide'){const suicideHp=68+t*12;Object.assign(base,{r:14,hp:suicideHp,max:suicideHp,v:175,shoot:99999,warning:0,fuse:null,fuseDuration:2.1})}
- if(type==='sniper')Object.assign(base,{r:16,hp:44+t*8,max:44+t*8,v:42,shoot:1350,aim:0});
+ if(type==='suicide'){const suicideHp=68+t*12;Object.assign(base,{r:14,hp:suicideHp,max:suicideHp,v:175,shoot:99999,warning:0,fuse:null,fuseDuration:2.1,sideEntry:true})}
+ if(type==='sniper')Object.assign(base,{r:16,hp:44+t*8,max:44+t*8,v:42,shoot:1350,sniperAim:null,sniperAimDuration:2});
  if(type==='support')Object.assign(base,{r:18,hp:72+t*10,max:72+t*10,v:48,shoot:99999,supportCd:.4});
  if(type==='barrage')Object.assign(base,{r:22,hp:105+t*14,max:105+t*14,v:38,shoot:1500});
  if(type==='raider')Object.assign(base,{r:14,hp:36+t*6,max:36+t*6,v:205+power*2,shoot:850,sideEntry:true});
@@ -737,6 +737,7 @@ function enemyShoot(e){
  if(e.boss)return;
  if(e.huntTarget){bountyTargetShoot(e);return;}
  const muzzleY=e.y+Math.max(10,e.r*.55);if(muzzleY>=player.y-28||e.y>H-SAFE_BOTTOM-45)return;
+ if(e.type==='sniper'){if(e.sniperAim==null){e.sniperAim=e.sniperAimDuration||2;e.sniperLockX=player.x;e.sniperLockY=player.y;e.shoot=999999}return}
  if(e.type==='barrage'){
   for(let a=-.72;a<=.72;a+=.24)pushEnemyBullet(e.x,muzzleY,Math.sin(a)*190,Math.cos(a)*190,5,'orange',16);return;
  }
@@ -745,16 +746,21 @@ function enemyShoot(e){
   for(let i=0;i<6;i++){const lag=i*9*e.dir;pushEnemyBullet(e.x-lag,muzzleY-i*2,-e.dir*(18+i*2),speed+i*7,4.2,'yellow',7)}
   return;
  }
- const speed=e.type==='sniper'?265:e.type==='heavy'?125:e.type==='jammer'?150:205;
+ const speed=e.type==='heavy'?125:e.type==='jammer'?150:205;
  const distance=Math.hypot(player.x-e.x,player.y-muzzleY),travel=Math.min(1.15,distance/speed);
- const lead=e.type==='sniper'?.78:e.type==='heavy'?.22:.42;
+ const lead=e.type==='heavy'?.22:.42;
  let targetX=player.x+player.vx*travel*lead,targetY=player.y+player.vy*travel*lead;
  targetX=Math.max(18,Math.min(W-18,targetX));targetY=Math.max(muzzleY+70,Math.min(H-SAFE_BOTTOM-18,targetY));
- let dx=targetX-e.x,dy=Math.max(70,targetY-muzzleY);const maxSide=dy*(e.type==='sniper'?1.05:.72);dx=Math.max(-maxSide,Math.min(maxSide,dx));
+ let dx=targetX-e.x,dy=Math.max(70,targetY-muzzleY);const maxSide=dy*.72;dx=Math.max(-maxSide,Math.min(maxSide,dx));
  const len=Math.hypot(dx,dy)||1;
- const type=e.type==='jammer'?'purple':e.type==='heavy'?'red':e.type==='sniper'?'yellow':'cyan';
- const damage=e.type==='jammer'?10:e.type==='heavy'?18:e.type==='sniper'?13:10;
+ const type=e.type==='jammer'?'purple':e.type==='heavy'?'red':'cyan';
+ const damage=e.type==='jammer'?10:e.type==='heavy'?18:10;
  pushEnemyBullet(e.x,muzzleY,dx/len*speed,dy/len*speed,e.type==='heavy'?6:e.type==='jammer'?7:5,type,damage);
+}
+function fireSniperLaser(e){
+ const x1=e.x,y1=e.y+Math.max(10,e.r*.55),targetX=Number.isFinite(e.sniperLockX)?e.sniperLockX:player.x,targetY=Number.isFinite(e.sniperLockY)?e.sniperLockY:player.y;
+ let dx=targetX-x1,dy=targetY-y1,len=Math.hypot(dx,dy)||1;dx/=len;dy/=len;const reach=Math.max(W,H)*2.4;
+ enemyLasers.push({boss:e,mode:'sniper',sniper:true,x:x1,y:y1,x1,y1,x2:x1+dx*reach,y2:y1+dy*reach,width:3,warning:0,duration:2,life:2,damage:13,tick:0});
 }
 function releaseCarrierDrones(e){
  for(let i=0;i<(e.spawnCount||3);i++){
@@ -1035,23 +1041,25 @@ function update(dt){
    else{const a=Math.atan2(player.y-e.y,player.x-e.x);e.x+=Math.cos(a)*(e.v+threat*7)*dt*slow;e.y+=Math.sin(a)*(e.v+threat*7)*dt*slow}
   }else if(e.type==='raider'){
    e.x+=e.dir*e.v*dt*slow;e.y+=34*dt*slow;
+  }else if(e.type==='sniper'){
+   const targetY=Math.min(155,H*.24);e.y+=(targetY-e.y)*Math.min(1,dt*1.8*slow);e.x+=Math.sin(e.age*1.7)*30*dt*slow;
+   if(e.sniperAim!=null){e.sniperLockX=player.x;e.sniperLockY=player.y;e.sniperAim-=dt;if(e.sniperAim<=0){fireSniperLaser(e);e.sniperAim=null;e.shoot=enemyAttackInterval(e,threat)}}
   }else{
    e.y+=(e.v+threat*7)*dt*slow;
-   if(e.type==='sniper')e.x+=Math.sin(e.age*2)*45*dt;
    if(e.type==='support'){
     e.supportCd-=dt;if(e.supportCd<=0){e.supportCd=1.15;const shieldTargets=enemies.filter(ally=>ally!==e&&ally.type!=='support'&&ally.hp>0&&Math.hypot(ally.x-e.x,ally.y-e.y)<220).sort((a,b)=>Math.hypot(a.x-e.x,a.y-e.y)-Math.hypot(b.x-e.x,b.y-e.y)).slice(0,3);for(const ally of enemies)if(ally.supportShieldSource===e&&!shieldTargets.includes(ally)){ally.shield=0;ally.maxShield=0;ally.supportShieldSource=null;ally.supportShieldUntil=0}for(const ally of shieldTargets){ally.supportShieldSource=e;ally.supportShieldUntil=elapsed+1.35;ally.maxShield=Math.max(ally.maxShield||0,28+threat*4);ally.shield=Math.min(ally.maxShield,(ally.shield||0)+18+threat*3)}}
    }
   }
-  e.shoot-=dt*1000*slow;if(e.shoot<=0&&!e.boss&&!['suicide','support'].includes(e.type)){enemyShoot(e);e.shoot=e.huntTarget?(e.enraged?560:760):enemyAttackInterval(e,threat)}
+  e.shoot-=dt*1000*slow;if(e.shoot<=0&&!e.boss&&!['suicide','support'].includes(e.type)){enemyShoot(e);if(e.type!=='sniper'||e.sniperAim==null)e.shoot=e.huntTarget?(e.enraged?560:760):enemyAttackInterval(e,threat)}
   if(!e.bossRetreating&&(e.boss?enemyHitTest(e,player.x,player.y,playerCombatRadius()):Math.hypot(player.x-e.x,player.y-e.y)<playerCombatRadius()+e.r)){damagePlayer(e.boss?30:e.type==='suicide'?28:16);if(e.type==='suicide')suicideBlast(e);explode(e.x,e.y);enemies.splice(i,1);if(dying)break;continue}
   if(e.y>H+50||e.x<-70||e.x>W+70)enemies.splice(i,1)
  }
  for(let i=enemyLasers.length-1;i>=0;i--){
   const l=enemyLasers[i];l.life-=dt;
-  if(!l.boss||!enemies.includes(l.boss)){enemyLasers.splice(i,1);continue}
+  if(!l.boss||(!l.sniper&&!enemies.includes(l.boss))){enemyLasers.splice(i,1);continue}
   if(l.mode==='sweep'&&l.life<l.duration){const progress=1-Math.max(0,l.life)/l.duration;l.x=W*.22+W*.56*(l.sweepDir>0?progress:1-progress)}
-  const active=l.life<l.duration;
-  if(active){l.tick-=dt;if(l.tick<=0&&Math.abs(player.x-l.x)<l.width+playerCombatRadius()&&player.y>l.y){damagePlayer(l.damage);l.tick=.55}}
+  const active=l.sniper||l.life<l.duration;
+  if(active){l.tick-=dt;if(l.sniper){const dx=l.x2-l.x1,dy=l.y2-l.y1,len2=dx*dx+dy*dy||1,t=Math.max(0,Math.min(1,((player.x-l.x1)*dx+(player.y-l.y1)*dy)/len2)),distance=Math.hypot(player.x-(l.x1+dx*t),player.y-(l.y1+dy*t));if(l.tick<=0&&distance<l.width+playerCombatRadius()){damagePlayer(l.damage);l.tick=.55}}else if(l.tick<=0&&Math.abs(player.x-l.x)<l.width+playerCombatRadius()&&player.y>l.y){damagePlayer(l.damage);l.tick=.55}}
   if(l.life<=0)enemyLasers.splice(i,1)
  }
  for(let i=enemyBullets.length-1;i>=0;i--){const b=enemyBullets[i];b.x+=b.vx*dt*slow;b.y+=b.vy*dt*slow;if(build.heavyEscortShieldActive>0){const dx=b.x-player.x,dy=b.y-(player.y-8),dist=Math.hypot(dx,dy);const inFront=dy<2&&dy>-112;const insideGuard=dist<92&&Math.abs(dx)<88;if(inFront&&insideGuard){enemyBullets.splice(i,1);particles.push({x:b.x,y:b.y,vx:dx*.75,vy:-70,life:.26,max:.26,r:5.5,type:'barrier'});continue}}if(build.awakeFrontShieldActive>0){const dx=b.x-player.x,dy=b.y-(player.y-78);if(dy>-26&&dy<34&&Math.abs(dx)<118){enemyBullets.splice(i,1);particles.push({x:b.x,y:b.y,vx:dx*.55,vy:-65,life:.28,max:.28,r:6,type:'barrier'});continue}}const bd=Math.hypot(b.x-player.x,b.y-player.y);if(bd<b.r+playerCombatRadius()){if(b.type==='purple'&&b.damage<=10){player.slowTimer=2.2;toast('动力受阻 · 移动速度下降')}damagePlayer(Number.isFinite(b.damage)?b.damage:10+threat*1.5);enemyBullets.splice(i,1);if(dying)break;continue}if(b.y>H+30||b.x<-30||b.x>W+30)enemyBullets.splice(i,1)}

@@ -1,9 +1,9 @@
-const CACHE='iw-cache-9.09-score-balance-v43';
+const CACHE='iw-cache-9.09-enemy-patterns-v44';
 const ASSETS=[
   './',
   './index.html',
-  './style.css?v=9.09.6',
-  './game.js?v=9.09.6',
+  './style.css?v=9.09.7',
+  './game.js?v=9.09.7',
   './manifest.webmanifest',
   './apple-touch-icon.png',
   './favicon.png',

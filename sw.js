@@ -1,9 +1,9 @@
-const CACHE='iw-cache-9.09-enemy-patterns-v44';
+const CACHE='iw-cache-9.09-suicide-impact-v45';
 const ASSETS=[
   './',
   './index.html',
-  './style.css?v=9.09.7',
-  './game.js?v=9.09.7',
+  './style.css?v=9.09.8',
+  './game.js?v=9.09.8',
   './manifest.webmanifest',
   './apple-touch-icon.png',
   './favicon.png',

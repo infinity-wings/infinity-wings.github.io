@@ -1037,7 +1037,7 @@ function update(dt){
   else if(e.type==='suicide'){
    const distance=Math.hypot(player.x-e.x,player.y-e.y);
    if(e.fuse==null&&distance<250){e.fuse=e.fuseDuration||2.1;e.warning=1}
-   if(e.fuse!=null){e.fuse-=dt;const urgency=Math.max(0,1-e.fuse/(e.fuseDuration||2.1));const a=Math.atan2(player.y-e.y,player.x-e.x);const chargeSpeed=e.v+threat*10+urgency*130;e.x+=Math.cos(a)*chargeSpeed*dt*slow;e.y+=Math.sin(a)*chargeSpeed*dt*slow;if(e.fuse<=0){if(distance<105)damagePlayer(24);suicideBlast(e);explode(e.x,e.y);enemies.splice(i,1);if(dying)break;continue}}
+   if(e.fuse!=null){e.fuse=Math.max(0,e.fuse-dt);const urgency=Math.max(0,1-e.fuse/(e.fuseDuration||2.1));const a=Math.atan2(player.y-e.y,player.x-e.x);const chargeSpeed=e.v+threat*10+urgency*130;e.x+=Math.cos(a)*chargeSpeed*dt*slow;e.y+=Math.sin(a)*chargeSpeed*dt*slow;const impactDistance=Math.hypot(player.x-e.x,player.y-e.y);if(impactDistance<48){damagePlayer(24);suicideBlast(e);explode(e.x,e.y);enemies.splice(i,1);if(dying)break;continue}}
    else{const a=Math.atan2(player.y-e.y,player.x-e.x);e.x+=Math.cos(a)*(e.v+threat*7)*dt*slow;e.y+=Math.sin(a)*(e.v+threat*7)*dt*slow}
   }else if(e.type==='raider'){
    e.x+=e.dir*e.v*dt*slow;e.y+=34*dt*slow;

@@ -110,7 +110,13 @@ function drawSupportShieldLinks(){
 function drawSniperAimLines(){
  const snipers=enemies.filter(e=>e?.type==='sniper'&&e.hp>0&&e.sniperAim!=null);if(!snipers.length)return;
  ctx.save();ctx.globalCompositeOperation='lighter';ctx.lineCap='round';
- for(const e of snipers){const duration=e.sniperAimDuration||2,progress=1-Math.max(0,e.sniperAim)/duration,pulse=.55+.45*Math.sin(elapsed*(8+progress*10)),tx=Number.isFinite(e.sniperLockX)?e.sniperLockX:player.x,ty=Number.isFinite(e.sniperLockY)?e.sniperLockY:player.y;ctx.globalAlpha=.28+.5*progress;ctx.strokeStyle=progress>.72?'#ff335c':'#ff7b65';ctx.shadowBlur=7+progress*9;ctx.shadowColor='#ff244f';ctx.lineWidth=.7+progress*.65;ctx.beginPath();ctx.moveTo(e.x,e.y+e.r*.55);ctx.lineTo(tx,ty);ctx.stroke();ctx.globalAlpha=.48+.38*pulse;ctx.lineWidth=1;ctx.beginPath();ctx.arc(tx,ty,9-progress*2,0,Math.PI*2);ctx.stroke();ctx.beginPath();ctx.moveTo(tx-13,ty);ctx.lineTo(tx-5,ty);ctx.moveTo(tx+5,ty);ctx.lineTo(tx+13,ty);ctx.moveTo(tx,ty-13);ctx.lineTo(tx,ty-5);ctx.moveTo(tx,ty+5);ctx.lineTo(tx,ty+13);ctx.stroke()}
+ for(const e of snipers){
+  const duration=e.sniperAimDuration||2,lockWindow=e.sniperLockWindow||.8,locked=e.sniperAim<=lockWindow,progress=1-Math.max(0,e.sniperAim)/duration,charge=locked?1-Math.max(0,e.sniperAim)/lockWindow:0,pulse=.55+.45*Math.sin(elapsed*(locked?19:10)),tx=Number.isFinite(e.sniperLockX)?e.sniperLockX:player.x,ty=Number.isFinite(e.sniperLockY)?e.sniperLockY:player.y,mx=e.x,my=e.y+e.r*.55;
+  ctx.globalAlpha=locked?.78:.58;ctx.strokeStyle=locked?'#ff244f':'#ff755f';ctx.shadowBlur=locked?18:11;ctx.shadowColor='#ff1748';ctx.lineWidth=locked?3.4:2.4;ctx.beginPath();ctx.moveTo(mx,my);ctx.lineTo(tx,ty);ctx.stroke();
+  ctx.globalAlpha=locked?.94:.78;ctx.strokeStyle=locked?'#fff1f4':'#ffb19f';ctx.shadowBlur=5;ctx.lineWidth=locked?1.15:.85;ctx.beginPath();ctx.moveTo(mx,my);ctx.lineTo(tx,ty);ctx.stroke();
+  ctx.globalAlpha=.68+.3*pulse;ctx.strokeStyle=locked?'#ff315b':'#ff876f';ctx.lineWidth=locked?1.8:1.3;ctx.beginPath();ctx.arc(tx,ty,locked?7:10-progress*2,0,Math.PI*2);ctx.stroke();ctx.beginPath();ctx.moveTo(tx-15,ty);ctx.lineTo(tx-5,ty);ctx.moveTo(tx+5,ty);ctx.lineTo(tx+15,ty);ctx.moveTo(tx,ty-15);ctx.lineTo(tx,ty-5);ctx.moveTo(tx,ty+5);ctx.lineTo(tx,ty+15);ctx.stroke();
+  if(locked){const radius=4+charge*8+pulse*1.5,g=ctx.createRadialGradient(mx,my,0,mx,my,radius*2.2);g.addColorStop(0,'#ffffff');g.addColorStop(.22,'#ffcfda');g.addColorStop(.55,'rgba(255,42,83,.9)');g.addColorStop(1,'rgba(255,20,66,0)');ctx.globalAlpha=.75+.25*pulse;ctx.fillStyle=g;ctx.shadowBlur=20+charge*16;ctx.shadowColor='#ff174f';ctx.beginPath();ctx.arc(mx,my,radius*2.2,0,Math.PI*2);ctx.fill();ctx.globalAlpha=.5+.45*charge;ctx.strokeStyle='#ff8ca5';ctx.lineWidth=1.2;ctx.beginPath();ctx.arc(mx,my,radius+4+Math.sin(elapsed*22)*2,0,Math.PI*2);ctx.stroke()}
+ }
  ctx.restore();
 }
 function drawPlayerSpriteGlow(color='#69efff',alpha=1){

@@ -124,7 +124,7 @@ function makeEnemy(type,side=false){
  const base={x:sideEntry?(fromLeft?-30:W+30):35+Math.random()*(W-70),y:sideEntry?70+Math.random()*Math.min(250,H*.38):-35,type,r:15,hp:25,max:25,v:120,shoot:1200+Math.random()*700,age:0,dir:fromLeft?1:-1,shield:0,maxShield:0};
  if(type==='heavy')Object.assign(base,{r:23,hp:95+t*12,max:95+t*12,v:42,shoot:1550});
  if(type==='suicide'){const suicideHp=68+t*12;Object.assign(base,{r:14,hp:suicideHp,max:suicideHp,v:175,shoot:99999,warning:0,fuse:null,fuseDuration:2.1,sideEntry:true})}
- if(type==='sniper')Object.assign(base,{r:16,hp:44+t*8,max:44+t*8,v:42,shoot:1350,sniperAim:null,sniperAimDuration:2});
+ if(type==='sniper')Object.assign(base,{r:16,hp:44+t*8,max:44+t*8,v:42,shoot:1350,sniperAim:null,sniperAimDuration:2,sniperLockWindow:.8});
  if(type==='support')Object.assign(base,{r:18,hp:72+t*10,max:72+t*10,v:48,shoot:99999,supportCd:.4});
  if(type==='barrage')Object.assign(base,{r:22,hp:105+t*14,max:105+t*14,v:38,shoot:1500});
  if(type==='raider')Object.assign(base,{r:14,hp:36+t*6,max:36+t*6,v:205+power*2,shoot:850,sideEntry:true});
@@ -1043,7 +1043,7 @@ function update(dt){
    e.x+=e.dir*e.v*dt*slow;e.y+=34*dt*slow;
   }else if(e.type==='sniper'){
    const targetY=Math.min(155,H*.24);e.y+=(targetY-e.y)*Math.min(1,dt*1.8*slow);e.x+=Math.sin(e.age*1.7)*30*dt*slow;
-   if(e.sniperAim!=null){e.sniperLockX=player.x;e.sniperLockY=player.y;e.sniperAim-=dt;if(e.sniperAim<=0){fireSniperLaser(e);e.sniperAim=null;e.shoot=enemyAttackInterval(e,threat)}}
+   if(e.sniperAim!=null){if(e.sniperAim>(e.sniperLockWindow||.8)){e.sniperLockX=player.x;e.sniperLockY=player.y}e.sniperAim-=dt;if(e.sniperAim<=0){fireSniperLaser(e);e.sniperAim=null;e.shoot=enemyAttackInterval(e,threat)}}
   }else{
    e.y+=(e.v+threat*7)*dt*slow;
    if(e.type==='support'){

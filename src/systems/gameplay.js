@@ -123,7 +123,7 @@ function makeEnemy(type,side=false){
  const sideEntry=side||type==='raider'||type==='suicide',fromLeft=sideEntry&&Math.random()<.5;
  const base={x:sideEntry?(fromLeft?-30:W+30):35+Math.random()*(W-70),y:sideEntry?70+Math.random()*Math.min(250,H*.38):-35,type,r:15,hp:25,max:25,v:120,shoot:1200+Math.random()*700,age:0,dir:fromLeft?1:-1,shield:0,maxShield:0};
  if(type==='heavy')Object.assign(base,{r:23,hp:95+t*12,max:95+t*12,v:42,shoot:1550});
- if(type==='suicide'){const suicideHp=68+t*12;Object.assign(base,{r:14,hp:suicideHp,max:suicideHp,v:175,shoot:99999,warning:0,fuse:null,fuseDuration:2.1,sideEntry:true})}
+ if(type==='suicide'){const suicideHp=68+t*12;Object.assign(base,{r:14,hp:suicideHp,max:suicideHp,v:145,shoot:99999,warning:0,fuse:null,fuseDuration:2.1,sideEntry:true})}
  if(type==='sniper')Object.assign(base,{r:16,hp:44+t*8,max:44+t*8,v:42,shoot:1350,sniperAim:null,sniperAimDuration:2,sniperLockWindow:.8});
  if(type==='support')Object.assign(base,{r:18,hp:72+t*10,max:72+t*10,v:48,shoot:99999,supportCd:.4});
  if(type==='barrage')Object.assign(base,{r:22,hp:105+t*14,max:105+t*14,v:38,shoot:1500});
@@ -1037,7 +1037,7 @@ function update(dt){
   else if(e.type==='suicide'){
    const distance=Math.hypot(player.x-e.x,player.y-e.y);
    if(e.fuse==null&&distance<250){e.fuse=e.fuseDuration||2.1;e.warning=1}
-   if(e.fuse!=null){e.fuse=Math.max(0,e.fuse-dt);const urgency=Math.max(0,1-e.fuse/(e.fuseDuration||2.1));const a=Math.atan2(player.y-e.y,player.x-e.x);const chargeSpeed=e.v+threat*10+urgency*130;e.x+=Math.cos(a)*chargeSpeed*dt*slow;e.y+=Math.sin(a)*chargeSpeed*dt*slow;const impactDistance=Math.hypot(player.x-e.x,player.y-e.y);if(impactDistance<48){damagePlayer(24);suicideBlast(e);explode(e.x,e.y);enemies.splice(i,1);if(dying)break;continue}}
+   if(e.fuse!=null){e.fuse=Math.max(0,e.fuse-dt);const urgency=Math.max(0,1-e.fuse/(e.fuseDuration||2.1));const a=Math.atan2(player.y-e.y,player.x-e.x);const chargeSpeed=e.v+threat*7+urgency*95;e.x+=Math.cos(a)*chargeSpeed*dt*slow;e.y+=Math.sin(a)*chargeSpeed*dt*slow;const impactDistance=Math.hypot(player.x-e.x,player.y-e.y);if(impactDistance<48){damagePlayer(24);suicideBlast(e);explode(e.x,e.y);enemies.splice(i,1);if(dying)break;continue}}
    else{const a=Math.atan2(player.y-e.y,player.x-e.x);e.x+=Math.cos(a)*(e.v+threat*7)*dt*slow;e.y+=Math.sin(a)*(e.v+threat*7)*dt*slow}
   }else if(e.type==='raider'){
    e.x+=e.dir*e.v*dt*slow;e.y+=34*dt*slow;

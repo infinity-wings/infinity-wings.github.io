@@ -1,9 +1,9 @@
-const CACHE='iw-cache-9.09-sniper-charge-v46';
+const CACHE='iw-cache-9.09-suicide-speed-v47';
 const ASSETS=[
   './',
   './index.html',
-  './style.css?v=9.09.9',
-  './game.js?v=9.09.9',
+  './style.css?v=9.09.10',
+  './game.js?v=9.09.10',
   './manifest.webmanifest',
   './apple-touch-icon.png',
   './favicon.png',

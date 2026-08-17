@@ -196,8 +196,8 @@ function spawnEnemy(){
  if(enemies.length>=cap)return;
  let type=chooseEnemyType();for(let tries=0;tries<6&&!canSpawnEnemyType(type);tries++)type=chooseEnemyType();if(!canSpawnEnemyType(type))type='scout';
  if(type==='jammer'){
-  const threat=threatLevel(),count=threat>=5&&Math.random()<.42?3:2,group=`jammer-${elapsed.toFixed(3)}-${Math.random().toString(36).slice(2,6)}`,spacing=count===3?88:106,center=70+Math.random()*Math.max(40,W-140);
-  for(let slot=0;slot<count&&enemies.length<cap;slot++){const unit=battleEventSystem.decorateSpawnedEnemy(makeEnemy('jammer'));unit.x=Math.max(30,Math.min(W-30,center+(slot-(count-1)/2)*spacing));unit.y=-42-Math.abs(slot-(count-1)/2)*10;unit.jammerGroup=group;unit.jammerSlot=slot;enemies.push(unit);battleEventSystem.spawnMirrorPartner(unit)}
+  const threat=threatLevel(),count=threat>=5&&Math.random()<.42?3:2,group=`jammer-${elapsed.toFixed(3)}-${Math.random().toString(36).slice(2,6)}`,diagonal=Math.random()<.5,desired=count===3?155+Math.random()*30:190+Math.random()*40,safeMargin=35,spacing=Math.min(desired,Math.max(110,(W-safeMargin*2)/(count-1))),halfWidth=spacing*(count-1)/2,centerMin=safeMargin+halfWidth,centerMax=W-safeMargin-halfWidth,center=centerMax>centerMin?centerMin+Math.random()*(centerMax-centerMin):W/2,baseY=diagonal?-112:-55;
+  for(let slot=0;slot<count&&enemies.length<cap;slot++){const unit=battleEventSystem.decorateSpawnedEnemy(makeEnemy('jammer')),verticalOffset=diagonal?(count===2?(slot===0?-45:45):(slot===1?50:-42)):0;unit.x=Math.max(safeMargin,Math.min(W-safeMargin,center+(slot-(count-1)/2)*spacing));unit.y=baseY+verticalOffset;unit.jammerGroup=group;unit.jammerSlot=slot;unit.jammerFormation=diagonal?'diagonal':'horizontal';enemies.push(unit);battleEventSystem.spawnMirrorPartner(unit)}
  }else{const primary=battleEventSystem.decorateSpawnedEnemy(makeEnemy(type,type==='raider'));enemies.push(primary);battleEventSystem.spawnMirrorPartner(primary)}
  const power=combatPower(),rate=recentKillRate();
  const ramp=Math.min(1,Math.max(0,(elapsed-45)/120));

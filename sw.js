@@ -1,9 +1,9 @@
-const CACHE='iw-cache-9.09-special-enemies-v49';
+const CACHE='iw-cache-10.0.2-jammer-spacing-v50';
 const ASSETS=[
   './',
   './index.html',
-  './style.css?v=9.09.12',
-  './game.js?v=9.09.12',
+  './style.css?v=10.0.2',
+  './game.js?v=10.0.2',
   './manifest.webmanifest',
   './apple-touch-icon.png',
   './favicon.png',

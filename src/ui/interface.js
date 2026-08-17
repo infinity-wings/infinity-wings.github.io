@@ -322,9 +322,9 @@ function updateUI(){
  if(UI.timer)UI.timer.textContent=formatRunTime(elapsed);
  UI.hpText.textContent=`${Math.ceil(player?.hp||0)} / ${player?.maxHp||100}`;UI.hpFill.style.width=Math.max(0,(player?.hp||0)/(player?.maxHp||100)*100)+'%';UI.xpFill.style.width=(build?.allCoresMax?100:xp/nextXp*100)+'%';UI.xpFill.classList.toggle('maxed',Boolean(build?.allCoresMax));UI.score.textContent=score;UI.level.textContent=level;UI.threat.textContent=THREAT_ROMAN[typeof displayedThreatLevel==='function'?displayedThreatLevel():threatLevel()];
  const barrierLeft=Math.max(0,bombs||0);UI.barrierCount.textContent=`剩余 ${barrierLeft} 次`;UI.touchBarrierCount.textContent=`剩余 ${barrierLeft} 次`;if(UI.barrierChargeFill)UI.barrierChargeFill.style.width=Math.max(0,Math.min(100,build?.barrierCharge||0))+'%';
- [...UI.barrierCores.children].forEach((core,i)=>{const active=i<barrierLeft;core.classList.toggle('active',active);core.classList.toggle('spent',!active&&!core.classList.contains('consuming'))});
+ [...UI.barrierCores.children].forEach((core,i)=>{const active=i<barrierLeft,wasActive=core.classList.contains('active');core.classList.toggle('active',active);core.classList.toggle('spent',!active&&!core.classList.contains('consuming'));if(active&&!wasActive){core.classList.remove('reforming');void core.offsetWidth;core.classList.add('reforming');setTimeout(()=>core.classList.remove('reforming'),560)}else if(!active)core.classList.remove('reforming')});
  [...UI.touchBarrierCores.children].forEach((core,i)=>core.classList.toggle('active',i<barrierLeft));
- UI.barrierBox.classList.toggle('empty',barrierLeft===0);UI.barrierBox.classList.toggle('last-charge',barrierLeft===1);UI.bombButton.classList.toggle('empty',barrierLeft===0);UI.bombButton.disabled=barrierLeft===0;
+ UI.barrierBox.classList.toggle('empty',barrierLeft===0);UI.barrierBox.classList.toggle('last-charge',barrierLeft===1);UI.barrierBox.classList.toggle('full-charge',barrierLeft>=3);UI.barrierBox.dataset.charges=barrierLeft;UI.bombButton.classList.toggle('empty',barrierLeft===0);UI.bombButton.disabled=barrierLeft===0;
 }
 function animateBarrierUse(spentIndex){
  const core=UI.barrierCores.children[spentIndex],touchCore=UI.touchBarrierCores.children[spentIndex];

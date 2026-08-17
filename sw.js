@@ -1,9 +1,9 @@
-const CACHE='iw-cache-10.0.3-shield-circle-v51';
+const CACHE='iw-cache-10.0.4-barrier-hud-v52';
 const ASSETS=[
   './',
   './index.html',
-  './style.css?v=10.0.3',
-  './game.js?v=10.0.3',
+  './style.css?v=10.0.4',
+  './game.js?v=10.0.4',
   './manifest.webmanifest',
   './apple-touch-icon.png',
   './favicon.png',

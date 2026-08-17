@@ -1,9 +1,9 @@
-const CACHE='iw-cache-9.09-save-slots-v41';
+const CACHE='iw-cache-9.09-enemy-core-v42';
 const ASSETS=[
   './',
   './index.html',
-  './style.css?v=9.09.4',
-  './game.js?v=9.09.4',
+  './style.css?v=9.09.5',
+  './game.js?v=9.09.5',
   './manifest.webmanifest',
   './apple-touch-icon.png',
   './favicon.png',

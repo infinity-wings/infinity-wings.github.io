@@ -446,7 +446,8 @@ function enemyEngineFlame(x,y,color,size=1,phase=0){
  enemyModelCtx.beginPath();enemyModelCtx.moveTo(x-2.1*size,y);enemyModelCtx.lineTo(x+2.1*size,y);enemyModelCtx.lineTo(x,y+flame);enemyModelCtx.closePath();enemyModelCtx.fill();enemyModelCtx.restore();
 }
 function enemyPanelLine(points,color='rgba(255,255,255,.25)',width=1){enemyModelCtx.strokeStyle=color;enemyModelCtx.lineWidth=width;enemyModelCtx.beginPath();enemyModelCtx.moveTo(points[0][0],points[0][1]);for(let i=1;i<points.length;i++)enemyModelCtx.lineTo(points[i][0],points[i][1]);enemyModelCtx.stroke();}
-function enemyCore(x,y,r,color,pulse=1){enemyModelCtx.save();enemyModelCtx.globalCompositeOperation='lighter';enemyModelCtx.shadowBlur=18;enemyModelCtx.shadowColor=color;enemyModelCtx.fillStyle='rgba(245,255,255,.96)';enemyModelCtx.beginPath();enemyModelCtx.arc(x,y,r,0,Math.PI*2);enemyModelCtx.fill();enemyModelCtx.globalAlpha=.72+.28*pulse;enemyModelCtx.fillStyle=color;enemyModelCtx.beginPath();enemyModelCtx.arc(x,y,r*.62,0,Math.PI*2);enemyModelCtx.fill();enemyModelCtx.restore();}
+// 敌机造型使用贴图或机身结构自身的发光细节，不再绘制统一的中心核心光点。
+function enemyCore(){}
 function drawTexturedEnemyOnly(e,pulse,hpRatio){
  const bossImage=e.boss?(e.bossArtKey?shipSpriteAssets.bosses[`${e.bossArtKey}-entity`]:e.bossSpriteType?shipSpriteAssets.enemies[e.bossSpriteType]:shipSpriteAssets.boss):null;
  const image=e.boss?bossImage:e.bossGuard?shipSpriteAssets.guard:(shipSpriteAssets.enemies[e.type]||shipSpriteAssets.enemies.scout);if(!shipSpriteReady(image))return false;
@@ -460,8 +461,8 @@ function drawTexturedEnemyOnly(e,pulse,hpRatio){
  enemyModelCtx.save();enemyModelCtx.scale(1,-1);if(e.bossEntering){const travel=e.bossIntroTravel||1.7,total=e.bossIntroDuration||3.7,reveal=Math.max(0,Math.min(1,((e.bossEntryTime||0)-travel)/Math.max(.01,total-travel))),entryScale=(.78+.22*(1-Math.pow(1-entryProgress,3)))*(1+Math.sin(reveal*Math.PI)*.13);enemyModelCtx.scale(entryScale,entryScale)}
  enemyModelCtx.globalAlpha=spriteAlpha;
  enemyModelCtx.imageSmoothingEnabled=true;enemyModelCtx.imageSmoothingQuality='high';if(contentBounds)enemyModelCtx.drawImage(renderImage,contentBounds.x,contentBounds.y,contentBounds.width,contentBounds.height,-width/2,-height/2,width,height);else enemyModelCtx.drawImage(renderImage,-width/2,-height/2,width,height);enemyModelCtx.restore();
- // Boss 贴图自身已经包含反应堆细节，不再叠加程序绘制的白色核心光点。
- if(!e.boss){const coreColor=e.bossGuard?'#ff79dc':e.type==='support'?'#5deaff':e.type==='sniper'||e.type==='raider'?'#ffe171':e.type==='carrier'||e.type==='jammer'?'#c477ff':e.type==='heavy'||e.type==='barrage'?'#ff9b45':'#ff526f';enemyCore(0,-3,Math.max(3.2,width*.075),coreColor,pulse)}return true;
+ // 敌机贴图已经包含各自的座舱与反应堆细节，不再额外覆盖统一白色核心光点。
+ return true;
 }
 function drawEnemyShip(e,targetCtx=null){
  const previousEnemyModelCtx=enemyModelCtx;if(targetCtx)enemyModelCtx=targetCtx;

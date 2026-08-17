@@ -1,9 +1,9 @@
-const CACHE='iw-cache-10.0.2-jammer-spacing-v50';
+const CACHE='iw-cache-10.0.3-shield-circle-v51';
 const ASSETS=[
   './',
   './index.html',
-  './style.css?v=10.0.2',
-  './game.js?v=10.0.2',
+  './style.css?v=10.0.3',
+  './game.js?v=10.0.3',
   './manifest.webmanifest',
   './apple-touch-icon.png',
   './favicon.png',

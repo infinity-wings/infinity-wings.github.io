@@ -182,12 +182,17 @@ function enemyHitRadius(enemy){
  const byType={scout:25,heavy:32,suicide:23,sniper:31,support:30,barrage:35,raider:23,carrier:41,jammer:30,boss:63};
  return byType[enemy.type]||Math.max(enemy.r||15,25);
 }
+function enemyShieldRadius(enemy){
+ const byType={scout:52,heavy:62,suicide:52,sniper:58,support:57,barrage:63,raider:53,carrier:68,jammer:57};
+ return byType[enemy.type]||enemyHitRadius(enemy)+12;
+}
 function enemyHitAxes(enemy,padding=0){
  if(enemy.boss)return {rx:(enemy.hitRx||88)+padding,ry:(enemy.hitRy||60)+padding};
+ if(enemy.shield>0){const radius=enemyShieldRadius(enemy)+padding;return {rx:radius,ry:radius}}
  const radius=enemyHitRadius(enemy)+padding;return {rx:radius,ry:radius};
 }
 function enemyHitTest(enemy,x,y,padding=0){const {rx,ry}=enemyHitAxes(enemy,padding),dx=x-enemy.x,dy=y-enemy.y;return dx*dx/(rx*rx)+dy*dy/(ry*ry)<=1}
-function enemyHitHalfWidth(enemy){return enemy.boss?enemyHitAxes(enemy).rx:enemyHitRadius(enemy)}
+function enemyHitHalfWidth(enemy){return enemyHitAxes(enemy).rx}
 
 function spawnEnemy(){
  const bossActive=enemies.some(e=>e.boss);
@@ -195,6 +200,7 @@ function spawnEnemy(){
  const cap=enemyCap();
  if(enemies.length>=cap)return;
  let type=chooseEnemyType();for(let tries=0;tries<6&&!canSpawnEnemyType(type);tries++)type=chooseEnemyType();if(!canSpawnEnemyType(type))type='scout';
+ if(type==='jammer'&&cap-enemies.length<2)type='heavy';
  if(type==='jammer'){
   const threat=threatLevel(),count=threat>=5&&Math.random()<.42?3:2,group=`jammer-${elapsed.toFixed(3)}-${Math.random().toString(36).slice(2,6)}`,diagonal=Math.random()<.5,desired=count===3?155+Math.random()*30:190+Math.random()*40,safeMargin=35,spacing=Math.min(desired,Math.max(110,(W-safeMargin*2)/(count-1))),halfWidth=spacing*(count-1)/2,centerMin=safeMargin+halfWidth,centerMax=W-safeMargin-halfWidth,center=centerMax>centerMin?centerMin+Math.random()*(centerMax-centerMin):W/2,baseY=diagonal?-112:-55;
   for(let slot=0;slot<count&&enemies.length<cap;slot++){const unit=battleEventSystem.decorateSpawnedEnemy(makeEnemy('jammer')),verticalOffset=diagonal?(count===2?(slot===0?-45:45):(slot===1?50:-42)):0;unit.x=Math.max(safeMargin,Math.min(W-safeMargin,center+(slot-(count-1)/2)*spacing));unit.y=baseY+verticalOffset;unit.jammerGroup=group;unit.jammerSlot=slot;unit.jammerFormation=diagonal?'diagonal':'horizontal';enemies.push(unit);battleEventSystem.spawnMirrorPartner(unit)}

@@ -767,8 +767,8 @@ function suicideBlast(e){
 }
 function enemyReward(e){
  if(e.rewardless||e.eventMeteor)return [0,0];
- if(e.boss){const tier=e.bossStage||1;if(e.projectionBoss)return [1100*tier,180+tier*75];return [2500*tier+(e.finalBoss?10000:0),300+tier*180+(e.awakenedBoss?260:0)]}
- const data={scout:[30,7],heavy:[80,17],sniper:[65,13],suicide:[55,11],support:[95,18],barrage:[110,21],raider:[60,12],carrier:[145,26],jammer:[90,17]};
+ if(e.boss){const tier=e.bossStage||1;if(e.projectionBoss)return [100,180+tier*75];return [100,300+tier*180+(e.awakenedBoss?260:0)]}
+ const data={scout:[1,7],heavy:[2,17],sniper:[2,13],suicide:[2,11],support:[2,18],barrage:[3,21],raider:[3,12],carrier:[5,26],jammer:[3,17]};
  return [...(data[e.type]||[30,8])];
 }
 function spawnExperienceFragments(e,total){

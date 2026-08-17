@@ -123,13 +123,13 @@ function makeEnemy(type,side=false){
  const sideEntry=side||type==='raider'||type==='suicide',fromLeft=sideEntry&&Math.random()<.5;
  const base={x:sideEntry?(fromLeft?-30:W+30):35+Math.random()*(W-70),y:sideEntry?70+Math.random()*Math.min(250,H*.38):-35,type,r:15,hp:25,max:25,v:120,shoot:1200+Math.random()*700,age:0,dir:fromLeft?1:-1,shield:0,maxShield:0};
  if(type==='heavy')Object.assign(base,{r:23,hp:95+t*12,max:95+t*12,v:42,shoot:1550});
- if(type==='suicide'){const suicideHp=68+t*12;Object.assign(base,{r:14,hp:suicideHp,max:suicideHp,v:145,shoot:99999,warning:0,fuse:null,fuseDuration:2.1,sideEntry:true})}
+ if(type==='suicide'){const suicideHp=68+t*12;Object.assign(base,{r:14,hp:suicideHp,max:suicideHp,v:130,shoot:99999,warning:0,fuse:null,fuseDuration:1.35,suicidePhase:'entry',heading:fromLeft?0:Math.PI,dashSpeed:265,sideEntry:true})}
  if(type==='sniper')Object.assign(base,{r:16,hp:44+t*8,max:44+t*8,v:42,shoot:1350,sniperAim:null,sniperAimDuration:2,sniperLockWindow:.8});
  if(type==='support')Object.assign(base,{r:18,hp:72+t*10,max:72+t*10,v:48,shoot:99999,supportCd:.4});
  if(type==='barrage')Object.assign(base,{r:22,hp:105+t*14,max:105+t*14,v:38,shoot:1500});
  if(type==='raider')Object.assign(base,{r:14,hp:36+t*6,max:36+t*6,v:205+power*2,shoot:850,sideEntry:true});
  if(type==='carrier')Object.assign(base,{r:27,hp:165+t*18,max:165+t*18,v:34,shoot:1750,spawnCount:3});
- if(type==='jammer')Object.assign(base,{r:17,hp:62+t*9,max:62+t*9,v:46,shoot:1250});
+ if(type==='jammer')Object.assign(base,{r:17,hp:62+t*9,max:62+t*9,v:135+Math.max(0,t-3)*10,shoot:999999,jammerGroup:null,jammerSlot:0,jammerNetDelay:.4});
  const enemy=applyEnemyDurability(base);
  if(typeof markEnemyEncounter==='function')markEnemyEncounter(enemy.type);
  return enemy;
@@ -195,16 +195,19 @@ function spawnEnemy(){
  const cap=enemyCap();
  if(enemies.length>=cap)return;
  let type=chooseEnemyType();for(let tries=0;tries<6&&!canSpawnEnemyType(type);tries++)type=chooseEnemyType();if(!canSpawnEnemyType(type))type='scout';
- const primary=battleEventSystem.decorateSpawnedEnemy(makeEnemy(type,type==='raider'));enemies.push(primary);battleEventSystem.spawnMirrorPartner(primary);
+ if(type==='jammer'){
+  const threat=threatLevel(),count=threat>=5&&Math.random()<.42?3:2,group=`jammer-${elapsed.toFixed(3)}-${Math.random().toString(36).slice(2,6)}`,spacing=count===3?88:106,center=70+Math.random()*Math.max(40,W-140);
+  for(let slot=0;slot<count&&enemies.length<cap;slot++){const unit=battleEventSystem.decorateSpawnedEnemy(makeEnemy('jammer'));unit.x=Math.max(30,Math.min(W-30,center+(slot-(count-1)/2)*spacing));unit.y=-42-Math.abs(slot-(count-1)/2)*10;unit.jammerGroup=group;unit.jammerSlot=slot;enemies.push(unit);battleEventSystem.spawnMirrorPartner(unit)}
+ }else{const primary=battleEventSystem.decorateSpawnedEnemy(makeEnemy(type,type==='raider'));enemies.push(primary);battleEventSystem.spawnMirrorPartner(primary)}
  const power=combatPower(),rate=recentKillRate();
  const ramp=Math.min(1,Math.max(0,(elapsed-45)/120));
  const extraChance=Math.min(.52,.02+ramp*(power*.016+rate*.10));
  if(enemies.length<cap&&Math.random()<extraChance){
   const forcedHigh=Number.isInteger(build?.debugThreatLevel)&&build.debugThreatLevel>=4;
-  const primary=battleEventSystem.decorateSpawnedEnemy(makeEnemy(forcedHigh?chooseEnemyType():(Math.random()<.72?'scout':chooseEnemyType()),false));enemies.push(primary);battleEventSystem.spawnMirrorPartner(primary);
+  let extraType=forcedHigh?chooseEnemyType():(Math.random()<.72?'scout':chooseEnemyType());if(extraType==='jammer')extraType='heavy';const primary=battleEventSystem.decorateSpawnedEnemy(makeEnemy(extraType,false));enemies.push(primary);battleEventSystem.spawnMirrorPartner(primary);
  }
  if(level>=10&&elapsed>150&&power>12&&enemies.length<cap-2&&Math.random()<.08){
-  const burstType=Number.isInteger(build?.debugThreatLevel)&&build.debugThreatLevel>=4?chooseEnemyType():'scout';
+  let burstType=Number.isInteger(build?.debugThreatLevel)&&build.debugThreatLevel>=4?chooseEnemyType():'scout';if(burstType==='jammer')burstType='heavy';
   const first=battleEventSystem.decorateSpawnedEnemy(makeEnemy(burstType));enemies.push(first);battleEventSystem.spawnMirrorPartner(first);const second=battleEventSystem.decorateSpawnedEnemy(makeEnemy(burstType));enemies.push(second);battleEventSystem.spawnMirrorPartner(second);
  }
 }
@@ -473,8 +476,8 @@ function fireProjectionLaserVolley(){
  const inherited=projectionCoreLevel();if(inherited.coreId!=='laser')return;
  const stats=laserStats(inherited.level),awakening=projectionPrimaryAwakening();
  clonePositions().forEach((clone,index)=>{
-  const star=awakening?.id==='laser_star',reflect=awakening?.id==='laser_reflect',life=star?1.15:reflect?2.1:stats.duration;
-  bullets.push({laser:true,x:clone.x,y:0,w:star?20:reflect?7:stats.width*.72,h:clone.y-20,life,maxLife:life,d:(star?185:reflect?72:stats.dps)*clone.damageScale,level:inherited.level,source:'clone',awakening:awakening?.id||null,emitterOffset:0,emitterIndex:index,projectionInherited:true,visualNodes:Array(9).fill(clone.x)});
+  const star=awakening?.id==='laser_star',reflect=awakening?.id==='laser_reflect',life=star?2.2:reflect?2.1:stats.duration;
+  bullets.push({laser:true,x:clone.x,y:0,w:star?20:reflect?7:stats.width*.72,h:clone.y-20,life,maxLife:life,d:(star?140:reflect?72:stats.dps)*clone.damageScale,level:inherited.level,source:'clone',awakening:awakening?.id||null,emitterOffset:0,emitterIndex:index,projectionInherited:true,visualNodes:Array(9).fill(clone.x)});
  });
  if(clonePositions().length)shake=Math.max(shake,3);
 }
@@ -517,7 +520,7 @@ function updateProjectionInheritedSkills(dt){
   if(build.projectionMissileCd<=0){fireProjectionMissileVolley();const awakening=projectionPrimaryAwakening();build.projectionMissileCd=awakening?.id==='missile_cluster'?3.6:awakening?.id==='missile_hunter'?5.8:missileStats(inherited.level).cooldown;}
  }
  if(inherited.coreId==='laser'){
-  const state=build.projectionLaserState||{phase:'idle',timer:0},awakening=projectionPrimaryAwakening(),stats=laserStats(inherited.level),charge=awakening?.id==='laser_star'?1.15:awakening?.id==='laser_reflect'?.45:stats.charge,duration=awakening?.id==='laser_star'?1.15:awakening?.id==='laser_reflect'?2.1:stats.duration,cooldown=awakening?.id==='laser_star'?10:awakening?.id==='laser_reflect'?5.8:stats.cooldown;state.timer-=dt;
+ const state=build.projectionLaserState||{phase:'idle',timer:0},awakening=projectionPrimaryAwakening(),stats=laserStats(inherited.level),charge=awakening?.id==='laser_star'?.8:awakening?.id==='laser_reflect'?.45:stats.charge,duration=awakening?.id==='laser_star'?2.2:awakening?.id==='laser_reflect'?2.1:stats.duration,cooldown=awakening?.id==='laser_star'?10:awakening?.id==='laser_reflect'?5.8:stats.cooldown;state.timer-=dt;
   if(state.phase==='idle'||state.phase==='cooldown'&&state.timer<=0){state.phase='charging';state.timer=charge;state.total=state.timer;}
   else if(state.phase==='charging'&&state.timer<=0){fireProjectionLaserVolley();state.phase='firing';state.timer=duration;state.total=state.timer;}
   else if(state.phase==='firing'&&state.timer<=0){state.phase='cooldown';state.timer=cooldown;state.total=state.timer;}
@@ -1036,9 +1039,11 @@ function update(dt){
   else if(e.huntTarget){const targetY=Math.min(145,H*.2);e.y+=(targetY-e.y)*Math.min(1,dt*2.2);e.x+=e.dir*(e.enraged?36:25)*dt*slow;if(e.x<75||e.x>W-75)e.dir*=-1;}
   else if(e.type==='suicide'){
    const distance=Math.hypot(player.x-e.x,player.y-e.y);
-   if(e.fuse==null&&distance<250){e.fuse=e.fuseDuration||2.1;e.warning=1}
-   if(e.fuse!=null){e.fuse=Math.max(0,e.fuse-dt);const urgency=Math.max(0,1-e.fuse/(e.fuseDuration||2.1));const a=Math.atan2(player.y-e.y,player.x-e.x);const chargeSpeed=e.v+threat*7+urgency*95;e.x+=Math.cos(a)*chargeSpeed*dt*slow;e.y+=Math.sin(a)*chargeSpeed*dt*slow;const impactDistance=Math.hypot(player.x-e.x,player.y-e.y);if(impactDistance<48){damagePlayer(24);suicideBlast(e);explode(e.x,e.y);enemies.splice(i,1);if(dying)break;continue}}
-   else{const a=Math.atan2(player.y-e.y,player.x-e.x);e.x+=Math.cos(a)*(e.v+threat*7)*dt*slow;e.y+=Math.sin(a)*(e.v+threat*7)*dt*slow}
+   if(e.suicidePhase==='entry'&&distance<250){e.suicidePhase='tracking';e.fuse=e.fuseDuration||1.35;e.warning=1;e.heading=Math.atan2(player.y-e.y,player.x-e.x)}
+   if(e.suicidePhase==='entry'){const targetY=Math.max(70,Math.min(H*.64,player.y-110)),vertical=Math.max(-.42,Math.min(.42,(targetY-e.y)/180));e.x+=Math.cos(e.heading||0)*e.v*dt*slow;e.y+=vertical*e.v*dt*slow}
+   else if(e.suicidePhase==='tracking'){e.fuse=Math.max(0,e.fuse-dt);const desired=Math.atan2(player.y-e.y,player.x-e.x),current=Number.isFinite(e.heading)?e.heading:desired,diff=((desired-current+Math.PI*3)%(Math.PI*2))-Math.PI,maxTurn=Math.PI*(150/180)*dt;e.heading=current+Math.max(-maxTurn,Math.min(maxTurn,diff));const trackingProgress=1-e.fuse/(e.fuseDuration||1.35),trackingSpeed=e.v+35+trackingProgress*45;e.x+=Math.cos(e.heading)*trackingSpeed*dt*slow;e.y+=Math.sin(e.heading)*trackingSpeed*dt*slow;if(e.fuse<=0){e.suicidePhase='dash';e.warning=2}}
+   else{e.x+=Math.cos(e.heading)*(e.dashSpeed||265)*dt*slow;e.y+=Math.sin(e.heading)*(e.dashSpeed||265)*dt*slow}
+   const impactDistance=Math.hypot(player.x-e.x,player.y-e.y);if(e.suicidePhase!=='entry'&&impactDistance<34){damagePlayer(24);suicideBlast(e);explode(e.x,e.y);enemies.splice(i,1);if(dying)break;continue}
   }else if(e.type==='raider'){
    e.x+=e.dir*e.v*dt*slow;e.y+=34*dt*slow;
   }else if(e.type==='sniper'){
@@ -1050,9 +1055,14 @@ function update(dt){
     e.supportCd-=dt;if(e.supportCd<=0){e.supportCd=1.15;const shieldTargets=enemies.filter(ally=>ally!==e&&ally.type!=='support'&&ally.hp>0&&Math.hypot(ally.x-e.x,ally.y-e.y)<220).sort((a,b)=>Math.hypot(a.x-e.x,a.y-e.y)-Math.hypot(b.x-e.x,b.y-e.y)).slice(0,3);for(const ally of enemies)if(ally.supportShieldSource===e&&!shieldTargets.includes(ally)){ally.shield=0;ally.maxShield=0;ally.supportShieldSource=null;ally.supportShieldUntil=0}for(const ally of shieldTargets){ally.supportShieldSource=e;ally.supportShieldUntil=elapsed+1.35;ally.maxShield=Math.max(ally.maxShield||0,28+threat*4);ally.shield=Math.min(ally.maxShield,(ally.shield||0)+18+threat*3)}}
    }
   }
-  e.shoot-=dt*1000*slow;if(e.shoot<=0&&!e.boss&&!['suicide','support'].includes(e.type)){enemyShoot(e);if(e.type!=='sniper'||e.sniperAim==null)e.shoot=e.huntTarget?(e.enraged?560:760):enemyAttackInterval(e,threat)}
+  e.shoot-=dt*1000*slow;if(e.shoot<=0&&!e.boss&&!['suicide','support','jammer'].includes(e.type)){enemyShoot(e);if(e.type!=='sniper'||e.sniperAim==null)e.shoot=e.huntTarget?(e.enraged?560:760):enemyAttackInterval(e,threat)}
   if(!e.bossRetreating&&(e.boss?enemyHitTest(e,player.x,player.y,playerCombatRadius()):Math.hypot(player.x-e.x,player.y-e.y)<playerCombatRadius()+e.r)){damagePlayer(e.boss?30:e.type==='suicide'?28:16);if(e.type==='suicide')suicideBlast(e);explode(e.x,e.y);enemies.splice(i,1);if(dying)break;continue}
   if(e.y>H+50||e.x<-70||e.x>W+70)enemies.splice(i,1)
+ }
+ build.jammerNetHitCd=Math.max(0,(build.jammerNetHitCd||0)-dt);
+ if(build.jammerNetHitCd<=0){
+  const groups=new Map();for(const e of enemies)if(e.type==='jammer'&&e.jammerGroup&&e.age>=(e.jammerNetDelay||.4)&&e.hp>0){if(!groups.has(e.jammerGroup))groups.set(e.jammerGroup,[]);groups.get(e.jammerGroup).push(e)}
+  outer:for(const group of groups.values()){group.sort((a,b)=>a.jammerSlot-b.jammerSlot);for(let n=1;n<group.length;n++){const a=group[n-1],b=group[n];if(b.jammerSlot-a.jammerSlot!==1)continue;const dx=b.x-a.x,dy=b.y-a.y,len2=dx*dx+dy*dy||1,t=Math.max(0,Math.min(1,((player.x-a.x)*dx+(player.y-a.y)*dy)/len2)),distance=Math.hypot(player.x-(a.x+dx*t),player.y-(a.y+dy*t));if(distance<playerCombatRadius()+8){const shielded=(build.shieldLayers||0)>0;damagePlayer(4);if(!shielded){player.slowTimer=Math.max(player.slowTimer||0,1.2);toast('减速电网 · 动力输出下降')}build.jammerNetHitCd=.6;break outer}}}
  }
  for(let i=enemyLasers.length-1;i>=0;i--){
   const l=enemyLasers[i];l.life-=dt;

@@ -1,9 +1,9 @@
-const CACHE='iw-cache-9.09-suicide-speed-v47';
+const CACHE='iw-cache-9.09-special-enemies-v49';
 const ASSETS=[
   './',
   './index.html',
-  './style.css?v=9.09.10',
-  './game.js?v=9.09.10',
+  './style.css?v=9.09.12',
+  './game.js?v=9.09.12',
   './manifest.webmanifest',
   './apple-touch-icon.png',
   './favicon.png',

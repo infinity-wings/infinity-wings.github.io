@@ -4,7 +4,7 @@ const AWAKENING_DEFINITIONS = Object.freeze([
  {id:'main_rapid',coreId:'main',name:'裂阵速射炮',description:'以扇形一次发射7枚小型高速弹，覆盖正前方较宽区域，适合近距离压制与清理敌群。'},
  {id:'main_piercer',coreId:'main',name:'贯星重炮',description:'每1.55秒发射一枚大型贯穿重炮；单发伤害高、后坐明显，贯穿目标后继续增伤。'},
  {id:'laser_reflect',coreId:'laser',name:'折射光阵',description:'主光束命中后自动折射附近目标，最多连续折射四次。'},
- {id:'laser_star',coreId:'laser',name:'贯星光束',description:'长蓄力后发射超粗全屏光束，持续时间短但中心伤害极高。'},
+ {id:'laser_star',coreId:'laser',name:'贯星光束',description:'蓄力后发射持续2.2秒的超粗全屏光束，以稳定高能照射贯穿战场。'},
  {id:'drone_swarm',coreId:'drone',name:'蜂群编队',description:'部署八架小型无人机，分散索敌并进行高覆盖火力压制。'},
  {id:'drone_heavy',coreId:'drone',name:'重型护航机',description:'部署两架前置护航机，发射大口径高伤穿透炮，并在玩家前方展开完整圆弧屏障。'},
  {id:'missile_cluster',coreId:'missile',name:'集束蜂群',description:'中型导弹接近目标后裂解成多枚自动索敌的小型导弹。'},

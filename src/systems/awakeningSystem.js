@@ -31,7 +31,7 @@ class AwakeningSystem{
   const nearest=targets.sort((x,y)=>Math.hypot(x.x-player.x,x.y-player.y)-Math.hypot(y.x-player.x,y.y-player.y))[0];
   if(a.coreId==='main'){this.fireMainAwakening(a);return}
   if(a.id==='laser_star'){audioSystem?.play('laser');
-   bullets.push({laser:true,x:player.x,y:0,w:28,h:player.y-20,life:1.15,maxLife:1.15,d:185,source:'awakening',awakening:a.id});shake=14
+   bullets.push({laser:true,x:player.x,y:0,w:28,h:player.y-20,life:2.2,maxLife:2.2,d:140,source:'awakening',awakening:a.id});shake=14
   }
   if(a.id==='laser_reflect'){audioSystem?.play('laser');}
   if(a.id==='laser_reflect')bullets.push({laser:true,x:player.x,y:0,w:8,h:player.y-20,life:2.1,maxLife:2.1,d:72,source:'awakening',awakening:a.id});

@@ -123,7 +123,7 @@ function makeEnemy(type,side=false){
  const fromLeft=side&&Math.random()<.5;
  const base={x:side?(fromLeft?-30:W+30):35+Math.random()*(W-70),y:side?70+Math.random()*Math.min(250,H*.38):-35,type,r:15,hp:25,max:25,v:120,shoot:1200+Math.random()*700,age:0,dir:fromLeft?1:-1,shield:0,maxShield:0};
  if(type==='heavy')Object.assign(base,{r:23,hp:95+t*12,max:95+t*12,v:42,shoot:1550});
- if(type==='suicide')Object.assign(base,{r:14,hp:42+t*8,max:42+t*8,v:175,shoot:99999,warning:0,fuse:null,fuseDuration:2.1});
+ if(type==='suicide'){const suicideHp=68+t*12;Object.assign(base,{r:14,hp:suicideHp,max:suicideHp,v:175,shoot:99999,warning:0,fuse:null,fuseDuration:2.1})}
  if(type==='sniper')Object.assign(base,{r:16,hp:44+t*8,max:44+t*8,v:42,shoot:1350,aim:0});
  if(type==='support')Object.assign(base,{r:18,hp:72+t*10,max:72+t*10,v:48,shoot:99999,supportCd:.4});
  if(type==='barrage')Object.assign(base,{r:22,hp:105+t*14,max:105+t*14,v:38,shoot:1500});
@@ -490,8 +490,8 @@ function fireProjectionMissileVolley(){
 }
 function fireProjectionDroneVolley(){
  const inherited=projectionCoreLevel();if(inherited.coreId!=='drone')return;
- const awakening=projectionPrimaryAwakening(),stats=awakening?.id==='drone_swarm'?{count:8,damage:.23}:awakening?.id==='drone_heavy'?{count:2,damage:1.82,heavy:true}:[null,{count:2,damage:.5},{count:3,damage:.62},{count:4,damage:.75}][inherited.level];
- for(const clone of clonePositions())for(let shot=0;shot<stats.count;shot++){const offset=(shot-(stats.count-1)/2)*(stats.count>4?6:12);bullets.push({x:clone.x+offset,y:clone.y-38,vx:offset*.7,vy:stats.heavy?-610:-690,r:stats.heavy?9.4:2.8,d:player.damage*stats.damage*clone.damageScale,source:'clone',life:stats.heavy?3.4:2.4,pierce:stats.heavy?4:0,awakening:awakening?.id||null,projectionInherited:true})}
+ const awakening=projectionPrimaryAwakening(),stats=awakening?.id==='drone_swarm'?{count:8,damage:.3}:awakening?.id==='drone_heavy'?{count:2,damage:2.08,heavy:true}:[null,{count:2,damage:.5},{count:3,damage:.62},{count:4,damage:.75}][inherited.level];
+ for(const clone of clonePositions())for(let shot=0;shot<stats.count;shot++){const formation=droneFormationOffset(shot,stats.count,awakening?.id||'standard'),originX=clone.x+formation.x*.48,originY=clone.y+formation.y*.4,focus=awakening?.id==='drone_swarm'&&shot%4===3;bullets.push({x:originX,y:originY-13,vx:formation.x*.18,vy:stats.heavy?-610:-690,r:stats.heavy?9.4:focus?4.2:2.8,d:player.damage*stats.damage*(focus?1.75:1)*clone.damageScale,source:'drone',life:stats.heavy?3.4:2.4,pierce:stats.heavy?4:focus?1:0,awakening:awakening?.id||null,swarmFocus:focus,seek:focus?6.8:0,target:focus?nearestLivingEnemy(originX,originY):null,projectionInherited:true})}
 }
 function fireProjectionThunderVolley(){
  const inherited=projectionCoreLevel();if(inherited.coreId!=='thunder')return;
@@ -536,9 +536,9 @@ function syncAttackCoreState(){
  }
  if(drones.length>desired)drones.length=desired;
  const droneStats=droneAwakening?.id==='drone_swarm'
-  ?{fireRate:520,damageScale:.23,mode:'drone_swarm'}
+  ?{fireRate:440,damageScale:.3,mode:'drone_swarm'}
   :droneAwakening?.id==='drone_heavy'
-   ?{fireRate:1020,damageScale:1.82,mode:'drone_heavy'}
+   ?{fireRate:920,damageScale:2.08,mode:'drone_heavy'}
    :([null,{fireRate:340,damageScale:.5,mode:'standard'},{fireRate:300,damageScale:.62,mode:'standard'},{fireRate:260,damageScale:.75,mode:'standard'}][droneLevel]);
  if(droneStats)drones.forEach((d,i)=>Object.assign(d,droneStats,{slot:i}));
 }
@@ -559,9 +559,10 @@ function dronePosition(d){
 function droneShoot(d){
  const pos=dronePosition(d);
  if(d.mode==='drone_swarm'){
-  bullets.push({x:pos.x,y:pos.y-13,vx:0,vy:-690,r:2.1,d:player.damage*(d.damageScale||.23),source:'drone',awakening:'drone_swarm',life:2.3});
+  d.shotCount=(d.shotCount||0)+1;const focus=d.shotCount%4===0;
+  bullets.push({x:pos.x,y:pos.y-13,vx:0,vy:-690,r:focus?4.2:2.1,d:player.damage*(d.damageScale||.3)*(focus?1.75:1),source:'drone',awakening:'drone_swarm',swarmFocus:focus,seek:focus?6.8:0,target:focus?nearestLivingEnemy(pos.x,pos.y):null,pierce:focus?1:0,life:2.3});
  }else if(d.mode==='drone_heavy'){
-  bullets.push({x:pos.x,y:pos.y-22,vx:(d.slot===0?8:-8),vy:-610,r:9.4,d:player.damage*(d.damageScale||1.82),source:'drone',awakening:'drone_heavy',pierce:4,life:3.4});
+  bullets.push({x:pos.x,y:pos.y-22,vx:(d.slot===0?8:-8),vy:-610,r:9.4,d:player.damage*(d.damageScale||2.08),source:'drone',awakening:'drone_heavy',pierce:4,life:3.4});
   shake=Math.max(shake,2.5);
  }else{
   bullets.push(applyBlastPayload({x:pos.x,y:pos.y-15,vx:0,vy:-610,r:2.8,d:player.damage*(d.damageScale||.45),source:'drone'}));
@@ -1008,6 +1009,7 @@ function update(dt){
  if(!build.firstEliteSpawned&&elapsed>=50&&!enemies.some(e=>e.boss)&&!battleEventSystem.active){build.firstEliteSpawned=true;enemies.push(makeEnemy('heavy'))}
  spawnCd-=dt;if(spawnCd<=0){const bossActive=enemies.some(e=>e.boss);if(!bossActive)spawnEnemy();const gradual=Math.min(.48,elapsed/1800+Math.max(0,level-1)*.012);const pressure=Math.min(.18,combatPower()*.004+recentKillRate()*.03);spawnCd=bossActive?.5:Math.max(.30,1.18-gradual-pressure)}maybeSpawnStageBoss(dt);
  const timeLevel=coreManager.getLevel('time');const slow=(build.awakeTimeStop||0)>0?.015:(build.chronoActive>0?(timeLevel===3?.02:.42):1);
+ for(const b of bullets)if(b.swarmFocus){if(!b.target||b.target.hp<=0||!enemies.includes(b.target))b.target=nearestLivingEnemy(b.x,b.y);if(b.target){const dx=b.target.x-b.x,dy=b.target.y-b.y,len=Math.hypot(dx,dy)||1,speed=Math.hypot(b.vx,b.vy)||690,turn=Math.min(1,(b.seek||6.8)*dt);b.vx+=(dx/len*speed-b.vx)*turn;b.vy+=(dy/len*speed-b.vy)*turn}}
  for(let i=bullets.length-1;i>=0;i--){const b=bullets[i];if(b.laser){b.life-=dt;const emitter=b.source==='clone'?clonePositions()[b.emitterIndex||0]:player;if(emitter){const targetX=emitter.x+(b.emitterOffset||0);b.x=targetX;b.h=emitter.y-20;if(!Array.isArray(b.visualNodes)||b.visualNodes.length!==9)b.visualNodes=Array(9).fill(targetX);b.visualNodes[0]=targetX;for(let n=1;n<b.visualNodes.length;n++){const source=b.visualNodes[n-1],follow=1-Math.exp(-(13-n*.72)*dt);b.visualNodes[n]+=(source-b.visualNodes[n])*follow}}for(let j=enemies.length-1;j>=0;j--){const e=enemies[j];if(Math.abs(e.x-b.x)<b.w+enemyHitHalfWidth(e)&&e.y<(emitter?emitter.y:player.y)){const killed=damageEnemy(e,b.d*dt,{piercing:true});if(b.awakening==='laser_reflect'&&Math.random()<dt*7){const others=enemies.filter(x=>x!==e&&Math.hypot(x.x-e.x,x.y-e.y)<180).slice(0,4);let from=e;for(const target of others){createLightningArc(from,target,2);if(damageEnemy(target,b.d*dt*.65)){const idx=enemies.indexOf(target);if(idx>=0)enemies.splice(idx,1)}from=target}}if(killed)enemies.splice(j,1)}}if(b.life<=0||!emitter)bullets.splice(i,1);continue}if(b.isSplit){b.life-=dt;if(b.life<=0){bullets.splice(i,1);continue}}if(b.awakening==='blast_chain'){if(!Number.isFinite(b.life)){b.life=1.1;b.maxLife=1.1}if(!b.isSplit){b.life-=dt;if(b.life<=0){bullets.splice(i,1);continue}}if(!b.target||b.target.hp<=0||!enemies.includes(b.target)){b.target=nearestLivingEnemy(b.x,b.y)}if(b.target){const dx=b.target.x-b.x,dy=b.target.y-b.y,len=Math.hypot(dx,dy)||1,speed=Math.hypot(b.vx,b.vy)||500,turn=Math.min(1,(b.seek||7.5)*dt);b.vx+=(dx/len*speed-b.vx)*turn;b.vy+=(dy/len*speed-b.vy)*turn}}b.x+=b.vx*dt;b.y+=b.vy*dt;if(b.y<-30||b.y>H+30||b.x<-30||b.x>W+30){bullets.splice(i,1);continue}for(let j=enemies.length-1;j>=0;j--){const e=enemies[j];if(enemyHitTest(e,b.x,b.y,b.r)){const hitX=e.x,hitY=e.y;if(b.awakening==='blast_chain'&&b.splitMark){e.blastAwakeMarks=(e.blastAwakeMarks||0)+1;if(e.blastAwakeMarks>=3){e.blastAwakeMarks=0;blastWaves.push({x:e.x,y:e.y,life:.28,maxLife:.28,radius:6,prevRadius:0,maxRadius:72,absorbed:0,temporalCollapse:true});for(const other of [...enemies])if(other!==e&&Math.hypot(other.x-e.x,other.y-e.y)<72)damageEnemy(other,34)}}const killed=damageEnemy(e,b.d,{piercing:(b.pierce||0)>0});if(killed){enemies.splice(j,1);if(b.blastLevel&&!b.isSplit)spawnSplitBullets(hitX,hitY,b.d,b.blastLevel);if(b.awakening==='blast_chain'&&b.chainDepth<2)awakeningSystem.spawnChainSplit?.(hitX,hitY,b.d,b.chainDepth+1)}if(b.thunderLevel)triggerThunder({x:hitX,y:hitY},b.d,b.thunderLevel,b.blastLevel&&!b.isSplit?b.blastLevel:0,e);if(b.pierce>0){b.pierce--;b.d*=1.08;break}else{bullets.splice(i,1);break}}}}
  for(let i=missiles.length-1;i>=0;i--){
   const m=missiles[i];m.life-=dt;m.trail-=dt;

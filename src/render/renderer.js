@@ -186,7 +186,8 @@ function draw(){
     const speed=Math.hypot(b.vx,b.vy)||1,ux=b.vx/speed,uy=b.vy/speed;
     const trail=ctx.createLinearGradient(b.x-ux*30,b.y-uy*30,b.x,b.y);trail.addColorStop(0,'rgba(67,184,255,0)');trail.addColorStop(1,'rgba(190,252,255,.9)');ctx.strokeStyle=trail;ctx.lineWidth=5.5;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(b.x-ux*30,b.y-uy*30);ctx.lineTo(b.x-ux*5,b.y-uy*5);ctx.stroke();
     ctx.shadowBlur=20;ctx.shadowColor='#61eaff';ctx.fillStyle='#dffeff';ctx.beginPath();ctx.ellipse(b.x,b.y-7,5.2,13.5,0,0,Math.PI*2);ctx.fill();ctx.fillStyle='#59cfff';ctx.beginPath();ctx.ellipse(b.x,b.y-8,2.6,8.5,0,0,Math.PI*2);ctx.fill();
-   }else{ctx.shadowBlur=9;ctx.shadowColor='#58d9ff';ctx.fillStyle='#baf6ff';ctx.beginPath();ctx.ellipse(b.x,b.y-5,2.2,6.5,0,0,Math.PI*2);ctx.fill();}
+   }else if(b.swarmFocus){ctx.shadowBlur=18;ctx.shadowColor='#7be8ff';ctx.strokeStyle='rgba(134,113,255,.75)';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(b.x,b.y+15);ctx.lineTo(b.x,b.y+2);ctx.stroke();ctx.fillStyle='#ecffff';ctx.beginPath();ctx.moveTo(b.x,b.y-12);ctx.lineTo(b.x-4.5,b.y+2);ctx.lineTo(b.x,b.y+7);ctx.lineTo(b.x+4.5,b.y+2);ctx.closePath();ctx.fill();}
+   else{ctx.shadowBlur=9;ctx.shadowColor='#58d9ff';ctx.fillStyle='#baf6ff';ctx.beginPath();ctx.ellipse(b.x,b.y-5,2.2,6.5,0,0,Math.PI*2);ctx.fill();}
    ctx.restore();
   }else if(b.source==='split'){
    const angle=Math.atan2(b.vy,b.vx)+Math.PI/2,level=b.splitLevel||1,pulse=.82+.18*Math.sin(elapsed*25+b.x*.03);
@@ -260,10 +261,14 @@ function draw(){
  try{drawHeavyEscortShield()}catch(error){console.warn('护航盾绘制已跳过',error)}
  try{drawAwakenedFrontShield()}catch(error){console.warn('前盾绘制已跳过',error)}
  if(!dying){for(const clone of clonePositions()){try{ctx.save();ctx.globalAlpha=finite(clone.alpha,.54);drawShip(finite(clone.x,player.x),finite(clone.y,player.y),clone.color||'#b474ff',clone)}catch(error){console.warn('投影绘制已跳过',error,clone)}finally{ctx.restore()}}}
+ if(!dying&&(build.projectionActive||0)>0&&projectionCoreLevel()?.coreId==='drone'){
+  const inherited=projectionCoreLevel(),awake=projectionPrimaryAwakening(),mode=awake?.id||'standard',fullCount=awake?.id==='drone_swarm'?8:awake?.id==='drone_heavy'?2:([0,2,3,4][inherited.level]||0),visibleCount=Math.min(4,fullCount);
+  for(const clone of clonePositions())for(let slot=0;slot<visibleCount;slot++){const offset=droneFormationOffset(slot,fullCount,mode);try{ctx.save();ctx.globalAlpha=.46;drawDrone({x:clone.x+offset.x*.48,y:clone.y+offset.y*.4,slot,mode,bank:0,recoil:0})}finally{ctx.restore()}}
+ }
  if(!dying&&player&&Number.isFinite(player.x)&&Number.isFinite(player.y)){try{withRenderState('玩家模型',()=>drawShip(player.x,player.y,'#5ce1ff'))}catch(error){console.warn('玩家模型绘制已跳过',error)}}
  for(const d of drones){try{withRenderState('无人机模型',()=>drawDrone(d))}catch(error){console.warn('无人机绘制已跳过',error,d)}}
  try{battleEventSystem.draw();battleEventSystem.drawMeteorTextures();battleEventSystem.drawMeteorWarnings()}catch(error){console.warn('随机事件绘制已跳过',error)}
- try{awakeningSystem.draw()}catch(error){console.warn('觉醒效果绘制已跳过',error)}
+ try{const originalStroke=ctx.stroke,suppressed={count:awakeningSystem.getActive().length};ctx.stroke=function(...args){if(suppressed.count>0){suppressed.count--;return}return originalStroke.apply(this,args)};try{awakeningSystem.draw()}finally{ctx.stroke=originalStroke}}catch(error){console.warn('觉醒效果绘制已跳过',error)}
  if(deathFade>0){ctx.fillStyle=`rgba(0,0,0,${deathFade})`;ctx.fillRect(0,0,W,H)}
  }catch(error){
   console.error('战斗渲染层已自动恢复',error);

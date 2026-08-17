@@ -1002,7 +1002,7 @@ body.touch-device .top-run-timer{
 .hologram-start.unavailable{opacity:.48;filter:saturate(.4)}
 
 /* Alpha 9.07.2 · deployment choices above, utility navigation below */
-#menuScreen .menu-game-grid{order:1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;width:100%}
+#menuScreen .menu-game-grid{order:1;display:grid;grid-template-columns:1fr;gap:10px;width:100%}
 #menuScreen .menu-game-action{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:0;height:70px;padding:8px;border:1px solid rgba(90,205,239,.42);background:linear-gradient(180deg,rgba(8,36,59,.78),rgba(3,17,32,.66));color:#effdff;clip-path:polygon(0 0,calc(100% - 12px) 0,100% 12px,100% 100%,12px 100%,0 calc(100% - 12px));box-shadow:inset 0 0 18px rgba(57,190,232,.07);cursor:pointer}
 #menuScreen .menu-game-action:before{content:"";position:absolute;left:12%;right:12%;top:0;height:1px;background:linear-gradient(90deg,transparent,#64e7ff,transparent)}
 #menuScreen .menu-game-action span{font:600 clamp(16px,4vw,23px)/1.1 system-ui,-apple-system,"PingFang SC",sans-serif;letter-spacing:.12em;text-shadow:0 0 12px rgba(105,224,255,.36);white-space:nowrap}
@@ -1011,6 +1011,20 @@ body.touch-device .top-run-timer{
 #menuScreen .menu-secondary-grid{order:2!important;margin-top:1px;border-top:1px solid rgba(76,180,214,.25)}
 #menuScreen .menu-project-mark{order:3!important}
 @media(max-width:460px){#menuScreen .menu-game-grid{gap:7px}#menuScreen .menu-game-action{height:64px}#menuScreen .menu-game-action span{font-size:16px;letter-spacing:.08em}}
+
+/* Alpha 9.09.4 · three-slot save archive */
+.save-select-screen{background:radial-gradient(circle at 50% 24%,rgba(24,95,139,.24),rgba(1,7,17,.96) 68%)}
+.save-select-panel{position:relative;width:min(88vw,520px);max-height:min(88vh,760px);overflow:auto}
+.save-select-panel .panel-back{position:absolute;right:24px;top:24px}
+.save-select-hint{margin:16px 0;color:#8faebf;font-size:12px;line-height:1.65}
+.save-slot-list{display:grid;gap:10px}
+.save-slot{position:relative;display:grid;grid-template-columns:52px 1fr auto;align-items:center;gap:12px;min-height:88px;padding:13px 14px;border:1px solid rgba(67,164,202,.4);background:linear-gradient(90deg,rgba(8,42,66,.86),rgba(3,20,38,.78));color:#dff8ff;text-align:left}
+.save-slot:not(.empty){cursor:pointer}.save-slot.active{border-color:#69e8ff;box-shadow:inset 3px 0 0 #5be6ff,0 0 18px rgba(63,211,255,.12)}
+.save-slot-number{color:#5fdbf6;font:800 12px/1 ui-monospace,monospace;letter-spacing:.08em}
+.save-slot-main b,.save-slot-main span,.save-slot-main small{display:block}.save-slot-main b{font-size:16px;letter-spacing:.08em}.save-slot-main span{margin-top:6px;color:#91b3c4;font-size:11px}.save-slot-main small{margin-top:4px;color:#63869a;font-size:9px}.save-slot.empty .save-slot-main b{color:#718d9c}.save-slot.empty .save-slot-main span{color:#4e6978}
+.save-slot-delete{min-width:56px;height:32px;border:1px solid rgba(173,76,93,.55);background:rgba(56,15,28,.56);color:#ffabb9;font-size:10px}
+.save-new-action{width:100%;min-height:68px;margin-top:14px;text-align:center;align-items:center}
+@media(max-width:520px){.save-select-panel{width:92vw;padding:20px 16px}.save-select-panel .panel-back{right:16px;top:18px}.save-slot{grid-template-columns:38px 1fr auto;gap:8px;padding:11px 10px}.save-slot-main b{font-size:14px}}
 @media(max-height:760px){.chapter-progress{padding:5px 10px}.chapter-locks{display:none}.continue-action{padding:4px 10px}.save-management{margin-top:9px}}
 @media(max-width:700px){.home-credits{left:12px;right:12px;bottom:10px;gap:5px;font-size:7px;letter-spacing:.07em}.home-credits i{margin:0 1px}}
 

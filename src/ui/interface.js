@@ -123,11 +123,23 @@ let settingsReturnState='menu';
 function refreshChapterMenu(){
  $('#startButton').disabled=false;
  $('#startButton').classList.remove('unavailable');
- $('#startButton span').textContent='继续游戏';
- const checkpoint=IWSave.data.runCheckpoint;
- $('#startButton small').textContent=checkpoint?`检查点 ${formatRunTime(checkpoint.elapsed)}`:'开始当前行动';
+ const hasSaves=IWSave.hasAnySlot();
+ $('#startButton span').textContent=hasSaves?'继续游戏':'开始游戏';
+ $('#startButton small').textContent=hasSaves?'SELECT SAVE':'START GAME';
  refreshSaveStatus();
 }
+function saveSlotSummary(save){
+ if(!save)return null;
+ const checkpoint=save.runCheckpoint,threat=Math.max(1,(save.progression?.highestThreat||0)+1),time=checkpoint?formatRunTime(checkpoint.elapsed||0):'暂无行动检查点';
+ return {title:checkpoint?'行动进行中':save.story?.chapterOneCompleted?'已完成第一阶段行动':'作战档案已建立',detail:`危险等级 ${THREAT_ROMAN[Math.min(5,threat-1)]} · 战机 ${(save.progression?.fighters||['infinity']).length}/5`,time};
+}
+function renderSaveSlots(){
+ const list=$('#saveSlotList');if(!list)return;const slots=IWSave.listSlots();
+ list.innerHTML=slots.map((save,index)=>{const slot=index+1,summary=saveSlotSummary(save),active=IWSave.activeSlot===slot;if(!summary)return `<article class="save-slot empty"><span class="save-slot-number">SLOT ${slot}</span><span class="save-slot-main"><b>空存档</b><span>可用于开始新的行动</span></span></article>`;return `<article class="save-slot ${active?'active':''}" data-save-slot="${slot}" tabindex="0" role="button"><span class="save-slot-number">SLOT ${slot}</span><span class="save-slot-main"><b>${summary.title}</b><span>${summary.detail}</span><small>${summary.time} · ${new Date(save.updatedAt).toLocaleString('zh-CN')}</small></span><button class="save-slot-delete" type="button" data-delete-slot="${slot}">删除</button></article>`}).join('');
+ list.querySelectorAll('[data-save-slot]').forEach(card=>{const activate=()=>{const slot=Number(card.dataset.saveSlot);if(!IWSave.activateSlot(slot))return;pilotId=IWSave.data.profile.pilotId;refreshChapterMenu();requestSortie(()=>IWSave.data.runCheckpoint?beginGame(true):IWSave.data.story.introSeen?beginGame(false):startStory())};card.onclick=e=>{if(e.target.closest('[data-delete-slot]'))return;activate()};card.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();activate()}}});
+ list.querySelectorAll('[data-delete-slot]').forEach(button=>button.onclick=e=>{e.stopPropagation();const slot=Number(button.dataset.deleteSlot);if(!confirm(`确定删除存档 ${slot} 吗？此操作无法撤销。`))return;IWSave.deleteSlot(slot);renderSaveSlots();refreshChapterMenu();toast(`存档 ${slot} 已删除`,'important')});
+}
+function createNewSave(){const empty=IWSave.listSlots().findIndex(save=>!save);if(empty<0){toast('三个存档槽位已满，请先删除一个旧存档','important');return}IWSave.createSlot(empty+1);pilotId=IWSave.data.profile.pilotId;refreshChapterMenu();requestSortie(()=>startStory())}
 function createRunCheckpoint(){
  if(!running||!player||!build)return null;
  const boss=enemies.some(e=>e.boss),snapshot={schema:1,elapsed:Math.floor(elapsed),score,level,xp,nextXp,bombs,player:{hp:Math.max(1,Math.ceil(player.hp)),maxHp:player.maxHp},cores:coreManager.createSnapshot(),awakenings:awakeningSystem.getActive().map(a=>a.id),build:{bossClearedTier:build.bossClearedTier,bossDirectorTier:build.bossDirectorTier,bossDirectorIndex:build.bossDirectorIndex,bossDirectorProgress:boss?8:build.bossDirectorProgress,bossesDefeated:build.bossesDefeated,barrierCharge:build.barrierCharge,shieldLayers:build.shieldLayers,lastLandmarkThreat:build.lastLandmarkThreat}};
@@ -351,7 +363,7 @@ UI.barrierBox?.setAttribute('role','button');UI.barrierBox?.setAttribute('tabind
 const activateHudBarrier=e=>{if(e){e.preventDefault();e.stopPropagation()}if(touchDevice&&state==='game'&&running&&!paused&&!dying)pulse()};
 UI.barrierBox?.addEventListener('pointerup',activateHudBarrier,{passive:false});
 UI.barrierBox?.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&touchDevice)activateHudBarrier(e)});
-$('#startButton').onclick=()=>requestSortie(()=>beginGame(Boolean(IWSave.data.runCheckpoint)));$('#newGameButton').onclick=()=>requestSortie(()=>{IWSave.clearCheckpoint();IWSave.markIntroSeen();refreshChapterMenu();startStory()});$('#fighterSelectBack').onclick=()=>{pendingSortieAction=null;showScreen(UI.menu)};$('#fighterDeployButton').onclick=()=>{IWSave.selectFighter(pendingFighterId);const action=pendingSortieAction;pendingSortieAction=null;if(action)action()};const skipStoryButton=$('#skipStory');const skipStoryNow=e=>{if(e){e.preventDefault();e.stopPropagation()}IWSave.markIntroSeen();beginGame()};skipStoryButton.onclick=skipStoryNow;skipStoryButton.addEventListener('pointerup',skipStoryNow);skipStoryButton.addEventListener('touchend',skipStoryNow,{passive:false});$('#storyRoll').addEventListener('animationend',()=>{IWSave.markIntroSeen();beginGame()});$('#syncRestartButton').onclick=()=>{pilotId++;localStorage.setItem('infinityWingsPilotIdV2',String(pilotId));IWSave.data.profile.pilotId=pilotId;IWSave.clearCheckpoint();$('#archiveCloneCount').textContent='当前驾驶员编号：#'+String(pilotId).padStart(6,'0');beginGame()};$('#deathMenuButton').onclick=returnToTitle;$('#bombButton').onclick=pulse;
+$('#startButton').onclick=()=>{if(!IWSave.hasAnySlot()){createNewSave();return}renderSaveSlots();showScreen(UI.saveSelect)};$('#saveSelectBack').onclick=()=>{refreshChapterMenu();showScreen(UI.menu)};$('#createNewSaveButton').onclick=createNewSave;$('#fighterSelectBack').onclick=()=>{pendingSortieAction=null;if(IWSave.hasAnySlot()){renderSaveSlots();showScreen(UI.saveSelect)}else showScreen(UI.menu)};$('#fighterDeployButton').onclick=()=>{IWSave.selectFighter(pendingFighterId);const action=pendingSortieAction;pendingSortieAction=null;if(action)action()};const skipStoryButton=$('#skipStory');const skipStoryNow=e=>{if(e){e.preventDefault();e.stopPropagation()}IWSave.markIntroSeen();beginGame()};skipStoryButton.onclick=skipStoryNow;skipStoryButton.addEventListener('pointerup',skipStoryNow);skipStoryButton.addEventListener('touchend',skipStoryNow,{passive:false});$('#storyRoll').addEventListener('animationend',()=>{IWSave.markIntroSeen();beginGame()});$('#syncRestartButton').onclick=()=>{pilotId++;localStorage.setItem('infinityWingsPilotIdV2',String(pilotId));IWSave.data.profile.pilotId=pilotId;IWSave.clearCheckpoint();$('#archiveCloneCount').textContent='当前驾驶员编号：#'+String(pilotId).padStart(6,'0');beginGame()};$('#deathMenuButton').onclick=returnToTitle;$('#bombButton').onclick=pulse;
 $('#archiveButton').onclick=()=>{showScreen(UI.archive);$('#archiveCloneCount').textContent='当前驾驶员编号：#'+String(pilotId).padStart(6,'0');renderArchiveHome()};document.querySelectorAll('[data-archive-view]').forEach(button=>button.onclick=()=>renderArchiveView(button.dataset.archiveView));$('#archiveBack').onclick=renderArchiveHome;$('#settingsButton').onclick=()=>{settingsReturnState='menu';showScreen(UI.settings);refreshPauseToggles()};
 $('#hangarButton').onclick=()=>{renderHangar();showScreen(UI.hangar)};
 document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>showScreen(UI.menu));
@@ -360,7 +372,7 @@ $('#migrationConfirmButton').onclick=()=>{IWSave.migrate();pilotId=IWSave.data.p
 $('#exportSaveButton').onclick=()=>{const blob=new Blob([IWSave.export()],{type:'application/json'}),link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download=`infinity-wings-save-${new Date().toISOString().slice(0,10)}.json`;link.click();setTimeout(()=>URL.revokeObjectURL(link.href),500);toast('永久存档已导出')};
 $('#importSaveButton').onclick=()=>$('#importSaveFile').click();
 $('#importSaveFile').onchange=async e=>{const file=e.target.files?.[0];if(!file)return;try{IWSave.import(await file.text());pilotId=IWSave.data.profile.pilotId;refreshChapterMenu();toast('永久存档导入成功','important')}catch(error){toast(error.message||'存档导入失败','important')}e.target.value=''};
-$('#clearSaveButton').onclick=()=>{if(!confirm('确定清除永久存档吗？此操作无法撤销。'))return;if(!confirm('再次确认：章节、图鉴与行动记录都会被清除。'))return;IWSave.clear();pilotId=1;localStorage.setItem('infinityWingsPilotIdV2','1');refreshChapterMenu();toast('永久存档已清除','important')};
+$('#clearSaveButton').onclick=()=>{if(!confirm('确定清除当前存档吗？此操作无法撤销。'))return;if(!confirm('再次确认：当前槽位的章节、图鉴与行动记录都会被清除。'))return;IWSave.clear();pilotId=1;localStorage.setItem('infinityWingsPilotIdV2','1');refreshChapterMenu();toast('当前存档已清除','important')};
 addEventListener('keydown',e=>{
  if(uiPrefs.controlMode==='keyboard'||touchDevice)keys[e.key]=true;
  if(state==='core'){

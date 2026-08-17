@@ -1,9 +1,9 @@
-const CACHE='iw-cache-9.09-drone-awakening-v40';
+const CACHE='iw-cache-9.09-save-slots-v41';
 const ASSETS=[
   './',
   './index.html',
-  './style.css?v=9.09.3',
-  './game.js?v=9.09.3',
+  './style.css?v=9.09.4',
+  './game.js?v=9.09.4',
   './manifest.webmanifest',
   './apple-touch-icon.png',
   './favicon.png',

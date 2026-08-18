@@ -1,9 +1,9 @@
-const CACHE='iw-cache-10.0.5-boss-hud-v53';
+const CACHE='iw-cache-10.1.0-boss-patterns-v54';
 const ASSETS=[
   './',
   './index.html',
-  './style.css?v=10.0.5',
-  './game.js?v=10.0.5',
+  './style.css?v=10.1.0',
+  './game.js?v=10.1.0',
   './manifest.webmanifest',
   './apple-touch-icon.png',
   './favicon.png',

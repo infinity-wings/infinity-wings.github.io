@@ -1,9 +1,9 @@
-const CACHE='iw-cache-10.2.0-wreck-cinematic-v64';
+const CACHE='iw-cache-10.2.1-wreck-foreground-v65';
 const ASSETS=[
   './',
   './index.html',
-  './style.css?v=10.2.0',
-  './game.js?v=10.2.0',
+  './style.css?v=10.2.1',
+  './game.js?v=10.2.1',
   './manifest.webmanifest',
   './apple-touch-icon.png',
   './favicon.png',
@@ -17,6 +17,7 @@ const ASSETS=[
   './assets/backgrounds/deep-space-flight-v1.jpg',
   './assets/backgrounds/landmarks/distant-planet-v1.png',
   './assets/backgrounds/landmarks/station-wreck-v1.png',
+  './assets/backgrounds/wrecks/laser-core-wreck-v1.png',
   './assets/ships/player-fighter-v4.png',
   './assets/ships/story-fighters/laser-core-fighter-v1.png',
   './assets/ships/story-fighters/drone-core-fighter-v1.png',

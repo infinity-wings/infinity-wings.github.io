@@ -37,6 +37,14 @@ const shieldSpriteAssets={
 };
 const deepSpaceBackgroundAsset=Object.assign(new Image(),{src:'assets/backgrounds/deep-space-flight-v1.jpg'});
 const storyWreckAssets={laser:Object.assign(new Image(),{src:'assets/backgrounds/wrecks/laser-core-wreck-v1.png'})};
+const storyWreckFallbackAssets={laser:shipSpriteAssets.players.laser};
+function preloadStoryWreckAsset(fighterId='laser'){
+ const image=storyWreckAssets[fighterId]||storyWreckAssets.laser;
+ if(!image)return Promise.resolve(false);
+ if(image.complete&&image.naturalWidth)return typeof image.decode==='function'?image.decode().catch(()=>false).then(()=>true):Promise.resolve(true);
+ return new Promise(resolve=>{const done=()=>resolve(Boolean(image.naturalWidth));image.addEventListener('load',done,{once:true});image.addEventListener('error',done,{once:true})});
+}
+for(const fighterId of Object.keys(storyWreckAssets))preloadStoryWreckAsset(fighterId);
 const spaceLandmarkAssets={
  planetTexture:Object.assign(new Image(),{src:'assets/backgrounds/landmarks/distant-planet-v1.png'}),
  wreckTexture:Object.assign(new Image(),{src:'assets/backgrounds/landmarks/station-wreck-v1.png'})
@@ -299,7 +307,6 @@ function draw(){
  withRenderState('干扰机减速电网',()=>drawJammerNets());
  withRenderState('自爆机警戒光环',()=>drawSuicideWarningHalos());
  withRenderState('狙击锁定线',()=>drawSniperAimLines());
- withRenderState('第三阶段战机遗骸',()=>drawWreckStory());
  for(const e of enemies){try{withRenderState('敌机模型',()=>drawEnemyShip(e));if(e.boss&&!e.bossRetreating&&!e.bossEntering){ctx.save();const headerY=72,barY=79,barX=18,barW=W-36,barH=10,hpRatio=Math.max(0,Math.min(1,finite(e.hp,0)/Math.max(1,finite(e.max,1))));ctx.fillStyle='rgba(2,9,21,.72)';ctx.fillRect(barX-5,headerY-15,barW+10,35);ctx.fillStyle='#dbeaff';ctx.font='bold 11px system-ui';ctx.textAlign='center';const timer=!e.persistentBoss&&Number.isFinite(e.bossTimeLeft)?` · ${Math.max(0,Math.ceil(e.bossTimeLeft))}秒`:'';const role=e.projectionBoss?'投影':e.miniBoss?'前哨':'真身';ctx.fillText(`危险等级 ${THREAT_ROMAN[Math.max(0,(e.bossStage||1)-1)]} · ${e.bossName||'Boss'} [${role}]${timer}`,W/2,headerY);ctx.fillStyle='rgba(24,35,59,.92)';ctx.fillRect(barX,barY,barW,barH);ctx.fillStyle=e.projectionBoss?'#7a8cff':e.awakenedBoss?'#ff5fd7':'#a767ff';ctx.fillRect(barX,barY,barW*hpRatio,barH);ctx.strokeStyle='rgba(170,235,255,.24)';ctx.lineWidth=1;ctx.strokeRect(barX+.5,barY+.5,barW-1,barH-1);ctx.restore()}}catch(error){console.warn('敌机绘制已跳过',error,e)}}
  const bossIntro=enemies.find(e=>e.boss&&e.bossEntering&&!e.bossRetreating&&(e.bossEntryTime||0)>=(e.bossIntroTravel||1.7));
  if(bossIntro){const travel=bossIntro.bossIntroTravel||1.7,total=bossIntro.bossIntroDuration||3.7,p=Math.max(0,Math.min(1,((bossIntro.bossEntryTime||0)-travel)/Math.max(.01,total-travel))),alpha=Math.min(1,p*6)*Math.min(1,(1-p)*7),role=bossIntro.projectionBoss?'投影':bossIntro.miniBoss?'前哨':'真身';ctx.save();ctx.globalAlpha=alpha;ctx.fillStyle='rgba(0,6,18,.62)';ctx.fillRect(0,H*.48,W,92);ctx.textAlign='center';ctx.fillStyle=bossIntro.projectionBoss?'#a8b9ff':'#bcefff';ctx.font='800 11px system-ui';ctx.fillText(`危险等级 ${THREAT_ROMAN[Math.max(0,(bossIntro.bossStage||1)-1)]} · ${role}`,W/2,H*.48+22);ctx.shadowBlur=20;ctx.shadowColor=bossIntro.projectionBoss?'#7583ff':'#55dfff';ctx.fillStyle='#fff';ctx.font='900 26px system-ui';ctx.fillText(bossIntro.bossName||'未知强敌',W/2,H*.48+56);ctx.shadowBlur=0;ctx.fillStyle='rgba(194,228,240,.9)';ctx.font='700 10px system-ui';ctx.fillText('高能反应确认 · 准备交战',W/2,H*.48+78);ctx.restore()}
@@ -312,6 +319,8 @@ function draw(){
  }
  if(!dying&&player&&Number.isFinite(player.x)&&Number.isFinite(player.y)){try{withRenderState('玩家模型',()=>drawShip(player.x,player.y,'#5ce1ff'))}catch(error){console.warn('玩家模型绘制已跳过',error)}}
  for(const d of drones){try{withRenderState('无人机模型',()=>drawDrone(d))}catch(error){console.warn('无人机绘制已跳过',error,d)}}
+ // 剧情遗骸使用独立前景通道：高于全部战斗模型，低于随后绘制的事件提示与 HUD。
+ withRenderState('第三阶段战机遗骸前景',()=>drawWreckStory());
  try{battleEventSystem.draw();battleEventSystem.drawMeteorTextures();battleEventSystem.drawMeteorWarnings()}catch(error){console.warn('随机事件绘制已跳过',error)}
  try{const originalStroke=ctx.stroke,suppressed={count:awakeningSystem.getActive().length};ctx.stroke=function(...args){if(suppressed.count>0){suppressed.count--;return}return originalStroke.apply(this,args)};try{awakeningSystem.draw()}finally{ctx.stroke=originalStroke}}catch(error){console.warn('觉醒效果绘制已跳过',error)}
  if(deathFade>0){ctx.fillStyle=`rgba(0,0,0,${deathFade})`;ctx.fillRect(0,0,W,H)}
@@ -328,14 +337,14 @@ function draw(){
 
 function drawWreckStory(){
  const story=build?.wreckStory;if(!story||story.phase==='recovered'||story.phase==='guarded')return;
- const asset=storyWreckAssets[story.fighterId]||storyWreckAssets.laser,x=finite(story.x,W/2),y=finite(story.y,150),pulse=.5+.5*Math.sin(elapsed*4.2);
+ const requestedAsset=storyWreckAssets[story.fighterId]||storyWreckAssets.laser,fallbackAsset=storyWreckFallbackAssets[story.fighterId]||storyWreckFallbackAssets.laser,asset=requestedAsset?.complete&&requestedAsset.naturalWidth?requestedAsset:fallbackAsset,x=finite(story.x,W/2),y=finite(story.y,150),pulse=.5+.5*Math.sin(performance.now()*.0042);
  if(story.phase==='abduct'){
   const boss=enemies.find(e=>e.boss&&e.wreckStory);
   if(boss){
    ctx.save();ctx.globalCompositeOperation='lighter';const topY=boss.y+30,bottomY=y+28,beam=ctx.createLinearGradient(boss.x,topY,x,bottomY);beam.addColorStop(0,'rgba(151,92,255,.08)');beam.addColorStop(.42,'rgba(108,180,255,.38)');beam.addColorStop(1,'rgba(100,238,255,.72)');ctx.fillStyle=beam;ctx.shadowBlur=22;ctx.shadowColor='#7edfff';ctx.beginPath();ctx.moveTo(boss.x-12,topY);ctx.lineTo(boss.x+12,topY);ctx.lineTo(x+44,bottomY);ctx.lineTo(x-44,bottomY);ctx.closePath();ctx.fill();ctx.strokeStyle=`rgba(205,249,255,${.45+pulse*.35})`;ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(boss.x,topY);ctx.lineTo(x,bottomY);ctx.stroke();ctx.restore();
   }
  }
- ctx.save();ctx.translate(x,y+(story.float||0));ctx.rotate(story.rotation||0);ctx.globalAlpha=Math.max(0,Math.min(1,finite(story.alpha,1)));ctx.shadowBlur=story.phase==='return'?20:15;ctx.shadowColor=story.phase==='return'?'#5cecff':'#6ea8ff';if(asset?.complete&&asset.naturalWidth)ctx.drawImage(asset,-78,-78,156,156);else{ctx.strokeStyle='#62ddff';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,-42);ctx.lineTo(48,31);ctx.lineTo(0,15);ctx.lineTo(-48,31);ctx.closePath();ctx.stroke()}ctx.restore();
+ ctx.save();ctx.translate(x,y+(story.float||0));ctx.rotate(story.rotation||0);ctx.globalAlpha=Math.max(0,Math.min(1,finite(story.alpha,1)));ctx.shadowBlur=story.phase==='return'?24:19;ctx.shadowColor=story.phase==='return'?'#5cecff':'#6ea8ff';ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';if(asset?.complete&&asset.naturalWidth)ctx.drawImage(asset,-82,-82,164,164);else{ctx.fillStyle='rgba(18,92,138,.5)';ctx.strokeStyle='#9af2ff';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(0,-58);ctx.lineTo(58,34);ctx.lineTo(14,24);ctx.lineTo(0,52);ctx.lineTo(-14,24);ctx.lineTo(-58,34);ctx.closePath();ctx.fill();ctx.stroke()}ctx.restore();
  ctx.save();ctx.textAlign='center';if(story.phase==='signal'){ctx.fillStyle='rgba(3,12,27,.88)';ctx.fillRect(W/2-128,H*.29,256,52);ctx.strokeStyle='rgba(85,224,255,.52)';ctx.strokeRect(W/2-128,H*.29,256,52);ctx.fillStyle='#75e8ff';ctx.font='800 12px system-ui';ctx.fillText('系统检测到失联战机信号',W/2,H*.29+22);ctx.fillStyle='rgba(220,241,255,.72)';ctx.font='700 9px system-ui';ctx.fillText('正在解析友军识别码……',W/2,H*.29+40)}else if(story.phase==='drift'){ctx.fillStyle='rgba(4,15,31,.78)';ctx.fillRect(W/2-116,y+83,232,42);ctx.fillStyle='#79eaff';ctx.font='800 11px system-ui';ctx.fillText('失联战机信号已确认',W/2,y+100);ctx.fillStyle='rgba(220,241,255,.82)';ctx.font='700 10px system-ui';ctx.fillText('曙光棱镜 · 遗骸状态',W/2,y+116)}else if(story.phase==='return'){ctx.strokeStyle=`rgba(92,235,255,${.48+pulse*.4})`;ctx.lineWidth=2;ctx.beginPath();ctx.arc(x,y,82+pulse*7,0,Math.PI*2);ctx.stroke();ctx.setLineDash([7,7]);ctx.beginPath();ctx.arc(x,y,94-pulse*5,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle='rgba(4,15,31,.8)';ctx.fillRect(x-86,y+82,172,24);ctx.fillStyle='#c8f7ff';ctx.font='800 10px system-ui';ctx.fillText('接触遗骸完成回收',x,y+98)}ctx.restore();
 }
 

@@ -238,11 +238,11 @@ function ensureWreckDialogue(){
  return overlay;
 }
 function hideWreckDialogue(){document.getElementById('wreckStoryDialogue')?.classList.add('hidden')}
-function continueTierThreeWreckStory(){const story=build?.wreckStory;if(!story||story.phase!=='dialogue')return;hideWreckDialogue();story.phase='guarded';story.timer=0;story.alpha=0;const boss=enemies.find(e=>e.boss&&e.wreckStory);if(boss){boss.bossEntering=false;boss.y=boss.targetY;boss.shoot=.55;boss.bossModeTimer=.65}paused=false;state='game';last=performance.now();audioSystem?.play('ui');toast('遗骸夺回作战开始','important')}
+function continueTierThreeWreckStory(){const story=build?.wreckStory;if(!story||story.phase!=='dialogue')return;hideWreckDialogue();story.phase='guarded';story.timer=0;story.alpha=0;const boss=enemies.find(e=>e.boss&&e.wreckStory);if(boss){boss.bossEntering=false;boss.y=boss.targetY;boss.shoot=.55;boss.bossModeTimer=.65}touchMoveActive=false;touchMovePointerId=null;touchTargetX=player.x;touchTargetY=player.y;mouseMoveActive=false;mouseDeltaX=mouseDeltaY=0;joyX=joyY=0;player.fireCd=Math.min(player.fireCd,180);player.vx=player.vy=player.targetVx=player.targetVy=0;paused=false;state='game';last=performance.now();audioSystem?.play('ui');toast('遗骸夺回作战开始','important')}
 function beginTierThreeWreckStory(force=false){
- if(typeof preloadStoryWreckAsset==='function')preloadStoryWreckAsset('laser');
- hideWreckDialogue();clearEntityArray(enemyBullets);clearEntityArray(bullets);clearEntityArray(missiles);enemyLasers.length=0;lightningArcs.length=0;blastWaves.length=0;particles.length=0;drones.length=0;enemies.length=0;battleEventSystem.cancelForBoss?.();build.bossPendingNumber=0;build.bossPendingTimer=0;
- build.wreckStory={fighterId:'laser',phase:'signal',timer:0,x:W/2,y:-60,alpha:0,rotation:-.18,debugForce:!!force};
+ hideWreckDialogue();clearEntityArray(enemyBullets);clearEntityArray(bullets);clearEntityArray(missiles);clearEntityArray(particles);clearEntityArray(pickups);enemyLasers.length=0;lightningArcs.length=0;blastWaves.length=0;drones.length=0;enemies.length=0;battleEventSystem.cancelForBoss?.();build.bossPendingNumber=0;build.bossPendingTimer=0;build.projectionActive=0;build.awakeFrontShieldActive=0;build.heavyEscortShieldActive=0;
+ const story={fighterId:'laser',phase:'signal',timer:0,x:W/2,y:76,alpha:1,rotation:-.18,float:0,assetReady:false,assetFailed:false,debugForce:!!force};build.wreckStory=story;
+ if(typeof preloadStoryWreckAsset==='function')preloadStoryWreckAsset('laser').then(ready=>{if(build?.wreckStory!==story)return;story.assetReady=!!ready;story.assetFailed=!ready}).catch(()=>{if(build?.wreckStory===story)story.assetFailed=true});else story.assetFailed=true;
  player.fireCd=Math.max(player.fireCd,900);player.vx=player.vy=player.targetVx=player.targetVy=0;audioSystem?.play('ui');toast('系统检测到失联战机信号……','important');
 }
 function releaseTierThreeWreck(){
@@ -252,12 +252,12 @@ function releaseTierThreeWreck(){
 }
 function updateWreckStory(dt){
  const story=build?.wreckStory;if(!story)return;
- story.timer+=dt;story.rotation=(story.rotation||0)+dt*.17;story.float=Math.sin(story.timer*1.35)*5;
- const playerTargetY=H-SAFE_BOTTOM-118;player.x+=(W/2-player.x)*Math.min(1,dt*2.3);player.y+=(playerTargetY-player.y)*Math.min(1,dt*2.3);player.vx=player.vy=player.targetVx=player.targetVy=0;player.tilt*=Math.max(0,1-dt*5);player.pitch*=Math.max(0,1-dt*5);
+ const cinematic=['signal','drift','bossEntry','abduct','dialogue'].includes(story.phase);story.timer+=dt;story.rotation=(story.rotation||0)+dt*.17;story.float=Math.sin(story.timer*1.35)*5;
+ const playerTargetY=H-SAFE_BOTTOM-118;if(cinematic){player.x+=(W/2-player.x)*Math.min(1,dt*2.3);player.y+=(playerTargetY-player.y)*Math.min(1,dt*2.3);player.vx=player.vy=player.targetVx=player.targetVy=0;player.tilt*=Math.max(0,1-dt*5);player.pitch*=Math.max(0,1-dt*5)}
  if(story.phase==='signal'){
-  story.alpha=Math.min(1,story.timer/.8);if(story.timer>=1.55){story.phase='drift';story.timer=0;story.y=-55;story.alpha=1}
+  story.alpha=1;story.y=76+Math.sin(story.timer*1.1)*3;if((story.assetReady||story.assetFailed)&&story.timer>=1.55){story.phase='drift';story.timer=0;story.y=76;story.alpha=1}
  }else if(story.phase==='drift'){
-  const targetY=Math.max(180,playerTargetY-205),p=Math.min(1,story.timer/5.1),ease=1-Math.pow(1-p,2.25);story.y=-55+(targetY+55)*ease;story.x=W/2+Math.sin(story.timer*.78)*15;
+  const targetY=Math.max(180,playerTargetY-205),p=Math.min(1,story.timer/5.1),ease=1-Math.pow(1-p,2.25);story.y=76+(targetY-76)*ease;story.x=W/2+Math.sin(story.timer*.78)*15;
   if(story.timer>=5.1){story.phase='bossEntry';story.timer=0;audioSystem?.play('ui');toast('高能反应接近','important');const boss=spawnBoss(3,{wreckStory:true});boss.wreckStory=true;boss.cinematicEntry=true;boss.bossEntering=true;boss.bossEntryTime=0;boss.y=-210;boss.entryStartY=-210;boss.targetY=128}
  }else if(story.phase==='bossEntry'){
   const boss=enemies.find(e=>e.boss&&e.wreckStory);if(boss){const p=Math.min(1,story.timer/2.15),ease=1-Math.pow(1-p,3);boss.y=-210+(boss.targetY+210)*ease;boss.bossEntryTime=Math.min(boss.bossIntroTravel||1.7,story.timer*.72)}if(story.timer>=2.3){story.phase='abduct';story.timer=0}

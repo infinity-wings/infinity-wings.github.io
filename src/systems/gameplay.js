@@ -64,7 +64,7 @@ function reset(){
  mainBulletSize:1,
  mainBulletDamageScale:1
 };
-bullets=resetEntityArray('bullets',bullets);missiles=resetEntityArray('missiles',missiles);enemies=[];enemyBullets=resetEntityArray('enemyBullets',enemyBullets);enemyLasers=[];particles=resetEntityArray('particles',particles);blastWaves=[];lightningArcs=[];drones=[];pickups=resetEntityArray('pickups',pickups);score=0;level=1;xp=0;nextXp=50;bombs=3;build={laserState:{phase:'cooldown',timer:1.8,level:0},missileCd:1.4,thunderCd:.7,chronoActive:0,chronoCd:8,levelUpLock:0,killWindow:[],spawnBurst:0,lastEnemyUnlock:1,lastLandmarkThreat:0,barrierCharge:0,shieldLayers:0,shieldRecharge:0,lastHitAt:-99,targetCacheFrame:-1,targetCache:[],projectionActive:0,projectionCd:0,projectionLevel:0,projectionMirrorSide:1,projectionCacheFrame:-1,projectionCacheLevel:0,projectionCache:[],projectionMode:'none',projectionMainCd:0,projectionMissileCd:0,projectionLaserState:{phase:'idle',timer:0},debugLockHp:false,debugLockXp:false,debugThreatLevel:null,bossClearedTier:-1,bossDirectorTier:0,bossDirectorIndex:0,bossDirectorProgress:0,bossPendingNumber:0,bossPendingTimer:0,bossWarningShownFor:0,bossesDefeated:0,finalBossDefeated:false,firstEliteSpawned:false,droneVolleyCd:0,droneVolleyMode:'none',heavyEscortShieldActive:0,heavyEscortShieldCd:0,heavyEscortShieldDuration:4.5,heavyEscortShieldCooldown:9,awakeFrontShieldActive:0,awakeFrontShieldCd:0,awakeFrontShieldDuration:4,awakeFrontShieldCooldown:8,awakeFrontShieldBurstDone:false};coreManager.reset({silent:true});const sortieFighter=IWSave?.data?.profile?.selectedFighter||'infinity',sortieCore={infinity:'main',laser:'laser',drone:'drone',missile:'missile',thunder:'thunder'}[sortieFighter]||'main';coreManager.setLevel(sortieCore,1,{silent:true});awakeningSystem.reset();battleEventSystem.reset();upgradeSystem.reset();rewindHistory=[];projectionHistory=[];elapsed=0;spawnCd=0;bossSpawned=false;dying=false;deathTimer=0;deathFade=0;spaceLandmarks.length=0;build.allCoresMax=false;updateUI();coreEffects.init()
+bullets=resetEntityArray('bullets',bullets);missiles=resetEntityArray('missiles',missiles);enemies=[];enemyBullets=resetEntityArray('enemyBullets',enemyBullets);enemyLasers=[];particles=resetEntityArray('particles',particles);blastWaves=[];lightningArcs=[];drones=[];pickups=resetEntityArray('pickups',pickups);score=0;level=1;xp=0;nextXp=50;bombs=3;build={laserState:{phase:'cooldown',timer:1.8,level:0},missileCd:1.4,thunderCd:.7,chronoActive:0,chronoCd:8,levelUpLock:0,killWindow:[],spawnBurst:0,lastEnemyUnlock:1,lastLandmarkThreat:0,barrierCharge:0,shieldLayers:0,shieldRecharge:0,lastHitAt:-99,targetCacheFrame:-1,targetCache:[],projectionActive:0,projectionCd:0,projectionLevel:0,projectionMirrorSide:1,projectionCacheFrame:-1,projectionCacheLevel:0,projectionCache:[],projectionMode:'none',projectionMainCd:0,projectionMissileCd:0,projectionLaserState:{phase:'idle',timer:0},debugLockHp:false,debugLockXp:false,debugThreatLevel:null,bossClearedTier:-1,bossDirectorTier:0,bossDirectorIndex:0,bossDirectorProgress:0,bossPendingNumber:0,bossPendingTimer:0,bossWarningShownFor:0,bossesDefeated:0,finalBossDefeated:false,firstEliteSpawned:false,wreckStory:null,droneVolleyCd:0,droneVolleyMode:'none',heavyEscortShieldActive:0,heavyEscortShieldCd:0,heavyEscortShieldDuration:4.5,heavyEscortShieldCooldown:9,awakeFrontShieldActive:0,awakeFrontShieldCd:0,awakeFrontShieldDuration:4,awakeFrontShieldCooldown:8,awakeFrontShieldBurstDone:false};coreManager.reset({silent:true});const sortieFighter=IWSave?.data?.profile?.selectedFighter||'infinity',sortieCore={infinity:'main',laser:'laser',drone:'drone',missile:'missile',thunder:'thunder'}[sortieFighter]||'main';coreManager.setLevel(sortieCore,1,{silent:true});awakeningSystem.reset();battleEventSystem.reset();upgradeSystem.reset();rewindHistory=[];projectionHistory=[];elapsed=0;spawnCd=0;bossSpawned=false;dying=false;deathTimer=0;deathFade=0;spaceLandmarks.length=0;build.allCoresMax=false;updateUI();coreEffects.init()
 }
 function threatLevel(){
  if(Number.isInteger(build?.debugThreatLevel))return Math.max(0,Math.min(5,build.debugThreatLevel));
@@ -230,6 +230,34 @@ function currentStageNumber(){const queue=BOSS_ENCOUNTERS_BY_TIER[Math.max(0,Mat
 function bossNumberForThreat(tier=threatLevel()){return Math.max(1,Math.min(6,tier+1))}
 function syncBossDirectorTier(force=false){const tier=Math.max(0,Math.min(5,threatLevel()));if(!force&&build.bossDirectorTier===tier)return;build.bossDirectorTier=tier;build.bossDirectorIndex=0;build.bossDirectorProgress=0;build.bossPendingNumber=0;build.bossPendingTimer=0;build.bossWarningShownFor=0}
 function advanceBossDirector(number){const queue=BOSS_ENCOUNTERS_BY_TIER[build.bossDirectorTier]||[];if(queue[build.bossDirectorIndex]===number){build.bossDirectorIndex++;build.bossClearedTier=Math.max(build.bossClearedTier??-1,build.bossDirectorTier)}build.bossDirectorProgress=0;build.bossPendingNumber=0;build.bossPendingTimer=0;build.bossWarningShownFor=0}
+function tierThreeWreckRecovered(){return !!IWSave?.data?.progression?.fighters?.includes('laser')}
+function beginTierThreeWreckStory(){
+ clearEntityArray(enemyBullets);enemyLasers.length=0;enemies.length=0;battleEventSystem.cancelForBoss?.();
+ build.wreckStory={fighterId:'laser',phase:'discover',timer:4.2,x:W/2,y:-90,alpha:1,dialogueShown:false};
+ audioSystem?.play('ui');toast('检测到微弱友军识别信号','important');
+}
+function releaseTierThreeWreck(){
+ if(!build.wreckStory||build.wreckStory.fighterId!=='laser'||tierThreeWreckRecovered())return;
+ Object.assign(build.wreckStory,{phase:'return',timer:0,x:W/2,y:118,alpha:1});
+ toast('牵引场已解除 · 战机遗骸正在坠回战区','important');
+}
+function updateWreckStory(dt){
+ const story=build?.wreckStory;if(!story)return;
+ if(story.phase==='discover'){
+  story.timer-=dt;story.y+=(160-story.y)*Math.min(1,dt*1.8);
+  if(story.timer<=0){story.phase='abduct';story.timer=0;const boss=spawnBoss(3,{wreckStory:true});boss.wreckStory=true;}
+ }else if(story.phase==='abduct'){
+  story.timer+=dt;const boss=enemies.find(e=>e.boss&&e.bossNumber===3);
+  if(boss){story.x+=(boss.x-story.x)*Math.min(1,dt*2.4);story.y+=(boss.y+24-story.y)*Math.min(1,dt*2.2);story.alpha=Math.max(0,1-story.timer/2.6);if(!story.dialogueShown&&story.timer>.75){story.dialogueShown=true;toast('想带回这个手下败将的遗骸？先击败我。','important')}}
+  if(story.timer>2.65)story.phase='guarded';
+ }else if(story.phase==='return'){
+  story.timer+=dt;story.y=Math.min(H-SAFE_BOTTOM-105,story.y+24*dt);story.x=W/2+Math.sin(story.timer*1.4)*12;
+  if(Math.hypot(player.x-story.x,player.y-story.y)<playerCombatRadius()+42){
+   IWSave.data.story.wrecks[0]=true;IWSave.data.story.wrecksFound=IWSave.data.story.wrecks.filter(Boolean).length;IWSave.unlockFighter('laser');
+   story.phase='recovered';story.alpha=0;audioSystem?.play('pickup');toast('曙光棱镜遗骸已回收 · 光能源核完成解析','important');
+  }
+ }
+}
 function maybeSpawnStageBoss(dt=0){
  syncBossDirectorTier();if(enemies.some(e=>e.boss)||battleEventSystem.warning||battleEventSystem.active)return;
  const queue=BOSS_ENCOUNTERS_BY_TIER[build.bossDirectorTier]||[],number=queue[build.bossDirectorIndex];if(!number)return;const encounter=BOSS_ENCOUNTERS[number-1];
@@ -237,6 +265,10 @@ function maybeSpawnStageBoss(dt=0){
  // 因而测试跳转危险等级也不会触发低阶段的旧定时 Boss。
  const required=encounter?.tier>=6?72:58;
  const ready=number===1?elapsed>=145:number===2?elapsed>=235:build.bossDirectorProgress>=required;
+ if(number===3&&ready&&!tierThreeWreckRecovered()){
+  if(!build.wreckStory)beginTierThreeWreckStory();
+  return;
+ }
  if(!build.bossPendingNumber&&ready){build.bossPendingNumber=number;build.bossPendingTimer=5;build.bossWarningShownFor=number;audioSystem?.play('ui');toast('有一股强大的力量正在靠近','important')}
  if(build.bossPendingNumber){build.bossPendingTimer=Math.max(0,build.bossPendingTimer-dt);if(build.bossPendingTimer<=0)spawnBoss(build.bossPendingNumber)}
 }
@@ -256,7 +288,8 @@ function spawnBoss(number=currentStageNumber(),options={}){
  const volleyCount=mini?3:Math.min(8,encounter.tier+2);
  const boss={type:'boss',boss:true,projectionBoss:projection,miniBoss:mini,fixedBoss:number>=3,awakenedBoss:encounter.tier>=5&&!projection,awakeningBoss:false,bossKind:kind,bossName:encounter.name,bossNumber:number,bossStage:encounter.tier,bossRole:encounter.role,bossArtKey:encounter.art,bossSpriteType:encounter.sprite,bossModes:encounter.modes,bossRenderSize:encounter.size,hitRx:encounter.hit[0],hitRy:encounter.hit[1],persistentBoss:persistent,bossTimeLeft:persistent?null:encounter.duration,finalBoss:!!encounter.final,x:W/2,y:-180,entryStartY:-180,targetY:number>=3?145:150,bossEntering:true,bossEntryTime:0,bossEntryFxCd:0,bossIntroTravel:1.7,bossIntroDuration:3.7,r:Math.max(encounter.hit[0],encounter.hit[1]),hp:bossHp,max:bossHp,v:28+encounter.tier*2,shoot:99999,dir:1,age:0,bossPhase:1,bossModeIndex:0,bossModeTimer:.9,bossModeMorph:0,bossVolleyCount:volleyCount,bossVolleyRemaining:volleyCount,bossActionCd:.65,guardWaveUsed:false};
  enemies.push(boss);
- if(encounter.final)toast('最终 Boss 降临 · 必须将其击毁','important');
+ if(options.wreckStory)toast('强大能量反应正在接近','important');
+ else if(encounter.final)toast('最终 Boss 降临 · 必须将其击毁','important');
  else if(mini)toast(`前期小型 Boss · ${encounter.duration} 秒限时歼灭`,'important');
  else toast(`危险等级 ${THREAT_ROMAN[encounter.tier-1]} · ${encounter.name} 真身降临`,'important');
  if(typeof markEnemyEncounter==='function'){markEnemyEncounter('boss');markEnemyEncounter(`boss-${number}`)}
@@ -916,7 +949,7 @@ function damageEnemy(e,d,opts={}){
  if(e.bossRetreating||e.bossEntering)return false;
  if(e.boss){const guards=enemies.filter(g=>g.bossGuardFor===e&&g.hp>0);e.guardActive=guards.length>0;if(e.guardActive&&!opts.piercing){e.guardFlash=.16;return false}if(e.guardActive&&opts.piercing)d*=.42;}
  if(e.shield>0){const absorbed=Math.min(e.shield,d);e.shield-=absorbed;d-=absorbed;if(d<=0)return false;}
- e.lastHitAt=elapsed;e.hp-=d;if(e.hp<=0){audioSystem?.play(e.boss||e.type==='carrier'?'explosionLarge':'explosionSmall');const archiveId=e.boss?`boss-${e.bossNumber||e.bossStage}`:e.type;if(typeof markEnemyDefeated==='function')markEnemyDefeated(archiveId);if(IWSave){const list=IWSave.data.progression.defeated;if(!list.includes(archiveId))list.push(archiveId);IWSave.data.progression.highestThreat=Math.max(IWSave.data.progression.highestThreat,(e.bossStage||1)-1);IWSave.commit()}const [points,experience]=enemyReward(e);score+=points;spawnExperienceFragments(e,experience);build.killWindow.push(elapsed);addBarrierCharge(barrierChargeValue(e));maybeDropRepair(e);if(e.type==='carrier')releaseCarrierDrones(e);if(e.type==='suicide')suicideBlast(e);if(e.boss){build.bossesDefeated=(build.bossesDefeated||0)+1;advanceBossDirector(e.bossNumber);if(e.finalBoss){build.finalBossDefeated=true;toast('最终 Boss 已击毁 · 终焉信号消散','important');setTimeout(()=>{if(build?.finalBossDefeated)showChapterComplete?.()},2200)}else toast(`${e.bossName}${e.projectionBoss?'投影':'真身'}已击毁 · 大量经验释放`);for(let burst=0;burst<5;burst++)explode(e.x+(Math.random()-.5)*e.r*1.4,e.y+(Math.random()-.5)*e.r*1.1,18);blastWaves.push({x:e.x,y:e.y,life:.72,maxLife:.72,radius:18,prevRadius:0,maxRadius:e.r*2.8,absorbed:0,temporalCollapse:true});shake=Math.max(shake,22)}else build.bossDirectorProgress=(build.bossDirectorProgress||0)+1;awakeningSystem.onEnemyKilled(e,opts);battleEventSystem.onEnemyKilled(e);if(!e.boss)explode(e.x,e.y,e.type==='carrier'?30:18);return true}return false
+ e.lastHitAt=elapsed;e.hp-=d;if(e.hp<=0){audioSystem?.play(e.boss||e.type==='carrier'?'explosionLarge':'explosionSmall');const archiveId=e.boss?`boss-${e.bossNumber||e.bossStage}`:e.type;if(typeof markEnemyDefeated==='function')markEnemyDefeated(archiveId);if(IWSave){const list=IWSave.data.progression.defeated;if(!list.includes(archiveId))list.push(archiveId);IWSave.data.progression.highestThreat=Math.max(IWSave.data.progression.highestThreat,(e.bossStage||1)-1);IWSave.commit()}const [points,experience]=enemyReward(e);score+=points;spawnExperienceFragments(e,experience);build.killWindow.push(elapsed);addBarrierCharge(barrierChargeValue(e));maybeDropRepair(e);if(e.type==='carrier')releaseCarrierDrones(e);if(e.type==='suicide')suicideBlast(e);if(e.boss){build.bossesDefeated=(build.bossesDefeated||0)+1;advanceBossDirector(e.bossNumber);if(e.wreckStory)releaseTierThreeWreck();if(e.finalBoss){build.finalBossDefeated=true;toast('最终 Boss 已击毁 · 终焉信号消散','important');setTimeout(()=>{if(build?.finalBossDefeated)showChapterComplete?.()},2200)}else if(!e.wreckStory)toast(`${e.bossName}${e.projectionBoss?'投影':'真身'}已击毁 · 大量经验释放`);for(let burst=0;burst<5;burst++)explode(e.x+(Math.random()-.5)*e.r*1.4,e.y+(Math.random()-.5)*e.r*1.1,18);blastWaves.push({x:e.x,y:e.y,life:.72,maxLife:.72,radius:18,prevRadius:0,maxRadius:e.r*2.8,absorbed:0,temporalCollapse:true});shake=Math.max(shake,22)}else build.bossDirectorProgress=(build.bossDirectorProgress||0)+1;awakeningSystem.onEnemyKilled(e,opts);battleEventSystem.onEnemyKilled(e);if(!e.boss)explode(e.x,e.y,e.type==='carrier'?30:18);return true}return false
 }
 function despawnTimedBoss(e){
  if(e.bossRetreating)return;
@@ -1001,7 +1034,7 @@ function hardSanitizeCombatState(){
 }
 function update(dt){
  IWStability?.watchdog?.();
- elapsed+=dt;const threat=threatLevel();battleEventSystem.update(dt);
+ elapsed+=dt;const threat=threatLevel();const wreckSceneActive=build?.wreckStory&&!['recovered'].includes(build.wreckStory.phase);if(!wreckSceneActive)battleEventSystem.update(dt);
  for(const s of stars){s.y+=s.v*(1+threat*.08)*dt;if(s.y>H){s.y=0;s.x=Math.random()*W}}
  for(const d of spaceDust){d.y+=d.v*(1+threat*.025)*dt;d.x+=d.drift*dt;if(d.y>H+8){d.y=-8;d.x=Math.random()*W}if(d.x<-8)d.x=W+8;else if(d.x>W+8)d.x=-8}
  for(const s of nearSpaceStreaks){s.y+=s.v*(1+threat*.045)*dt;if(s.y>H+s.len){s.y=-s.len-Math.random()*H*.28;s.x=Math.random()*W}}
@@ -1097,7 +1130,7 @@ function update(dt){
  rewindHistory.unshift({x:player.x,y:player.y,hp:player.hp});if(rewindHistory.length>240)rewindHistory.pop();
  // 投影已经使用固定阵列缓存，不再每帧创建未被读取的历史姿态对象。
  if(!build.firstEliteSpawned&&elapsed>=50&&!enemies.some(e=>e.boss)&&!battleEventSystem.active){build.firstEliteSpawned=true;enemies.push(makeEnemy('heavy'))}
- spawnCd-=dt;if(spawnCd<=0){const bossActive=enemies.some(e=>e.boss);if(!bossActive)spawnEnemy();const gradual=Math.min(.48,elapsed/1800+Math.max(0,level-1)*.012);const pressure=Math.min(.18,combatPower()*.004+recentKillRate()*.03);spawnCd=bossActive?.5:Math.max(.30,1.18-gradual-pressure)}maybeSpawnStageBoss(dt);
+ updateWreckStory(dt);spawnCd-=dt;if(spawnCd<=0){const bossActive=enemies.some(e=>e.boss),wreckScene=build.wreckStory&&!['recovered'].includes(build.wreckStory.phase);if(!bossActive&&!wreckScene)spawnEnemy();const gradual=Math.min(.48,elapsed/1800+Math.max(0,level-1)*.012);const pressure=Math.min(.18,combatPower()*.004+recentKillRate()*.03);spawnCd=bossActive?.5:Math.max(.30,1.18-gradual-pressure)}maybeSpawnStageBoss(dt);
  const timeLevel=coreManager.getLevel('time');const slow=(build.awakeTimeStop||0)>0?.015:(build.chronoActive>0?(timeLevel===3?.02:.42):1);
  for(const b of bullets)if(b.swarmFocus){if(!b.target||b.target.hp<=0||!enemies.includes(b.target))b.target=nearestLivingEnemy(b.x,b.y);if(b.target){const dx=b.target.x-b.x,dy=b.target.y-b.y,len=Math.hypot(dx,dy)||1,speed=Math.hypot(b.vx,b.vy)||690,turn=Math.min(1,(b.seek||6.8)*dt);b.vx+=(dx/len*speed-b.vx)*turn;b.vy+=(dy/len*speed-b.vy)*turn}}
  for(let i=bullets.length-1;i>=0;i--){const b=bullets[i];if(b.laser){b.life-=dt;const emitter=b.source==='clone'?clonePositions()[b.emitterIndex||0]:player;if(emitter){const targetX=emitter.x+(b.emitterOffset||0);b.x=targetX;b.h=emitter.y-20;if(!Array.isArray(b.visualNodes)||b.visualNodes.length<2)b.visualNodes=Array(mobilePerf?.enabled?7:9).fill(targetX);b.visualNodes[0]=targetX;for(let n=1;n<b.visualNodes.length;n++){const source=b.visualNodes[n-1],follow=1-Math.exp(-(13-n*.72)*dt);b.visualNodes[n]+=(source-b.visualNodes[n])*follow}}b.damageTick=(b.damageTick||0)+dt;const damageStep=1/30;if(b.damageTick>=damageStep){const damageDt=b.damageTick;b.damageTick=0;for(let j=enemies.length-1;j>=0;j--){const e=enemies[j];if(Math.abs(e.x-b.x)<b.w+enemyHitHalfWidth(e)&&e.y<(emitter?emitter.y:player.y)){const killed=damageEnemy(e,b.d*damageDt,{piercing:true});if(b.awakening==='laser_reflect'&&Math.random()<damageDt*7){const others=livingTargetSnapshot().filter(x=>x!==e&&Math.hypot(x.x-e.x,x.y-e.y)<180).slice(0,4);let from=e;for(const target of others){createLightningArc(from,target,2);if(damageEnemy(target,b.d*damageDt*.65)){const idx=enemies.indexOf(target);if(idx>=0)enemies.splice(idx,1)}from=target}}if(killed)enemies.splice(j,1)}}}if(b.life<=0||!emitter)bullets.splice(i,1);continue}if(b.isSplit){b.life-=dt;if(b.life<=0){bullets.splice(i,1);continue}}if(b.awakening==='blast_chain'){if(!Number.isFinite(b.life)){b.life=1.1;b.maxLife=1.1}if(!b.isSplit){b.life-=dt;if(b.life<=0){bullets.splice(i,1);continue}}if(!b.target||b.target.hp<=0||!enemies.includes(b.target)){b.target=nearestLivingEnemy(b.x,b.y)}if(b.target){const dx=b.target.x-b.x,dy=b.target.y-b.y,len=Math.hypot(dx,dy)||1,speed=Math.hypot(b.vx,b.vy)||500,turn=Math.min(1,(b.seek||7.5)*dt);b.vx+=(dx/len*speed-b.vx)*turn;b.vy+=(dy/len*speed-b.vy)*turn}}b.x+=b.vx*dt;b.y+=b.vy*dt;if(b.y<-30||b.y>H+30||b.x<-30||b.x>W+30){bullets.splice(i,1);continue}for(let j=enemies.length-1;j>=0;j--){const e=enemies[j];if(enemyHitTest(e,b.x,b.y,b.r)){const hitX=e.x,hitY=e.y;if(b.awakening==='blast_chain'&&b.splitMark){e.blastAwakeMarks=(e.blastAwakeMarks||0)+1;if(e.blastAwakeMarks>=3){e.blastAwakeMarks=0;blastWaves.push({x:e.x,y:e.y,life:.28,maxLife:.28,radius:6,prevRadius:0,maxRadius:72,absorbed:0,temporalCollapse:true});for(const other of [...enemies])if(other!==e&&Math.hypot(other.x-e.x,other.y-e.y)<72)damageEnemy(other,34)}}const killed=damageEnemy(e,b.d,{piercing:(b.pierce||0)>0});if(killed){enemies.splice(j,1);if(b.blastLevel&&!b.isSplit)spawnSplitBullets(hitX,hitY,b.d,b.blastLevel);if(b.awakening==='blast_chain'&&b.chainDepth<2)awakeningSystem.spawnChainSplit?.(hitX,hitY,b.d,b.chainDepth+1)}if(b.thunderLevel)triggerThunder({x:hitX,y:hitY},b.d,b.thunderLevel,b.blastLevel&&!b.isSplit?b.blastLevel:0,e);if(b.pierce>0){b.pierce--;b.d*=1.08;break}else{bullets.splice(i,1);break}}}}

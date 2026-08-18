@@ -1,9 +1,9 @@
-const CACHE='iw-cache-10.1.2-boss-pause-v56';
+const CACHE='iw-cache-10.1.3-performance-pause-v57';
 const ASSETS=[
   './',
   './index.html',
-  './style.css?v=10.1.2',
-  './game.js?v=10.1.2',
+  './style.css?v=10.1.3',
+  './game.js?v=10.1.3',
   './manifest.webmanifest',
   './apple-touch-icon.png',
   './favicon.png',

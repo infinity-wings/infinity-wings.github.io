@@ -234,7 +234,8 @@ function loop(t){
  const rawDt=Math.max(0,(t-last)/1000||0);last=t;
  // Safari/iPad may resume with a multi-second frame. The stability layer
  // discards the gap plus a few settling frames before simulation continues.
- const lifecycleGap=IWStability?.consumeFrameGuard?.(rawDt)??(rawDt>.12);
+ const forcedPause=IWStability?.forcePauseForFrame?.(rawDt)??false;
+ const lifecycleGap=forcedPause||(IWStability?.consumeFrameGuard?.(rawDt)??(rawDt>.12));
  const dt=lifecycleGap?0:Math.min(.028,rawDt);
  if(typeof mobilePerf!=='undefined'&&mobilePerf.enabled){
   mobilePerf.frameMs=mobilePerf.frameMs*.9+rawDt*1000*.1;mobilePerf.sampleFrames++;

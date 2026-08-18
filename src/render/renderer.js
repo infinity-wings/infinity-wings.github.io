@@ -199,7 +199,7 @@ function draw(){
  if(!(particles instanceof PooledEntityArray))particles=ensureEntityArray('particles',particles);
  withRenderState('粒子层',()=>{const particleStride=mobilePerf?.enabled?(perfQ<.66?4:perfQ<.82?2:1):1;for(let i=0;i<particles.length;i++){const p=particles[i],important=p.type==='barrier'||p.type==='thunder'||p.type==='repairShard';if(!important&&particleStride>1&&i%particleStride)continue;if(p.x<-45||p.x>W+45||p.y<-60||p.y>H+60)continue;drawParticleSafe(p,lowFx)}});
  withRenderState('冲击波层',()=>{for(const wave of blastWaves||[])withRenderState('单个冲击波',()=>drawBarrierWave(wave))});
- withRenderState('闪电层',()=>{for(const arc of lightningArcs||[])withRenderState('单条闪电',()=>drawLightningArc(arc))});
+ withRenderState('闪电层',()=>{const arcStride=mobilePerf?.enabled&&perfQ<.65?2:1;for(let i=0;i<(lightningArcs||[]).length;i++){const arc=lightningArcs[i];if(arcStride>1&&i%arcStride&&arc.life<arc.maxLife*.72)continue;withRenderState('单条闪电',()=>drawLightningArc(arc))}});
  withRenderState('激光蓄力层',()=>drawLaserChargeEffect());
  withRenderState('核心防御层',()=>drawCoreDefenseEffects(lowFx));
  for(const b of bullets){
@@ -331,8 +331,8 @@ function drawPlayerLaserBeam(b,lowFx=false){
  const nodes=Array.isArray(b.visualNodes)&&b.visualNodes.length>1?b.visualNodes:[b.x,b.x],muzzleX=b.x;
  const path=(offset=0)=>{ctx.beginPath();ctx.moveTo(nodes[nodes.length-1]+offset,-8);for(let n=nodes.length-2;n>=0;n--){const y=height*(1-n/(nodes.length-1)),previousY=height*(1-(n+1)/(nodes.length-1)),midY=(previousY+y)*.5,previousX=nodes[n+1]+offset,currentX=nodes[n]+offset;ctx.quadraticCurveTo(previousX,midY,(previousX+currentX)*.5,y)}ctx.lineTo(muzzleX+offset,height)};
  ctx.save();ctx.globalCompositeOperation='lighter';ctx.lineCap='round';ctx.lineJoin='round';ctx.globalAlpha=.78+.18*pulse;
- ctx.shadowColor=violet?'#8f6cff':'#48e5ff';ctx.shadowBlur=25+level*5;ctx.strokeStyle=violet?'rgba(112,82,255,.15)':'rgba(35,195,255,.14)';ctx.lineWidth=width*5.2;path();ctx.stroke();
- ctx.shadowBlur=18;ctx.strokeStyle=violet?'rgba(159,124,255,.58)':'rgba(54,218,255,.58)';ctx.lineWidth=width*2.05;path();ctx.stroke();
+ ctx.shadowColor=violet?'#8f6cff':'#48e5ff';ctx.shadowBlur=lowFx?14:25+level*5;ctx.strokeStyle=violet?'rgba(112,82,255,.15)':'rgba(35,195,255,.14)';ctx.lineWidth=width*(lowFx?3.8:5.2);path();ctx.stroke();
+ if(!lowFx){ctx.shadowBlur=18;ctx.strokeStyle=violet?'rgba(159,124,255,.58)':'rgba(54,218,255,.58)';ctx.lineWidth=width*2.05;path();ctx.stroke()}
  ctx.shadowBlur=10;ctx.strokeStyle=violet?'rgba(229,214,255,.94)':'rgba(198,252,255,.94)';ctx.lineWidth=Math.max(2.2,width*.82);path();ctx.stroke();
  ctx.shadowBlur=5;ctx.strokeStyle=`rgba(255,255,255,${.88+.1*pulse})`;ctx.lineWidth=Math.max(1.2,width*.28);path();ctx.stroke();
  if(!lowFx){ctx.globalAlpha=.52+.28*pulse;ctx.shadowBlur=8;ctx.strokeStyle=violet?'rgba(197,171,255,.72)':'rgba(132,246,255,.72)';ctx.lineWidth=Math.max(1,width*.11);for(const side of [-1,1]){path(side*width*.84);ctx.stroke()}}

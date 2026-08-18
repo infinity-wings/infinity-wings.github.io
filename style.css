@@ -1019,7 +1019,7 @@ body.touch-device .top-run-timer{
 .save-select-hint{margin:16px 0;color:#8faebf;font-size:12px;line-height:1.65}
 .save-slot-list{display:grid;gap:10px}
 .save-slot{position:relative;display:grid;grid-template-columns:52px 1fr auto;align-items:center;gap:12px;min-height:88px;padding:13px 14px;border:1px solid rgba(67,164,202,.4);background:linear-gradient(90deg,rgba(8,42,66,.86),rgba(3,20,38,.78));color:#dff8ff;text-align:left}
-.save-slot:not(.empty){cursor:pointer}.save-slot.active{border-color:#69e8ff;box-shadow:inset 3px 0 0 #5be6ff,0 0 18px rgba(63,211,255,.12)}
+.save-slot{cursor:pointer}.save-slot.active{border-color:#69e8ff;box-shadow:inset 3px 0 0 #5be6ff,0 0 18px rgba(63,211,255,.12)}
 .save-slot-number{color:#5fdbf6;font:800 12px/1 ui-monospace,monospace;letter-spacing:.08em}
 .save-slot-main b,.save-slot-main span,.save-slot-main small{display:block}.save-slot-main b{font-size:16px;letter-spacing:.08em}.save-slot-main span{margin-top:6px;color:#91b3c4;font-size:11px}.save-slot-main small{margin-top:4px;color:#63869a;font-size:9px}.save-slot.empty .save-slot-main b{color:#718d9c}.save-slot.empty .save-slot-main span{color:#4e6978}
 .save-slot-delete{min-width:56px;height:32px;border:1px solid rgba(173,76,93,.55);background:rgba(56,15,28,.56);color:#ffabb9;font-size:10px}

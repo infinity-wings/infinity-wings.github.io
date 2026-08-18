@@ -1,9 +1,9 @@
-const CACHE='iw-cache-10.1.0-boss-patterns-v54';
+const CACHE='iw-cache-10.1.1-save-slots-v55';
 const ASSETS=[
   './',
   './index.html',
-  './style.css?v=10.1.0',
-  './game.js?v=10.1.0',
+  './style.css?v=10.1.1',
+  './game.js?v=10.1.1',
   './manifest.webmanifest',
   './apple-touch-icon.png',
   './favicon.png',

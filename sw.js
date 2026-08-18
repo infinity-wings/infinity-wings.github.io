@@ -1,9 +1,9 @@
-const CACHE='iw-cache-10.1.6-projection-alpha-v60';
+const CACHE='iw-cache-10.1.7-fresh-run-v61';
 const ASSETS=[
   './',
   './index.html',
-  './style.css?v=10.1.6',
-  './game.js?v=10.1.6',
+  './style.css?v=10.1.7',
+  './game.js?v=10.1.7',
   './manifest.webmanifest',
   './apple-touch-icon.png',
   './favicon.png',

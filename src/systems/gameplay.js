@@ -31,7 +31,7 @@ function boot(){
 }
 let storyAutoTimer=0;
 function startStory(){state='story';showScreen(UI.story);const roll=$('#storyRoll');roll.style.animation='none';void roll.offsetWidth;roll.style.animation='storyScroll 36s linear forwards';clearTimeout(storyAutoTimer);storyAutoTimer=setTimeout(()=>{if(state==='story')beginGame()},35000)}
-function beginGame(resumeCheckpoint=false){if(state==='game'&&running)return;clearTimeout(storyAutoTimer);storyAutoTimer=0;const roll=$('#storyRoll');if(roll)roll.style.animation='none';reset();if(resumeCheckpoint)restoreRunCheckpoint?.();state='game';document.querySelectorAll('.screen').forEach(s=>s.classList.add('hidden'));UI.hud.classList.remove('hidden');UI.timerPanel.classList.remove('hidden');UI.touch.classList.remove('hidden');setSystemMenuVisible(true);running=true;paused=false;last=performance.now();refreshMouseCursorState?.();if(!touchDevice&&uiPrefs?.controlMode==='mouse'){requestMouseBattleLock?.();setTimeout(()=>{if(document.pointerLockElement!==canvas&&state==='game')toast('点击战场启用鼠标控制')},120)}requestAnimationFrame(loop);setTimeout(()=>showBarrierTutorial?.(),420)}
+function beginGame(){if(state==='game'&&running)return;clearTimeout(storyAutoTimer);storyAutoTimer=0;const roll=$('#storyRoll');if(roll)roll.style.animation='none';reset();state='game';document.querySelectorAll('.screen').forEach(s=>s.classList.add('hidden'));UI.hud.classList.remove('hidden');UI.timerPanel.classList.remove('hidden');UI.touch.classList.remove('hidden');setSystemMenuVisible(true);running=true;paused=false;last=performance.now();refreshMouseCursorState?.();if(!touchDevice&&uiPrefs?.controlMode==='mouse'){requestMouseBattleLock?.();setTimeout(()=>{if(document.pointerLockElement!==canvas&&state==='game')toast('点击战场启用鼠标控制')},120)}requestAnimationFrame(loop);setTimeout(()=>showBarrierTutorial?.(),420)}
 function reset(){
  runGeneration++;
  player={
@@ -121,7 +121,7 @@ function applyEnemyDurability(enemy){
 function makeEnemy(type,side=false){
  const t=threatLevel(),power=combatPower();
  const sideEntry=side||type==='raider'||type==='suicide',fromLeft=sideEntry&&Math.random()<.5;
- const base={x:sideEntry?(fromLeft?-30:W+30):35+Math.random()*(W-70),y:sideEntry?70+Math.random()*Math.min(250,H*.38):-35,type,r:15,hp:25,max:25,v:120,shoot:1200+Math.random()*700,age:0,dir:fromLeft?1:-1,shield:0,maxShield:0};
+ const base={x:sideEntry?(fromLeft?-30:W+30):35+Math.random()*(W-70),y:sideEntry?70+Math.random()*Math.min(250,H*.38):-35,type,r:15,hp:25,max:25,v:120,shoot:0,attackArmed:false,age:0,dir:fromLeft?1:-1,shield:0,maxShield:0};
  if(type==='heavy')Object.assign(base,{r:23,hp:95+t*12,max:95+t*12,v:42,shoot:1550});
  if(type==='suicide'){const suicideHp=68+t*12;Object.assign(base,{r:14,hp:suicideHp,max:suicideHp,v:130,shoot:99999,warning:0,fuse:null,fuseDuration:1.35,suicidePhase:'entry',heading:fromLeft?0:Math.PI,dashSpeed:265,sideEntry:true})}
  if(type==='sniper')Object.assign(base,{r:16,hp:44+t*8,max:44+t*8,v:42,shoot:1350,sniperAim:null,sniperAimDuration:2,sniperLockWindow:.8});
@@ -1136,7 +1136,9 @@ function update(dt){
     e.supportCd-=dt;if(e.supportCd<=0){e.supportCd=1.15;const shieldTargets=enemies.filter(ally=>ally!==e&&ally.type!=='support'&&ally.hp>0&&Math.hypot(ally.x-e.x,ally.y-e.y)<220).sort((a,b)=>Math.hypot(a.x-e.x,a.y-e.y)-Math.hypot(b.x-e.x,b.y-e.y)).slice(0,3);for(const ally of enemies)if(ally.supportShieldSource===e&&!shieldTargets.includes(ally)){ally.shield=0;ally.maxShield=0;ally.supportShieldSource=null;ally.supportShieldUntil=0}for(const ally of shieldTargets){ally.supportShieldSource=e;ally.supportShieldUntil=elapsed+1.35;ally.maxShield=Math.max(ally.maxShield||0,28+threat*4);ally.shield=Math.min(ally.maxShield,(ally.shield||0)+18+threat*3)}}
    }
   }
-  e.shoot-=dt*1000*slow;if(e.shoot<=0&&!e.boss&&!['suicide','support','jammer'].includes(e.type)){enemyShoot(e);if(e.type!=='sniper'||e.sniperAim==null)e.shoot=e.huntTarget?(e.enraged?560:760):enemyAttackInterval(e,threat)}
+  const fullyVisible=e.sideEntry?(e.x>=e.r+8&&e.x<=W-e.r-8):e.y>=e.r+8;
+  if(!e.boss&&!e.attackArmed&&fullyVisible){e.attackArmed=true;e.shoot=e.type==='sniper'?120:['heavy','barrage'].includes(e.type)?400:e.type==='carrier'?350:250}
+  if(e.attackArmed){e.shoot-=dt*1000*slow;if(e.shoot<=0&&!e.boss&&!['suicide','support','jammer'].includes(e.type)){enemyShoot(e);if(e.type!=='sniper'||e.sniperAim==null)e.shoot=e.huntTarget?(e.enraged?560:760):enemyAttackInterval(e,threat)}}
   if(!e.bossRetreating&&(e.boss?enemyHitTest(e,player.x,player.y,playerCombatRadius()):Math.hypot(player.x-e.x,player.y-e.y)<playerCombatRadius()+e.r)){damagePlayer(e.boss?30:e.type==='suicide'?28:16);if(e.type==='suicide')suicideBlast(e);explode(e.x,e.y);enemies.splice(i,1);if(dying)break;continue}
   if(e.y>H+50||e.x<-70||e.x>W+70)enemies.splice(i,1)
  }

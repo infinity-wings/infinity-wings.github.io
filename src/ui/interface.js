@@ -130,8 +130,8 @@ function refreshChapterMenu(){
 }
 function saveSlotSummary(save){
  if(!save)return null;
- const checkpoint=save.runCheckpoint,threat=Math.max(1,(save.progression?.highestThreat||0)+1),time=checkpoint?formatRunTime(checkpoint.elapsed||0):'暂无行动检查点';
- return {title:checkpoint?'行动进行中':save.story?.chapterOneCompleted?'已完成第一阶段行动':'作战档案已建立',detail:`危险等级 ${THREAT_ROMAN[Math.min(5,threat-1)]} · 战机 ${(save.progression?.fighters||['infinity']).length}/5`,time};
+ const threat=Math.max(1,(save.progression?.highestThreat||0)+1);
+ return {title:save.story?.chapterOneCompleted?'已完成第一阶段行动':'作战档案已建立',detail:`危险等级 ${THREAT_ROMAN[Math.min(5,threat-1)]} · 战机 ${(save.progression?.fighters||['infinity']).length}/5`,time:'永久进度'};
 }
 let selectedSaveSlot=0;
 function defaultSaveSlot(slots){
@@ -149,19 +149,12 @@ function renderSaveSlots(){
 function createNewSave(){const empty=IWSave.listSlots().findIndex(save=>!save);if(empty<0){toast('三个存档槽位已满，请先删除一个旧存档','important');return}IWSave.createSlot(empty+1);pilotId=IWSave.data.profile.pilotId;refreshChapterMenu();requestSortie(()=>startStory())}
 function confirmSelectedSaveSlot(){
  const slot=selectedSaveSlot,save=IWSave.listSlots()[slot-1];if(!slot)return;
- if(save){if(!IWSave.activateSlot(slot))return;pilotId=IWSave.data.profile.pilotId;refreshChapterMenu();requestSortie(()=>IWSave.data.runCheckpoint?beginGame(true):IWSave.data.story.introSeen?beginGame(false):startStory());return}
+ if(save){if(!IWSave.activateSlot(slot))return;IWSave.clearCheckpoint();pilotId=IWSave.data.profile.pilotId;refreshChapterMenu();requestSortie(()=>IWSave.data.story.introSeen?beginGame():startStory());return}
  IWSave.createSlot(slot);pilotId=IWSave.data.profile.pilotId;refreshChapterMenu();requestSortie(()=>startStory());
 }
 function createRunCheckpoint(){
  if(!running||!player||!build)return null;
- const boss=enemies.some(e=>e.boss),snapshot={schema:1,fighterId:IWSave?.data?.profile?.selectedFighter||'infinity',elapsed:Math.floor(elapsed),score,level,xp,nextXp,bombs,player:{hp:Math.max(1,Math.ceil(player.hp)),maxHp:player.maxHp},cores:coreManager.createSnapshot(),awakenings:awakeningSystem.getActive().map(a=>a.id),build:{bossClearedTier:build.bossClearedTier,bossDirectorTier:build.bossDirectorTier,bossDirectorIndex:build.bossDirectorIndex,bossDirectorProgress:boss?8:build.bossDirectorProgress,bossesDefeated:build.bossesDefeated,barrierCharge:build.barrierCharge,shieldLayers:build.shieldLayers,lastLandmarkThreat:build.lastLandmarkThreat}};
- return IWSave.saveCheckpoint(snapshot);
-}
-function restoreRunCheckpoint(){
- const cp=IWSave.data.runCheckpoint;if(!cp||cp.schema!==1)return false;
- const fighters=IWSave.data.progression?.fighters||[],fighterId=cp.fighterId&&fighters.includes(cp.fighterId)?cp.fighterId:(IWSave.data.profile?.selectedFighter||'infinity'),primaryByFighter={infinity:'main',laser:'laser',drone:'drone',missile:'missile',thunder:'thunder'},primaryCore=primaryByFighter[fighterId]||'main',attackCores=new Set(Object.values(primaryByFighter));IWSave.data.profile.selectedFighter=fighterId;
- const savedLevels={...(cp.cores?.levels||{})};for(const id of attackCores)if(id!==primaryCore)delete savedLevels[id];if(!savedLevels[primaryCore])savedLevels[primaryCore]=1;const safeCores={...(cp.cores||{}),levels:savedLevels};
- elapsed=Math.max(0,Number(cp.elapsed)||0);score=Math.max(0,Number(cp.score)||0);level=Math.max(1,Number(cp.level)||1);xp=Math.max(0,Number(cp.xp)||0);nextXp=Math.max(1,Number(cp.nextXp)||50);bombs=Math.max(0,Math.min(3,Number(cp.bombs)||0));player.maxHp=Math.max(100,Number(cp.player?.maxHp)||100);player.hp=Math.max(1,Math.min(player.maxHp,Number(cp.player?.hp)||player.maxHp));coreManager.loadSnapshot(safeCores,{silent:true});for(const id of cp.awakenings||[]){const awakening=AWAKENING_BY_ID?.[id];if(!awakening||!attackCores.has(awakening.coreId)||awakening.coreId===primaryCore)awakeningSystem.grant(id)}Object.assign(build,cp.build||{});build.bossPendingNumber=0;build.bossPendingTimer=0;coreEffects.applyPlayerStats();IWSave.commit();updateUI();setTimeout(()=>toast('安全检查点已载入','important'),180);return true;
+ return IWSave.saveCheckpoint();
 }
 function refreshSaveStatus(){const el=$('#saveStatusText');if(!el)return;const save=IWSave.data;el.textContent=`V${save.version} · ${save.profile.totalRuns} 次行动 · ${new Date(save.updatedAt).toLocaleString('zh-CN')}`}
 function showChapterComplete(){
@@ -361,7 +354,7 @@ function toast(text,priority='normal'){
 }
 
 $('#systemMenuButton').onclick=openPauseMenu;const resumeButton=$('#resumeButton');if(resumeButton){resumeButton.onclick=closePauseMenu;resumeButton.addEventListener('pointerup',e=>{e.preventDefault();closePauseMenu()},{passive:false})}$('#restartButton').onclick=restartCurrentRun;$('#titleButton').onclick=returnToTitle;
-$('#saveProgressButton').onclick=()=>{const cp=createRunCheckpoint();if(!cp)return;const hint=$('#saveProgressHint');if(hint)hint.textContent=`已保存 · ${formatRunTime(cp.elapsed)}`;refreshChapterMenu();toast('当前行动已保存','important')};
+$('#saveProgressButton').onclick=()=>{const saved=createRunCheckpoint();if(!saved)return;const hint=$('#saveProgressHint');if(hint)hint.textContent='永久进度已保存';refreshChapterMenu();toast('永久进度已保存','important')};
 $('#controlsButton').onclick=()=>$('#controlsPanel').classList.toggle('hidden');
 $('#gameSettingsButton').onclick=()=>{settingsReturnState='pause';showScreen(UI.settings);refreshPauseToggles()};
 $('#sfxSetting')?.addEventListener('change',e=>{uiPrefs.sfx=e.target.checked;audioSystem.setEnabled('sfx',uiPrefs.sfx);refreshPauseToggles()});

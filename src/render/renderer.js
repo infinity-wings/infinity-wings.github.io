@@ -42,6 +42,7 @@ const spaceLandmarkAssets={
 };
 for(const image of [shipSpriteAssets.player,...Object.values(shipSpriteAssets.players),shipSpriteAssets.drone,shipSpriteAssets.guard,shipSpriteAssets.boss,...Object.values(shipSpriteAssets.bosses),...Object.values(shipSpriteAssets.enemies),...Object.values(shieldSpriteAssets),deepSpaceBackgroundAsset,...Object.values(spaceLandmarkAssets)])image.decoding='async';
 const tintedShipSpriteCache=new Map();
+const projectionShipSpriteCache=new Map();
 const mobileRenderSpriteCache=new WeakMap();
 const opaqueSpriteBoundsCache=new WeakMap();
 function getOpaqueSpriteBounds(image){
@@ -62,6 +63,15 @@ function getTintedShipSprite(image,color,strength=.35,maxTintSide=256){
  const maxSide=mobilePerf?.enabled?maxTintSide:Math.max(image.naturalWidth,image.naturalHeight),scale=Math.min(1,maxSide/Math.max(image.naturalWidth,image.naturalHeight));const tinted=document.createElement('canvas');tinted.width=Math.round(image.naturalWidth*scale);tinted.height=Math.round(image.naturalHeight*scale);const tintCtx=tinted.getContext('2d');
  tintCtx.drawImage(image,0,0,tinted.width,tinted.height);tintCtx.globalCompositeOperation='source-atop';tintCtx.globalAlpha=strength;tintCtx.fillStyle=color;tintCtx.fillRect(0,0,tinted.width,tinted.height);tintCtx.globalCompositeOperation='source-over';
  tintedShipSpriteCache.set(key,tinted);return tinted;
+}
+function getProjectionShipSprite(image,color='#6657d9',maxSide=768){
+ if(!shipSpriteReady(image))return image;
+ const key=`${image.src}|projection|${color}|${maxSide}`;if(projectionShipSpriteCache.has(key))return projectionShipSpriteCache.get(key);
+ const scale=Math.min(1,maxSide/Math.max(image.naturalWidth,image.naturalHeight)),sprite=document.createElement('canvas');sprite.width=Math.max(1,Math.round(image.naturalWidth*scale));sprite.height=Math.max(1,Math.round(image.naturalHeight*scale));
+ const c=sprite.getContext('2d',{alpha:true,willReadFrequently:true});c.drawImage(image,0,0,sprite.width,sprite.height);
+ try{const pixels=c.getImageData(0,0,sprite.width,sprite.height),data=pixels.data;for(let i=0;i<data.length;i+=4){const alpha=data[i+3];if(alpha<52){data[i+3]=0;continue}if(alpha<104)data[i+3]=Math.round((alpha-52)/52*alpha)}c.putImageData(pixels,0,0)}catch{}
+ c.globalCompositeOperation='source-atop';c.globalAlpha=.34;c.fillStyle=color;c.fillRect(0,0,sprite.width,sprite.height);c.globalCompositeOperation='source-over';c.globalAlpha=1;
+ projectionShipSpriteCache.set(key,sprite);return sprite;
 }
 const BOSS_VISUAL_PROFILES=Object.freeze([
  {tint:'#365d86',core:'#7ddfff',mark:1},{tint:'#6f351f',core:'#ff9a55',mark:2},{tint:'#574084',core:'#c49aff',mark:3},{tint:'#775e25',core:'#ffe06d',mark:4},{tint:'#7b214f',core:'#ff66bd',mark:5},
@@ -438,8 +448,9 @@ function drawDrone(d){
  ctx.save();ctx.translate(pos.x,pos.y+recoil);ctx.rotate((Number.isFinite(d.aimAngle)?d.aimAngle:0)-bank*.045);if(projection){ctx.globalAlpha*=.48;ctx.scale(.8,.8)}
  if(shipSpriteReady(shipSpriteAssets.drone)){
   const swarm=d.mode==='drone_swarm',heavy=d.mode==='drone_heavy',width=heavy?64:swarm?34:46,height=heavy?58:swarm?31:42;
-  const droneImage=getMobileRenderSprite(heavy?getTintedShipSprite(shipSpriteAssets.drone,'#6c87c8',.2,512):swarm?getTintedShipSprite(shipSpriteAssets.drone,'#62efff',.16,512):shipSpriteAssets.drone,512);
-  ctx.save();ctx.globalAlpha*=.99;ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(droneImage,-width/2,-height/2,width,height);if(projection){ctx.globalCompositeOperation='source-atop';ctx.fillStyle='rgba(117,104,255,.32)';ctx.fillRect(-width/2,-height/2,width,height)}ctx.restore();
+  const baseDroneImage=heavy?getTintedShipSprite(shipSpriteAssets.drone,'#6c87c8',.2,512):swarm?getTintedShipSprite(shipSpriteAssets.drone,'#62efff',.16,512):shipSpriteAssets.drone;
+  const droneImage=getMobileRenderSprite(projection?getProjectionShipSprite(shipSpriteAssets.drone,'#7568ff',512):baseDroneImage,512);
+  ctx.save();ctx.globalAlpha*=.99;ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(droneImage,-width/2,-height/2,width,height);ctx.restore();
   ctx.save();ctx.globalCompositeOperation='lighter';ctx.shadowBlur=heavy?15:10;ctx.shadowColor='#59ddff';ctx.fillStyle='#dfffff';const engineY=height*.39;for(const engineX of heavy?[-11,11]:[-7,7]){ctx.beginPath();ctx.ellipse(engineX,engineY,heavy?2.2:1.5,heavy?6:4,0,0,Math.PI*2);ctx.fill()}ctx.restore();ctx.restore();return;
  }
  if(d.mode==='drone_swarm'){
@@ -618,7 +629,7 @@ function drawShip(x,y,color,pose=null){
 
  const selectedPlayerImage=shipSpriteAssets.players[window.IWSave?.data?.profile?.selectedFighter]||shipSpriteAssets.player;
  if(shipSpriteReady(selectedPlayerImage)){
-  const spriteAlpha=pose?.alpha??.99,playerImage=pose?.bodyColor?getTintedShipSprite(selectedPlayerImage,pose.bodyColor,.42,768):selectedPlayerImage,bounds=getOpaqueSpriteBounds(playerImage);let drawW=88,drawH=88;if(bounds){const ratio=bounds.width/Math.max(1,bounds.height);if(ratio>=1)drawH=drawW/ratio;else drawW=drawH*ratio}drawW=Math.round(drawW);drawH=Math.round(drawH);const drawX=Math.round(-drawW/2),drawY=Math.round(-drawH/2);ctx.save();ctx.globalAlpha=spriteAlpha;ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.filter='none';if(bounds)ctx.drawImage(playerImage,bounds.x,bounds.y,bounds.width,bounds.height,drawX,drawY,drawW,drawH);else ctx.drawImage(playerImage,drawX,drawY,drawW,drawH);ctx.restore();drawPlayerSpriteGlow(pose?.color||color,spriteAlpha);ctx.restore();return;
+  const spriteAlpha=pose?.alpha??.99,playerImage=pose?.bodyColor?getProjectionShipSprite(selectedPlayerImage,pose.bodyColor,768):selectedPlayerImage,bounds=getOpaqueSpriteBounds(playerImage);let drawW=88,drawH=88;if(bounds){const ratio=bounds.width/Math.max(1,bounds.height);if(ratio>=1)drawH=drawW/ratio;else drawW=drawH*ratio}drawW=Math.round(drawW);drawH=Math.round(drawH);const drawX=Math.round(-drawW/2),drawY=Math.round(-drawH/2);ctx.save();ctx.globalAlpha=spriteAlpha;ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.filter='none';if(bounds)ctx.drawImage(playerImage,bounds.x,bounds.y,bounds.width,bounds.height,drawX,drawY,drawW,drawH);else ctx.drawImage(playerImage,drawX,drawY,drawW,drawH);ctx.restore();drawPlayerSpriteGlow(pose?.color||color,spriteAlpha);ctx.restore();return;
  }
 
  // 横滚透视：压低的一侧更宽、更暗并稍向下；抬高的一侧更窄、更亮并稍向上。

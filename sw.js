@@ -1,9 +1,9 @@
-const CACHE='iw-cache-10.1.9-wreck-debug-v63';
+const CACHE='iw-cache-10.2.0-wreck-cinematic-v64';
 const ASSETS=[
   './',
   './index.html',
-  './style.css?v=10.1.9',
-  './game.js?v=10.1.9',
+  './style.css?v=10.2.0',
+  './game.js?v=10.2.0',
   './manifest.webmanifest',
   './apple-touch-icon.png',
   './favicon.png',

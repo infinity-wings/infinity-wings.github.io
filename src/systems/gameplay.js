@@ -231,10 +231,18 @@ function bossNumberForThreat(tier=threatLevel()){return Math.max(1,Math.min(6,ti
 function syncBossDirectorTier(force=false){const tier=Math.max(0,Math.min(5,threatLevel()));if(!force&&build.bossDirectorTier===tier)return;build.bossDirectorTier=tier;build.bossDirectorIndex=0;build.bossDirectorProgress=0;build.bossPendingNumber=0;build.bossPendingTimer=0;build.bossWarningShownFor=0}
 function advanceBossDirector(number){const queue=BOSS_ENCOUNTERS_BY_TIER[build.bossDirectorTier]||[];if(queue[build.bossDirectorIndex]===number){build.bossDirectorIndex++;build.bossClearedTier=Math.max(build.bossClearedTier??-1,build.bossDirectorTier)}build.bossDirectorProgress=0;build.bossPendingNumber=0;build.bossPendingTimer=0;build.bossWarningShownFor=0}
 function tierThreeWreckRecovered(){return !!IWSave?.data?.progression?.fighters?.includes('laser')}
+function wreckCinematicActive(){const phase=build?.wreckStory?.phase;return ['signal','drift','bossEntry','abduct','dialogue'].includes(phase)}
+function ensureWreckDialogue(){
+ let overlay=document.getElementById('wreckStoryDialogue');
+ if(!overlay){overlay=document.createElement('section');overlay.id='wreckStoryDialogue';overlay.className='wreck-story-dialogue hidden';overlay.innerHTML='<button type="button"><small>UNKNOWN HOSTILE SIGNAL</small><strong>裂隙猎手</strong><p>“想带回这个手下败将的遗骸？<br>那就先击败我。”</p><span>点击继续</span></button>';document.querySelector('#app')?.appendChild(overlay);overlay.querySelector('button').onclick=()=>continueTierThreeWreckStory()}
+ return overlay;
+}
+function hideWreckDialogue(){document.getElementById('wreckStoryDialogue')?.classList.add('hidden')}
+function continueTierThreeWreckStory(){const story=build?.wreckStory;if(!story||story.phase!=='dialogue')return;hideWreckDialogue();story.phase='guarded';story.timer=0;story.alpha=0;const boss=enemies.find(e=>e.boss&&e.wreckStory);if(boss){boss.bossEntering=false;boss.y=boss.targetY;boss.shoot=.55;boss.bossModeTimer=.65}paused=false;state='game';last=performance.now();audioSystem?.play('ui');toast('遗骸夺回作战开始','important')}
 function beginTierThreeWreckStory(force=false){
- clearEntityArray(enemyBullets);enemyLasers.length=0;enemies.length=0;battleEventSystem.cancelForBoss?.();
- build.wreckStory={fighterId:'laser',phase:'discover',timer:4.2,x:W/2,y:-90,alpha:1,dialogueShown:false,debugForce:!!force};
- audioSystem?.play('ui');toast('检测到微弱友军识别信号','important');
+ hideWreckDialogue();clearEntityArray(enemyBullets);clearEntityArray(bullets);clearEntityArray(missiles);enemyLasers.length=0;lightningArcs.length=0;blastWaves.length=0;particles.length=0;drones.length=0;enemies.length=0;battleEventSystem.cancelForBoss?.();build.bossPendingNumber=0;build.bossPendingTimer=0;
+ build.wreckStory={fighterId:'laser',phase:'signal',timer:0,x:W/2,y:-150,alpha:0,rotation:-.18,debugForce:!!force};
+ player.fireCd=Math.max(player.fireCd,900);player.vx=player.vy=player.targetVx=player.targetVy=0;audioSystem?.play('ui');toast('系统检测到失联战机信号……','important');
 }
 function releaseTierThreeWreck(){
  if(!build.wreckStory||build.wreckStory.fighterId!=='laser'||(tierThreeWreckRecovered()&&!build.wreckStory.debugForce))return;
@@ -243,15 +251,21 @@ function releaseTierThreeWreck(){
 }
 function updateWreckStory(dt){
  const story=build?.wreckStory;if(!story)return;
- if(story.phase==='discover'){
-  story.timer-=dt;story.y+=(160-story.y)*Math.min(1,dt*1.8);
-  if(story.timer<=0){story.phase='abduct';story.timer=0;const boss=spawnBoss(3,{wreckStory:true});boss.wreckStory=true;}
+ story.timer+=dt;story.rotation=(story.rotation||0)+dt*.17;story.float=Math.sin(story.timer*1.35)*5;
+ const playerTargetY=H-SAFE_BOTTOM-118;player.x+=(W/2-player.x)*Math.min(1,dt*2.3);player.y+=(playerTargetY-player.y)*Math.min(1,dt*2.3);player.vx=player.vy=player.targetVx=player.targetVy=0;player.tilt*=Math.max(0,1-dt*5);player.pitch*=Math.max(0,1-dt*5);
+ if(story.phase==='signal'){
+  story.alpha=Math.min(1,story.timer/1.1);if(story.timer>=1.55){story.phase='drift';story.timer=0;story.y=-112;story.alpha=1}
+ }else if(story.phase==='drift'){
+  const targetY=Math.max(180,playerTargetY-205),p=Math.min(1,story.timer/5.1),ease=1-Math.pow(1-p,2.25);story.y=-112+(targetY+112)*ease;story.x=W/2+Math.sin(story.timer*.78)*15;
+  if(story.timer>=5.1){story.phase='bossEntry';story.timer=0;audioSystem?.play('ui');toast('高能反应接近','important');const boss=spawnBoss(3,{wreckStory:true});boss.wreckStory=true;boss.cinematicEntry=true;boss.bossEntering=true;boss.bossEntryTime=0;boss.y=-210;boss.entryStartY=-210;boss.targetY=128}
+ }else if(story.phase==='bossEntry'){
+  const boss=enemies.find(e=>e.boss&&e.wreckStory);if(boss){const p=Math.min(1,story.timer/2.15),ease=1-Math.pow(1-p,3);boss.y=-210+(boss.targetY+210)*ease;boss.bossEntryTime=Math.min(boss.bossIntroTravel||1.7,story.timer*.72)}if(story.timer>=2.3){story.phase='abduct';story.timer=0}
  }else if(story.phase==='abduct'){
-  story.timer+=dt;const boss=enemies.find(e=>e.boss&&e.bossNumber===3);
-  if(boss){story.x+=(boss.x-story.x)*Math.min(1,dt*2.4);story.y+=(boss.y+24-story.y)*Math.min(1,dt*2.2);story.alpha=Math.max(0,1-story.timer/2.6);if(!story.dialogueShown&&story.timer>.75){story.dialogueShown=true;toast('想带回这个手下败将的遗骸？先击败我。','important')}}
-  if(story.timer>2.65)story.phase='guarded';
+  const boss=enemies.find(e=>e.boss&&e.wreckStory),p=Math.min(1,story.timer/2.15);if(boss){story.x+=(boss.x-story.x)*Math.min(1,dt*(1.25+p*2.5));story.y+=(boss.y+22-story.y)*Math.min(1,dt*(1.05+p*2.8));story.alpha=Math.max(0,1-Math.max(0,p-.64)/.36)}if(story.timer>=2.2){story.phase='dialogue';story.timer=0;story.alpha=0;ensureWreckDialogue().classList.remove('hidden');audioSystem?.play('ui')}
+ }else if(story.phase==='dialogue'){
+  const boss=enemies.find(e=>e.boss&&e.wreckStory);if(boss)boss.y=boss.targetY;
  }else if(story.phase==='return'){
-  story.timer+=dt;story.y=Math.min(H-SAFE_BOTTOM-105,story.y+24*dt);story.x=W/2+Math.sin(story.timer*1.4)*12;
+  story.y=Math.min(H-SAFE_BOTTOM-105,story.y+24*dt);story.x=W/2+Math.sin(story.timer*1.4)*12;
   if(Math.hypot(player.x-story.x,player.y-story.y)<playerCombatRadius()+42){
    IWSave.data.story.wrecks[0]=true;IWSave.data.story.wrecksFound=IWSave.data.story.wrecks.filter(Boolean).length;IWSave.unlockFighter('laser');
    story.phase='recovered';story.alpha=0;audioSystem?.play('pickup');toast('曙光棱镜遗骸已回收 · 光能源核完成解析','important');
@@ -1034,7 +1048,7 @@ function hardSanitizeCombatState(){
 }
 function update(dt){
  IWStability?.watchdog?.();
- elapsed+=dt;const threat=threatLevel();const wreckSceneActive=build?.wreckStory&&!['recovered'].includes(build.wreckStory.phase);if(!wreckSceneActive)battleEventSystem.update(dt);
+ const cinematic=wreckCinematicActive();if(!cinematic)elapsed+=dt;const threat=threatLevel();const wreckSceneActive=build?.wreckStory&&!['recovered'].includes(build.wreckStory.phase);if(!wreckSceneActive)battleEventSystem.update(dt);
  for(const s of stars){s.y+=s.v*(1+threat*.08)*dt;if(s.y>H){s.y=0;s.x=Math.random()*W}}
  for(const d of spaceDust){d.y+=d.v*(1+threat*.025)*dt;d.x+=d.drift*dt;if(d.y>H+8){d.y=-8;d.x=Math.random()*W}if(d.x<-8)d.x=W+8;else if(d.x>W+8)d.x=-8}
  for(const s of nearSpaceStreaks){s.y+=s.v*(1+threat*.045)*dt;if(s.y>H+s.len){s.y=-s.len-Math.random()*H*.28;s.x=Math.random()*W}}
@@ -1045,6 +1059,7 @@ function update(dt){
   if(deathTimer>=2.15)die();
   updateUI();return;
  }
+ if(cinematic){updateWreckStory(dt);updateUI();return}
  const keyboardMode=touchDevice||uiPrefs?.controlMode!=='mouse';
  let dx=keyboardMode?((keys.ArrowRight||keys.d?1:0)-(keys.ArrowLeft||keys.a?1:0)+joyX):0;
  let dy=keyboardMode?((keys.ArrowDown||keys.s?1:0)-(keys.ArrowUp||keys.w?1:0)+joyY):0;

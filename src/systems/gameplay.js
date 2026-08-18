@@ -504,8 +504,10 @@ function fireProjectionDroneVolley(){
  for(const clone of clonePositions())for(let shot=0;shot<stats.count;shot++){
   const formation=droneFormationOffset(shot,stats.count,awakening?.id||'standard'),originX=clone.x+formation.x*.48,originY=clone.y+formation.y*.4,focus=awakening?.id==='drone_swarm'&&shot%4===3,target=nearestLivingEnemy(originX,originY);
   if(!target)continue;
-  const speed=stats.heavy?610:690,velocity=aimedVelocity(originX,originY,target,speed);
-  bullets.push({x:originX,y:originY-13,vx:velocity.vx,vy:velocity.vy,r:stats.heavy?9.4:focus?4.2:2.8,d:player.damage*stats.damage*(focus?1.75:1)*clone.damageScale,source:'drone',life:stats.heavy?3.4:2.4,pierce:stats.heavy?4:focus?1:0,awakening:awakening?.id||null,swarmFocus:focus,seek:focus?6.8:0,target:focus?target:null,projectionInherited:true});
+  const range=[0,260,315,370][inherited.level]||370,dx=target.x-originX,dy=target.y-originY;
+  if(dx*dx+dy*dy>range*range)continue;
+  const speed=stats.heavy?610:690,aimAngle=Math.atan2(dy,dx)+Math.PI/2,muzzleX=originX+Math.sin(aimAngle)*13,muzzleY=originY-Math.cos(aimAngle)*13,velocity=aimedVelocity(muzzleX,muzzleY,target,speed);
+  bullets.push({x:muzzleX,y:muzzleY,vx:velocity.vx,vy:velocity.vy,r:stats.heavy?9.4:focus?4.2:2.8,d:player.damage*stats.damage*(focus?1.75:1)*clone.damageScale,source:'drone',life:stats.heavy?3.4:2.4,pierce:stats.heavy?4:focus?1:0,awakening:awakening?.id||null,swarmFocus:focus,seek:focus?6.8:0,target:focus?target:null,projectionInherited:true,droneLevel:inherited.level,aimAngle});
  }
 }
 function fireProjectionThunderVolley(){
@@ -526,7 +528,7 @@ function updateProjectionInheritedSkills(dt){
  if(!active){build.projectionMainCd=0;build.projectionMissileCd=0;build.projectionLaserState={phase:'idle',timer:0};return;}
  build.projectionMainCd-=dt;
  const inherited=projectionCoreLevel();
- if(build.projectionMainCd<=0){if(inherited.coreId==='main')fireProjectionMainVolley();else if(inherited.coreId==='drone')fireProjectionDroneVolley();else if(inherited.coreId==='thunder')fireProjectionThunderVolley();const awakening=projectionPrimaryAwakening();build.projectionMainCd=inherited.coreId==='thunder'?(awakening?.id==='thunder_storm'?.36:awakening?.id==='thunder_lance'?2.5:getThunderCoreStats().cooldown):inherited.coreId==='drone'?(awakening?.id==='drone_swarm'?.52:awakening?.id==='drone_heavy'?1.02:[0,.34,.3,.26][inherited.level]):inherited.coreId==='main'?(awakening?.id==='main_piercer'?1.55:awakening?.id==='main_rapid'?.22:.28):.28;}
+ if(build.projectionMainCd<=0){if(inherited.coreId==='main')fireProjectionMainVolley();else if(inherited.coreId==='drone')fireProjectionDroneVolley();else if(inherited.coreId==='thunder')fireProjectionThunderVolley();const awakening=projectionPrimaryAwakening();build.projectionMainCd=inherited.coreId==='thunder'?(awakening?.id==='thunder_storm'?.36:awakening?.id==='thunder_lance'?2.5:getThunderCoreStats().cooldown):inherited.coreId==='drone'?(awakening?.id==='drone_swarm'?.52:awakening?.id==='drone_heavy'?1.05:[0,.44,.39,.34][inherited.level]):inherited.coreId==='main'?(awakening?.id==='main_piercer'?1.55:awakening?.id==='main_rapid'?.22:.28):.28;}
  if(inherited.coreId==='missile'){
   build.projectionMissileCd-=dt;
   if(build.projectionMissileCd<=0){fireProjectionMissileVolley();const awakening=projectionPrimaryAwakening();build.projectionMissileCd=awakening?.id==='missile_cluster'?3.6:awakening?.id==='missile_hunter'?5.8:missileStats(inherited.level).cooldown;}
@@ -547,14 +549,14 @@ function syncAttackCoreState(){
  if(build.droneVolleyMode!==mode){build.droneVolleyMode=mode;build.droneVolleyCd=90;}
  while(drones.length<desired){
   const index=drones.length;
-  drones.push({slot:index,cd:0,fireRate:340,damageScale:.55,bank:0,recoil:0,x:player.x,y:player.y+26,mode});
+  drones.push({slot:index,cd:0,fireRate:440,damageScale:.55,bank:0,recoil:0,aimAngle:0,x:player.x,y:player.y+26,mode});
  }
  if(drones.length>desired)drones.length=desired;
  const droneStats=droneAwakening?.id==='drone_swarm'
-  ?{fireRate:440,damageScale:.3,mode:'drone_swarm'}
+  ?{fireRate:520,damageScale:.3,mode:'drone_swarm'}
   :droneAwakening?.id==='drone_heavy'
-   ?{fireRate:920,damageScale:2.08,mode:'drone_heavy'}
-   :([null,{fireRate:340,damageScale:.5,mode:'standard'},{fireRate:300,damageScale:.62,mode:'standard'},{fireRate:260,damageScale:.75,mode:'standard'}][droneLevel]);
+   ?{fireRate:1050,damageScale:2.08,mode:'drone_heavy'}
+   :([null,{fireRate:440,damageScale:.5,mode:'standard'},{fireRate:390,damageScale:.62,mode:'standard'},{fireRate:340,damageScale:.75,mode:'standard'}][droneLevel]);
  if(droneStats)drones.forEach((d,i)=>Object.assign(d,droneStats,{slot:i}));
 }
 function droneFormationOffset(slot,count,mode='standard'){
@@ -576,7 +578,7 @@ function aimedVelocity(x,y,target,speed){
  return{vx:dx/length*speed,vy:dy/length*speed};
 }
 function droneTarget(d,pos){
- const level=Math.max(1,coreManager.getLevel('drone')),range=[0,380,455,540][level]||540,current=d.target;
+ const level=Math.max(1,coreManager.getLevel('drone')),range=[0,260,315,370][level]||370,current=d.target;
  if(current&&current.hp>0&&!current.bossRetreating){const dx=current.x-pos.x,dy=current.y-pos.y;if(dx*dx+dy*dy<=range*range*1.25)return current}
  let best=null,bestDistance=range*range;
  for(const enemy of livingTargetSnapshot()){
@@ -586,20 +588,26 @@ function droneTarget(d,pos){
  }
  d.target=best;return best;
 }
+function smoothDroneAim(current,target,dt){
+ const delta=Math.atan2(Math.sin(target-current),Math.cos(target-current));
+ return current+delta*(1-Math.exp(-7.5*dt));
+}
+function droneMuzzle(pos,angle,distance){return{x:pos.x+Math.sin(angle)*distance,y:pos.y-Math.cos(angle)*distance}}
 function droneShoot(d){
  const pos=dronePosition(d),target=droneTarget(d,pos);
  if(!target)return false;
+ const level=Math.max(1,coreManager.getLevel('drone')),aimAngle=Number.isFinite(d.aimAngle)?d.aimAngle:Math.atan2(target.y-pos.y,target.x-pos.x)+Math.PI/2,muzzle=droneMuzzle(pos,aimAngle,d.mode==='drone_heavy'?22:15);
  if(d.mode==='drone_swarm'){
   d.shotCount=(d.shotCount||0)+1;const focus=d.shotCount%4===0;
-  const velocity=aimedVelocity(pos.x,pos.y,target,690);
-  bullets.push({x:pos.x,y:pos.y-13,vx:velocity.vx,vy:velocity.vy,r:focus?4.2:2.1,d:player.damage*(d.damageScale||.3)*(focus?1.75:1),source:'drone',awakening:'drone_swarm',swarmFocus:focus,seek:focus?6.8:0,target:focus?target:null,pierce:focus?1:0,life:2.3});
+  const velocity=aimedVelocity(muzzle.x,muzzle.y,target,690);
+  bullets.push({x:muzzle.x,y:muzzle.y,vx:velocity.vx,vy:velocity.vy,r:focus?4.2:2.1,d:player.damage*(d.damageScale||.3)*(focus?1.75:1),source:'drone',awakening:'drone_swarm',swarmFocus:focus,seek:focus?6.8:0,target:focus?target:null,pierce:focus?1:0,life:2.3,droneLevel:level,aimAngle});
  }else if(d.mode==='drone_heavy'){
-  const velocity=aimedVelocity(pos.x,pos.y,target,610);
-  bullets.push({x:pos.x,y:pos.y-22,vx:velocity.vx,vy:velocity.vy,r:9.4,d:player.damage*(d.damageScale||2.08),source:'drone',awakening:'drone_heavy',pierce:4,life:3.4});
+  const velocity=aimedVelocity(muzzle.x,muzzle.y,target,610);
+  bullets.push({x:muzzle.x,y:muzzle.y,vx:velocity.vx,vy:velocity.vy,r:9.4,d:player.damage*(d.damageScale||2.08),source:'drone',awakening:'drone_heavy',pierce:4,life:3.4,droneLevel:level,aimAngle});
   shake=Math.max(shake,2.5);
  }else{
-  const velocity=aimedVelocity(pos.x,pos.y,target,610);
-  bullets.push(applyBlastPayload({x:pos.x,y:pos.y-15,vx:velocity.vx,vy:velocity.vy,r:2.8,d:player.damage*(d.damageScale||.45),source:'drone'}));
+  const velocity=aimedVelocity(muzzle.x,muzzle.y,target,610);
+  bullets.push(applyBlastPayload({x:muzzle.x,y:muzzle.y,vx:velocity.vx,vy:velocity.vy,r:2.8,d:player.damage*(d.damageScale||.45),source:'drone',droneLevel:level,aimAngle}));
  }
  d.recoil=1;return true;
 }
@@ -1160,6 +1168,9 @@ function update(dt){
   d.recoil=Math.max(0,(d.recoil||0)-dt*9);
   const targetBank=Math.max(-1,Math.min(1,player.vx/player.speed));
   d.bank+=(targetBank-d.bank)*(1-Math.exp(-9*dt));
+  const aimTarget=droneTarget(d,dronePosition(d));
+  const desiredAim=aimTarget?Math.atan2(aimTarget.y-d.y,aimTarget.x-d.x)+Math.PI/2:0;
+  d.aimAngle=smoothDroneAim(Number.isFinite(d.aimAngle)?d.aimAngle:0,desiredAim,dt);
   if(d.mode==='drone_heavy')d.guardFlash=build.heavyEscortShieldActive>0?Math.min(1,build.heavyEscortShieldActive):0;
  }
  if(drones.length){

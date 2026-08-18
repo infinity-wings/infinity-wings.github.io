@@ -205,13 +205,18 @@ function draw(){
  for(const b of bullets){
   if(b.laser)drawPlayerLaserBeam(b,lowFx)
   else if(b.source==='drone'){
-   ctx.save();ctx.globalCompositeOperation='lighter';ctx.globalAlpha=b.projectionInherited?.48:1;
-   if(b.awakening==='drone_heavy'){
-    const speed=Math.hypot(b.vx,b.vy)||1,ux=b.vx/speed,uy=b.vy/speed;
-    const trail=ctx.createLinearGradient(b.x-ux*30,b.y-uy*30,b.x,b.y);trail.addColorStop(0,'rgba(67,184,255,0)');trail.addColorStop(1,'rgba(190,252,255,.9)');ctx.strokeStyle=trail;ctx.lineWidth=5.5;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(b.x-ux*30,b.y-uy*30);ctx.lineTo(b.x-ux*5,b.y-uy*5);ctx.stroke();
-    ctx.shadowBlur=20;ctx.shadowColor='#61eaff';ctx.fillStyle='#dffeff';ctx.beginPath();ctx.ellipse(b.x,b.y-7,5.2,13.5,0,0,Math.PI*2);ctx.fill();ctx.fillStyle='#59cfff';ctx.beginPath();ctx.ellipse(b.x,b.y-8,2.6,8.5,0,0,Math.PI*2);ctx.fill();
-   }else if(b.swarmFocus){ctx.shadowBlur=18;ctx.shadowColor='#7be8ff';ctx.strokeStyle='rgba(134,113,255,.75)';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(b.x,b.y+15);ctx.lineTo(b.x,b.y+2);ctx.stroke();ctx.fillStyle='#ecffff';ctx.beginPath();ctx.moveTo(b.x,b.y-12);ctx.lineTo(b.x-4.5,b.y+2);ctx.lineTo(b.x,b.y+7);ctx.lineTo(b.x+4.5,b.y+2);ctx.closePath();ctx.fill();}
-   else{ctx.shadowBlur=9;ctx.shadowColor='#58d9ff';ctx.fillStyle='#baf6ff';ctx.beginPath();ctx.ellipse(b.x,b.y-5,2.2,6.5,0,0,Math.PI*2);ctx.fill();}
+   const projection=!!b.projectionInherited,level=Math.max(1,b.droneLevel||1),heavy=b.awakening==='drone_heavy',focus=!!b.swarmFocus,swarm=b.awakening==='drone_swarm';
+   const angle=Math.atan2(b.vy,b.vx)+Math.PI/2,pulse=.82+.18*Math.sin(elapsed*22+b.x*.04),trailLength=heavy?34:focus?25:swarm?12:12+level*5;
+   const glow=projection?'#806cff':focus?'#8c72ff':'#52dcff',core=projection?'#d8d0ff':'#efffff';
+   ctx.save();ctx.translate(b.x,b.y);ctx.rotate(angle);ctx.globalCompositeOperation='lighter';ctx.globalAlpha=projection ? .56 : 1;ctx.lineCap='round';
+   const trail=ctx.createLinearGradient(0,3,0,trailLength);trail.addColorStop(0,projection?'rgba(198,187,255,.82)':'rgba(204,252,255,.92)');trail.addColorStop(.34,projection?'rgba(116,91,255,.5)':'rgba(49,205,255,.58)');trail.addColorStop(1,'rgba(35,85,255,0)');ctx.strokeStyle=trail;ctx.shadowBlur=heavy?20:10+level*2;ctx.shadowColor=glow;ctx.lineWidth=heavy?7:focus?3.6:swarm?2:2.2+level*.45;ctx.beginPath();ctx.moveTo(0,3);ctx.lineTo(0,trailLength);ctx.stroke();
+   if(level>=3&&!swarm&&!heavy){ctx.globalAlpha*=.58;ctx.lineWidth=1.35;for(const side of [-1,1]){ctx.beginPath();ctx.moveTo(side*2.5,5);ctx.lineTo(side*3.8,trailLength*.78);ctx.stroke()}ctx.globalAlpha=projection ? .56 : 1}
+   ctx.shadowBlur=heavy?25:14;ctx.fillStyle=core;
+   if(heavy){ctx.beginPath();ctx.moveTo(0,-16);ctx.lineTo(-7,-2);ctx.lineTo(-5,9);ctx.lineTo(0,13);ctx.lineTo(5,9);ctx.lineTo(7,-2);ctx.closePath();ctx.fill();ctx.fillStyle=projection?'#8f7cff':'#45cfff';ctx.beginPath();ctx.ellipse(0,-2,3.1,8.5,0,0,Math.PI*2);ctx.fill()}
+   else if(level>=3||focus){const width=focus?5:4.2,height=focus?13:11;ctx.beginPath();ctx.moveTo(0,-height);ctx.lineTo(-width,0);ctx.lineTo(0,7);ctx.lineTo(width,0);ctx.closePath();ctx.fill();ctx.fillStyle=projection?'#8068ff':'#43cfff';ctx.beginPath();ctx.moveTo(0,-height+4);ctx.lineTo(-1.7,0);ctx.lineTo(0,4);ctx.lineTo(1.7,0);ctx.closePath();ctx.fill()}
+   else{ctx.beginPath();ctx.ellipse(0,-4,level===2?3:2.35,level===2?8.5:7,0,0,Math.PI*2);ctx.fill();ctx.fillStyle=projection?'#8068ff':'#3bd7ff';ctx.beginPath();ctx.ellipse(0,-4,1.15,4.5,0,0,Math.PI*2);ctx.fill()}
+   if(level>=2&&!swarm){ctx.shadowBlur=8;ctx.strokeStyle=projection?`rgba(157,133,255,${.58*pulse})`:`rgba(104,232,255,${.62*pulse})`;ctx.lineWidth=1.1;ctx.beginPath();ctx.ellipse(0,-1,5+level,2.1+level*.25,0,0,Math.PI*2);ctx.stroke()}
+   if(focus){ctx.strokeStyle=`rgba(174,143,255,${.76*pulse})`;ctx.lineWidth=1.4;ctx.beginPath();ctx.arc(0,-2,8.5,0,Math.PI*2);ctx.stroke()}
    ctx.restore();
   }else if(b.source==='split'){
    const angle=Math.atan2(b.vy,b.vx)+Math.PI/2,level=b.splitLevel||1,pulse=.82+.18*Math.sin(elapsed*25+b.x*.03);
@@ -291,7 +296,7 @@ function draw(){
  if(!dying){for(const clone of clonePositions()){try{ctx.save();ctx.globalAlpha=finite(clone.alpha,.54);drawShip(finite(clone.x,player.x),finite(clone.y,player.y),clone.color||'#b474ff',clone)}catch(error){console.warn('投影绘制已跳过',error,clone)}finally{ctx.restore()}}}
  if(!dying&&build&&(build.projectionActive||0)>0&&projectionCoreLevel()?.coreId==='drone'){
   const inherited=projectionCoreLevel(),awake=projectionPrimaryAwakening(),mode=awake?.id||'standard',fullCount=awake?.id==='drone_swarm'?8:awake?.id==='drone_heavy'?2:([0,2,3,4][inherited.level]||0),visibleCount=Math.min(4,fullCount);
-  for(const clone of clonePositions())for(let slot=0;slot<visibleCount;slot++){const offset=droneFormationOffset(slot,fullCount,mode);drawDrone({x:clone.x+offset.x*.48,y:clone.y+offset.y*.4,slot,mode,bank:0,recoil:0,projection:true})}
+  for(const clone of clonePositions())for(let slot=0;slot<visibleCount;slot++){const offset=droneFormationOffset(slot,fullCount,mode),x=clone.x+offset.x*.48,y=clone.y+offset.y*.4,target=nearestLivingEnemy(x,y),range=[0,260,315,370][inherited.level]||370,inside=target&&Math.hypot(target.x-x,target.y-y)<=range,aimAngle=inside?Math.atan2(target.y-y,target.x-x)+Math.PI/2:0;drawDrone({x,y,slot,mode,bank:0,recoil:0,aimAngle,projection:true})}
  }
  if(!dying&&player&&Number.isFinite(player.x)&&Number.isFinite(player.y)){try{withRenderState('玩家模型',()=>drawShip(player.x,player.y,'#5ce1ff'))}catch(error){console.warn('玩家模型绘制已跳过',error)}}
  for(const d of drones){try{withRenderState('无人机模型',()=>drawDrone(d))}catch(error){console.warn('无人机绘制已跳过',error,d)}}
@@ -430,7 +435,7 @@ function drawAwakenedFrontShield(){
 function drawDrone(d){
  const pos=dronePosition(d),bank=d.bank||0,recoil=(d.recoil||0)*1.4;
  const projection=!!d.projection;
- ctx.save();ctx.translate(pos.x,pos.y+recoil);ctx.rotate(-bank*.09);if(projection){ctx.globalAlpha*=.48;ctx.scale(.8,.8)}
+ ctx.save();ctx.translate(pos.x,pos.y+recoil);ctx.rotate((Number.isFinite(d.aimAngle)?d.aimAngle:0)-bank*.045);if(projection){ctx.globalAlpha*=.48;ctx.scale(.8,.8)}
  if(shipSpriteReady(shipSpriteAssets.drone)){
   const swarm=d.mode==='drone_swarm',heavy=d.mode==='drone_heavy',width=heavy?64:swarm?34:46,height=heavy?58:swarm?31:42;
   const droneImage=getMobileRenderSprite(heavy?getTintedShipSprite(shipSpriteAssets.drone,'#6c87c8',.2,512):swarm?getTintedShipSprite(shipSpriteAssets.drone,'#62efff',.16,512):shipSpriteAssets.drone,512);

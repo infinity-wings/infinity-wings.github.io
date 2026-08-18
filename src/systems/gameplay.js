@@ -500,7 +500,13 @@ function fireProjectionMissileVolley(){
 function fireProjectionDroneVolley(){
  const inherited=projectionCoreLevel();if(inherited.coreId!=='drone')return;
  const awakening=projectionPrimaryAwakening(),stats=awakening?.id==='drone_swarm'?{count:8,damage:.3}:awakening?.id==='drone_heavy'?{count:2,damage:2.08,heavy:true}:[null,{count:2,damage:.5},{count:3,damage:.62},{count:4,damage:.75}][inherited.level];
- for(const clone of clonePositions())for(let shot=0;shot<stats.count;shot++){const formation=droneFormationOffset(shot,stats.count,awakening?.id||'standard'),originX=clone.x+formation.x*.48,originY=clone.y+formation.y*.4,focus=awakening?.id==='drone_swarm'&&shot%4===3;bullets.push({x:originX,y:originY-13,vx:formation.x*.18,vy:stats.heavy?-610:-690,r:stats.heavy?9.4:focus?4.2:2.8,d:player.damage*stats.damage*(focus?1.75:1)*clone.damageScale,source:'drone',life:stats.heavy?3.4:2.4,pierce:stats.heavy?4:focus?1:0,awakening:awakening?.id||null,swarmFocus:focus,seek:focus?6.8:0,target:focus?nearestLivingEnemy(originX,originY):null,projectionInherited:true})}
+ if(!stats)return;
+ for(const clone of clonePositions())for(let shot=0;shot<stats.count;shot++){
+  const formation=droneFormationOffset(shot,stats.count,awakening?.id||'standard'),originX=clone.x+formation.x*.48,originY=clone.y+formation.y*.4,focus=awakening?.id==='drone_swarm'&&shot%4===3,target=nearestLivingEnemy(originX,originY);
+  if(!target)continue;
+  const speed=stats.heavy?610:690,velocity=aimedVelocity(originX,originY,target,speed);
+  bullets.push({x:originX,y:originY-13,vx:velocity.vx,vy:velocity.vy,r:stats.heavy?9.4:focus?4.2:2.8,d:player.damage*stats.damage*(focus?1.75:1)*clone.damageScale,source:'drone',life:stats.heavy?3.4:2.4,pierce:stats.heavy?4:focus?1:0,awakening:awakening?.id||null,swarmFocus:focus,seek:focus?6.8:0,target:focus?target:null,projectionInherited:true});
+ }
 }
 function fireProjectionThunderVolley(){
  const inherited=projectionCoreLevel();if(inherited.coreId!=='thunder')return;
@@ -565,18 +571,37 @@ function droneFormationOffset(slot,count,mode='standard'){
 function dronePosition(d){
  return {x:Number.isFinite(d.x)?d.x:player.x,y:Number.isFinite(d.y)?d.y:player.y+30};
 }
+function aimedVelocity(x,y,target,speed){
+ const dx=target.x-x,dy=target.y-y,length=Math.hypot(dx,dy)||1;
+ return{vx:dx/length*speed,vy:dy/length*speed};
+}
+function droneTarget(d,pos){
+ const level=Math.max(1,coreManager.getLevel('drone')),range=[0,380,455,540][level]||540,current=d.target;
+ if(current&&current.hp>0&&!current.bossRetreating){const dx=current.x-pos.x,dy=current.y-pos.y;if(dx*dx+dy*dy<=range*range*1.25)return current}
+ let best=null,bestDistance=range*range;
+ for(const enemy of livingTargetSnapshot()){
+  if(enemy.hp<=0||enemy.bossRetreating)continue;
+  const dx=enemy.x-pos.x,dy=enemy.y-pos.y,distance=dx*dx+dy*dy;
+  if(distance<bestDistance){best=enemy;bestDistance=distance}
+ }
+ d.target=best;return best;
+}
 function droneShoot(d){
- const pos=dronePosition(d);
+ const pos=dronePosition(d),target=droneTarget(d,pos);
+ if(!target)return false;
  if(d.mode==='drone_swarm'){
   d.shotCount=(d.shotCount||0)+1;const focus=d.shotCount%4===0;
-  bullets.push({x:pos.x,y:pos.y-13,vx:0,vy:-690,r:focus?4.2:2.1,d:player.damage*(d.damageScale||.3)*(focus?1.75:1),source:'drone',awakening:'drone_swarm',swarmFocus:focus,seek:focus?6.8:0,target:focus?nearestLivingEnemy(pos.x,pos.y):null,pierce:focus?1:0,life:2.3});
+  const velocity=aimedVelocity(pos.x,pos.y,target,690);
+  bullets.push({x:pos.x,y:pos.y-13,vx:velocity.vx,vy:velocity.vy,r:focus?4.2:2.1,d:player.damage*(d.damageScale||.3)*(focus?1.75:1),source:'drone',awakening:'drone_swarm',swarmFocus:focus,seek:focus?6.8:0,target:focus?target:null,pierce:focus?1:0,life:2.3});
  }else if(d.mode==='drone_heavy'){
-  bullets.push({x:pos.x,y:pos.y-22,vx:(d.slot===0?8:-8),vy:-610,r:9.4,d:player.damage*(d.damageScale||2.08),source:'drone',awakening:'drone_heavy',pierce:4,life:3.4});
+  const velocity=aimedVelocity(pos.x,pos.y,target,610);
+  bullets.push({x:pos.x,y:pos.y-22,vx:velocity.vx,vy:velocity.vy,r:9.4,d:player.damage*(d.damageScale||2.08),source:'drone',awakening:'drone_heavy',pierce:4,life:3.4});
   shake=Math.max(shake,2.5);
  }else{
-  bullets.push(applyBlastPayload({x:pos.x,y:pos.y-15,vx:0,vy:-610,r:2.8,d:player.damage*(d.damageScale||.45),source:'drone'}));
+  const velocity=aimedVelocity(pos.x,pos.y,target,610);
+  bullets.push(applyBlastPayload({x:pos.x,y:pos.y-15,vx:velocity.vx,vy:velocity.vy,r:2.8,d:player.damage*(d.damageScale||.45),source:'drone'}));
  }
- d.recoil=1;
+ d.recoil=1;return true;
 }
 function laserStats(level){
  return [null,

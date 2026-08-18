@@ -1,9 +1,9 @@
-const CACHE='iw-cache-10.1.3-performance-pause-v57';
+const CACHE='iw-cache-10.1.4-drone-targeting-v58';
 const ASSETS=[
   './',
   './index.html',
-  './style.css?v=10.1.3',
-  './game.js?v=10.1.3',
+  './style.css?v=10.1.4',
+  './game.js?v=10.1.4',
   './manifest.webmanifest',
   './apple-touch-icon.png',
   './favicon.png',

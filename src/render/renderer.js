@@ -205,7 +205,7 @@ function draw(){
  for(const b of bullets){
   if(b.laser)drawPlayerLaserBeam(b,lowFx)
   else if(b.source==='drone'){
-   ctx.save();ctx.globalCompositeOperation='lighter';
+   ctx.save();ctx.globalCompositeOperation='lighter';ctx.globalAlpha=b.projectionInherited?.48:1;
    if(b.awakening==='drone_heavy'){
     const speed=Math.hypot(b.vx,b.vy)||1,ux=b.vx/speed,uy=b.vy/speed;
     const trail=ctx.createLinearGradient(b.x-ux*30,b.y-uy*30,b.x,b.y);trail.addColorStop(0,'rgba(67,184,255,0)');trail.addColorStop(1,'rgba(190,252,255,.9)');ctx.strokeStyle=trail;ctx.lineWidth=5.5;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(b.x-ux*30,b.y-uy*30);ctx.lineTo(b.x-ux*5,b.y-uy*5);ctx.stroke();
@@ -289,9 +289,9 @@ function draw(){
  try{drawHeavyEscortShield()}catch(error){console.warn('护航盾绘制已跳过',error)}
  try{drawAwakenedFrontShield()}catch(error){console.warn('前盾绘制已跳过',error)}
  if(!dying){for(const clone of clonePositions()){try{ctx.save();ctx.globalAlpha=finite(clone.alpha,.54);drawShip(finite(clone.x,player.x),finite(clone.y,player.y),clone.color||'#b474ff',clone)}catch(error){console.warn('投影绘制已跳过',error,clone)}finally{ctx.restore()}}}
- if(!dying&&(build.projectionActive||0)>0&&projectionCoreLevel()?.coreId==='drone'){
+ if(!dying&&build&&(build.projectionActive||0)>0&&projectionCoreLevel()?.coreId==='drone'){
   const inherited=projectionCoreLevel(),awake=projectionPrimaryAwakening(),mode=awake?.id||'standard',fullCount=awake?.id==='drone_swarm'?8:awake?.id==='drone_heavy'?2:([0,2,3,4][inherited.level]||0),visibleCount=Math.min(4,fullCount);
-  for(const clone of clonePositions())for(let slot=0;slot<visibleCount;slot++){const offset=droneFormationOffset(slot,fullCount,mode);try{ctx.save();ctx.globalAlpha=.46;drawDrone({x:clone.x+offset.x*.48,y:clone.y+offset.y*.4,slot,mode,bank:0,recoil:0})}finally{ctx.restore()}}
+  for(const clone of clonePositions())for(let slot=0;slot<visibleCount;slot++){const offset=droneFormationOffset(slot,fullCount,mode);drawDrone({x:clone.x+offset.x*.48,y:clone.y+offset.y*.4,slot,mode,bank:0,recoil:0,projection:true})}
  }
  if(!dying&&player&&Number.isFinite(player.x)&&Number.isFinite(player.y)){try{withRenderState('玩家模型',()=>drawShip(player.x,player.y,'#5ce1ff'))}catch(error){console.warn('玩家模型绘制已跳过',error)}}
  for(const d of drones){try{withRenderState('无人机模型',()=>drawDrone(d))}catch(error){console.warn('无人机绘制已跳过',error,d)}}
@@ -429,11 +429,12 @@ function drawAwakenedFrontShield(){
 
 function drawDrone(d){
  const pos=dronePosition(d),bank=d.bank||0,recoil=(d.recoil||0)*1.4;
- ctx.save();ctx.translate(pos.x,pos.y+recoil);ctx.rotate(-bank*.09);
+ const projection=!!d.projection;
+ ctx.save();ctx.translate(pos.x,pos.y+recoil);ctx.rotate(-bank*.09);if(projection){ctx.globalAlpha*=.48;ctx.scale(.8,.8)}
  if(shipSpriteReady(shipSpriteAssets.drone)){
   const swarm=d.mode==='drone_swarm',heavy=d.mode==='drone_heavy',width=heavy?64:swarm?34:46,height=heavy?58:swarm?31:42;
   const droneImage=getMobileRenderSprite(heavy?getTintedShipSprite(shipSpriteAssets.drone,'#6c87c8',.2,512):swarm?getTintedShipSprite(shipSpriteAssets.drone,'#62efff',.16,512):shipSpriteAssets.drone,512);
-  ctx.save();ctx.globalAlpha=.99;ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(droneImage,-width/2,-height/2,width,height);ctx.restore();
+  ctx.save();ctx.globalAlpha*=.99;ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(droneImage,-width/2,-height/2,width,height);if(projection){ctx.globalCompositeOperation='source-atop';ctx.fillStyle='rgba(117,104,255,.32)';ctx.fillRect(-width/2,-height/2,width,height)}ctx.restore();
   ctx.save();ctx.globalCompositeOperation='lighter';ctx.shadowBlur=heavy?15:10;ctx.shadowColor='#59ddff';ctx.fillStyle='#dfffff';const engineY=height*.39;for(const engineX of heavy?[-11,11]:[-7,7]){ctx.beginPath();ctx.ellipse(engineX,engineY,heavy?2.2:1.5,heavy?6:4,0,0,Math.PI*2);ctx.fill()}ctx.restore();ctx.restore();return;
  }
  if(d.mode==='drone_swarm'){

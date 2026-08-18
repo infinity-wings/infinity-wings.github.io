@@ -231,13 +231,13 @@ function bossNumberForThreat(tier=threatLevel()){return Math.max(1,Math.min(6,ti
 function syncBossDirectorTier(force=false){const tier=Math.max(0,Math.min(5,threatLevel()));if(!force&&build.bossDirectorTier===tier)return;build.bossDirectorTier=tier;build.bossDirectorIndex=0;build.bossDirectorProgress=0;build.bossPendingNumber=0;build.bossPendingTimer=0;build.bossWarningShownFor=0}
 function advanceBossDirector(number){const queue=BOSS_ENCOUNTERS_BY_TIER[build.bossDirectorTier]||[];if(queue[build.bossDirectorIndex]===number){build.bossDirectorIndex++;build.bossClearedTier=Math.max(build.bossClearedTier??-1,build.bossDirectorTier)}build.bossDirectorProgress=0;build.bossPendingNumber=0;build.bossPendingTimer=0;build.bossWarningShownFor=0}
 function tierThreeWreckRecovered(){return !!IWSave?.data?.progression?.fighters?.includes('laser')}
-function beginTierThreeWreckStory(){
+function beginTierThreeWreckStory(force=false){
  clearEntityArray(enemyBullets);enemyLasers.length=0;enemies.length=0;battleEventSystem.cancelForBoss?.();
- build.wreckStory={fighterId:'laser',phase:'discover',timer:4.2,x:W/2,y:-90,alpha:1,dialogueShown:false};
+ build.wreckStory={fighterId:'laser',phase:'discover',timer:4.2,x:W/2,y:-90,alpha:1,dialogueShown:false,debugForce:!!force};
  audioSystem?.play('ui');toast('检测到微弱友军识别信号','important');
 }
 function releaseTierThreeWreck(){
- if(!build.wreckStory||build.wreckStory.fighterId!=='laser'||tierThreeWreckRecovered())return;
+ if(!build.wreckStory||build.wreckStory.fighterId!=='laser'||(tierThreeWreckRecovered()&&!build.wreckStory.debugForce))return;
  Object.assign(build.wreckStory,{phase:'return',timer:0,x:W/2,y:118,alpha:1});
  toast('牵引场已解除 · 战机遗骸正在坠回战区','important');
 }
@@ -263,7 +263,7 @@ function maybeSpawnStageBoss(dt=0){
  const queue=BOSS_ENCOUNTERS_BY_TIER[build.bossDirectorTier]||[],number=queue[build.bossDirectorIndex];if(!number)return;const encounter=BOSS_ENCOUNTERS[number-1];
  // 前两名前哨使用明确的章节时间点；后续实体 Boss 使用本阶段击毁进度，
  // 因而测试跳转危险等级也不会触发低阶段的旧定时 Boss。
- const required=encounter?.tier>=6?72:58;
+ const required=number===3?30:encounter?.tier>=6?72:58;
  const ready=number===1?elapsed>=145:number===2?elapsed>=235:build.bossDirectorProgress>=required;
  if(number===3&&ready&&!tierThreeWreckRecovered()){
   if(!build.wreckStory)beginTierThreeWreckStory();

@@ -121,6 +121,7 @@ const IWStability={
   if(typeof releaseMouseLock==='function')releaseMouseLock();
   if(typeof running!=='undefined'&&running&&typeof paused!=='undefined'&&!paused&&typeof state!=='undefined'&&state==='game'){
    this.autoPaused=true;
+   if(typeof createRunCheckpoint==='function'){try{createRunCheckpoint()}catch(_){}}
    if(typeof openPauseMenu==='function')openPauseMenu();
    else paused=true;
   }
@@ -138,6 +139,12 @@ const IWStability={
   if(returningFromBackground)this.hardResetCanvas(reason);
   else this.resetCanvas();
   this.clearTransientEffects();
+  if(this.autoPaused&&typeof running!=='undefined'&&running&&typeof dying!=='undefined'&&!dying){
+   if(typeof paused!=='undefined')paused=true;
+   if(typeof state!=='undefined')state='pause';
+   if(typeof UI!=='undefined'&&UI.pause&&typeof showScreen==='function')showScreen(UI.pause);
+   if(typeof setSystemMenuVisible==='function')setSystemMenuVisible(false);
+  }
   if(typeof last!=='undefined')last=performance.now();
   if(typeof mobilePerf!=='undefined'){
    mobilePerf.lastSample=performance.now();mobilePerf.sampleFrames=0;mobilePerf.frameMs=16.7;
@@ -258,7 +265,7 @@ window.addEventListener('pagehide',suspendIW,{passive:true});
 window.addEventListener('pageshow',resumeIW,{passive:true});
 window.addEventListener('freeze',suspendIW,{passive:true});
 window.addEventListener('resume',resumeIW,{passive:true});
-window.addEventListener('blur',()=>{if(document.hidden) suspendIW()},{passive:true});
+window.addEventListener('blur',()=>suspendIW({type:'window-blur'}),{passive:true});
 window.addEventListener('focus',()=>{if(!document.hidden&&IWStability.suspended) resumeIW()},{passive:true});
 canvas?.addEventListener?.('contextlost',event=>{event.preventDefault?.();IWStability.suspend('context-lost')},{passive:false});
 canvas?.addEventListener?.('contextrestored',()=>IWStability.resume('context-restored'),{passive:true});

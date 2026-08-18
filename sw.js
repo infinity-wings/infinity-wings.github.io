@@ -1,9 +1,9 @@
-const CACHE='iw-cache-10.1.1-save-slots-v55';
+const CACHE='iw-cache-10.1.2-boss-pause-v56';
 const ASSETS=[
   './',
   './index.html',
-  './style.css?v=10.1.1',
-  './game.js?v=10.1.1',
+  './style.css?v=10.1.2',
+  './game.js?v=10.1.2',
   './manifest.webmanifest',
   './apple-touch-icon.png',
   './favicon.png',

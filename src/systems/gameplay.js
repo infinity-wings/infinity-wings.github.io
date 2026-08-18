@@ -696,8 +696,8 @@ function fireBossLaneWall(e,phase=1,omega=false){
 function fireBossMode(e,mode,phase=1){
  if(mode==='guard'){summonBossGuards(e);
  }else if(mode==='royalSplit'){
-  const dx=player.x-e.x,dy=Math.max(100,player.y-e.y),len=Math.hypot(dx,dy)||1,b=pushEnemyBullet(e.x,e.y+34,dx/len*112,dy/len*112,11,'orange',16);
-  if(b)Object.assign(b,{splitTimer:1.05,splitCount:14,splitSpeed:152,splitDamage:13,splitGapAngle:Math.atan2(player.y-(e.y+34),player.x-e.x),splitGapWidth:.52});
+  const base=Math.atan2(player.y-(e.y+34),player.x-e.x),shellCount=phase>=3?3:2;
+  for(let i=0;i<shellCount;i++){const offset=(i-(shellCount-1)/2)*.24,a=base+offset,b=pushEnemyBullet(e.x+(i-(shellCount-1)/2)*28,e.y+34,Math.cos(a)*124,Math.sin(a)*124,10,'orange',16);if(b)Object.assign(b,{splitTimer:.92+i*.08,splitCount:phase>=3?12:10,splitSpeed:158+(phase-1)*10,splitDamage:13,splitGapAngle:base,splitGapWidth:.5})}
  }else if(mode==='beholsterCombo'){
   fireGapRing(e.x,e.y+22,16,155,13,Math.atan2(player.y-e.y,player.x-e.x),.48,e.age*.12);launchBossHomingBullet(e,-1,phase);launchBossHomingBullet(e,1,phase);
  }else if(mode==='hunterCombo'){
@@ -715,11 +715,12 @@ function fireBossMode(e,mode,phase=1){
  }else if(mode==='omegaCombo'){
   fireBossLaneWall(e,phase,true);spawnBossLaser(e,'sweep');
  }else if(mode==='fan'){
-  for(let a=-.82;a<=.82;a+=.28)pushEnemyBullet(e.x,e.y+32,Math.sin(a)*185,Math.cos(a)*185,6,'purple',14);
+  const count=phase===1?7:phase===2?9:11,spread=phase===1?1.42:1.72,offset=(e.bossVolleyRemaining||0)%2?.07:-.07;
+  for(let i=0;i<count;i++){const a=-spread/2+i*spread/(count-1)+offset;pushEnemyBullet(e.x,e.y+32,Math.sin(a)*(188+phase*8),Math.cos(a)*(188+phase*8),5.7,'purple',14+phase-1)}
  }else if(mode==='fanStrong'){
   for(let a=-1.08;a<=1.08;a+=.22)pushEnemyBullet(e.x,e.y+34,Math.sin(a)*230,Math.cos(a)*230,7,'orange',20);
  }else if(mode==='ring'||mode==='ringStrong'){
-  const count=mode==='ringStrong'?18:12,speed=mode==='ringStrong'?205:170,damage=mode==='ringStrong'?18:13;
+  const count=mode==='ringStrong'?18:14,speed=mode==='ringStrong'?205:176,damage=mode==='ringStrong'?18:13;
   for(let i=0;i<count;i++){const a=i*Math.PI*2/count+e.age*.24;pushEnemyBullet(e.x,e.y+18,Math.cos(a)*speed,Math.sin(a)*speed,5.5,mode==='ringStrong'?'orange':'purple',damage)}
  }else if(mode==='aimed'){
   const base=Math.atan2(player.y-e.y,player.x-e.x),count=phase===3?7:5;

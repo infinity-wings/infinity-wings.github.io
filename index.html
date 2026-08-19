@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
-  <title>无限之翼 · Alpha 10.2.5</title>
+  <title>无限之翼 · Alpha 10.2.6</title>
   <meta name="theme-color" content="#050816" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black" />
@@ -16,7 +16,7 @@
   <link rel="preload" as="image" href="assets/menu/menu-space-background-desktop.jpg" media="(pointer:fine)" fetchpriority="high" />
   <link rel="preload" as="image" href="assets/menu/menu-title-logo.PNG" />
   <link rel="preload" as="image" href="assets/menu/menu-fighter-rear-v2.png" />
-  <link rel="stylesheet" href="style.css?v=10.2.5" />
+  <link rel="stylesheet" href="style.css?v=10.2.6" />
 </head>
 <body>
   <script>
@@ -128,7 +128,7 @@
             </button>
           </div>
           <div class="menu-project-mark" aria-hidden="true">
-            <b>ALPHA 10.2.5</b>
+            <b>ALPHA 10.2.6</b>
           </div>
         </div>
       </section>
@@ -219,6 +219,7 @@
           <label class="setting-volume"><span><b>音效音量</b><output id="sfxVolumeValue">50%</output></span><input id="sfxVolumeSetting" type="range" min="0" max="100" step="1" value="50" /></label>
           <label class="setting-row"><span>背景音乐</span><input id="musicSetting" type="checkbox" checked /></label>
           <label class="setting-volume"><span><b>背景音乐音量</b><output id="musicVolumeValue">50%</output></span><input id="musicVolumeSetting" type="range" min="0" max="100" step="1" value="50" /></label>
+          <label class="setting-row"><span>画面震动</span><input id="shakeSetting" type="checkbox" checked /></label>
           <label class="setting-volume"><span><b>触控灵敏度</b><output id="touchSensitivityValue">150%</output></span><input id="touchSensitivitySetting" type="range" min="80" max="220" step="5" value="150" /></label>
           <label class="setting-select desktop-control-setting"><span><b>电脑版控制方式</b><small>鼠标模式下光标会自动隐藏</small></span><select id="controlModeSetting"><option value="keyboard">键盘控制</option><option value="mouse">鼠标控制</option></select></label>
           <label class="setting-row"><span>自动射击</span><input type="checkbox" checked disabled /></label>
@@ -236,7 +237,7 @@
       </section>
 
       <section id="migrationScreen" class="screen hidden modal-screen migration-screen">
-        <div class="panel"><div class="panel-kicker"><span>SAVE MIGRATION</span>存档升级</div><h2>检测到旧版作战档案</h2><p>源核、敌军图鉴、行动记录和驾驶员编号将合并到 Alpha 10.2.5 永久存档。旧数据不会被删除。</p><button id="migrationConfirmButton" class="primary-action"><span>迁移并继续</span><small>建立新的章节存档</small></button></div>
+        <div class="panel"><div class="panel-kicker"><span>SAVE MIGRATION</span>存档升级</div><h2>检测到旧版作战档案</h2><p>源核、敌军图鉴、行动记录和驾驶员编号将合并到 Alpha 10.2.6 永久存档。旧数据不会被删除。</p><button id="migrationConfirmButton" class="primary-action"><span>迁移并继续</span><small>建立新的章节存档</small></button></div>
       </section>
 
 
@@ -262,7 +263,7 @@
             <div><kbd>ESC / P</kbd><span>打开或关闭系统菜单</span></div>
             <div><kbd>1 / 2 / 3</kbd><span>选择源核</span></div>
           </div>
-          <div class="pause-footer"><span>INFINITY WINGS · RIFT OS</span><b>ALPHA 10.2.5</b></div>
+          <div class="pause-footer"><span>INFINITY WINGS · RIFT OS</span><b>ALPHA 10.2.6</b></div>
         </div>
       </section>
 
@@ -306,7 +307,7 @@
       document.documentElement.style.setProperty('--iw-world-height', String(logicalHeight));
     })();
   </script>
-  <script src="game.js?v=10.2.5"></script>
-  <script>if('serviceWorker' in navigator){addEventListener('load',async()=>{try{const r=await navigator.serviceWorker.register('./sw.js?v=10.2.5',{updateViaCache:'none'});await r.update();let refreshed=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(refreshed)return;refreshed=true;location.reload()})}catch{}})}</script>
+  <script src="game.js?v=10.2.6"></script>
+  <script>if('serviceWorker' in navigator){addEventListener('load',async()=>{try{const r=await navigator.serviceWorker.register('./sw.js?v=10.2.6',{updateViaCache:'none'});await r.update();let refreshed=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(refreshed)return;refreshed=true;location.reload()})}catch{}})}</script>
 </body>
 </html>

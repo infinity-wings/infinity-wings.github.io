@@ -231,7 +231,13 @@ function bossNumberForThreat(tier=threatLevel()){return Math.max(1,Math.min(6,ti
 function syncBossDirectorTier(force=false){const tier=Math.max(0,Math.min(5,threatLevel()));if(!force&&build.bossDirectorTier===tier)return;build.bossDirectorTier=tier;build.bossDirectorIndex=0;build.bossDirectorProgress=0;build.bossPendingNumber=0;build.bossPendingTimer=0;build.bossWarningShownFor=0}
 function advanceBossDirector(number){const queue=BOSS_ENCOUNTERS_BY_TIER[build.bossDirectorTier]||[];if(queue[build.bossDirectorIndex]===number){build.bossDirectorIndex++;build.bossClearedTier=Math.max(build.bossClearedTier??-1,build.bossDirectorTier)}build.bossDirectorProgress=0;build.bossPendingNumber=0;build.bossPendingTimer=0;build.bossWarningShownFor=0}
 function tierThreeWreckRecovered(){return !!IWSave?.data?.progression?.fighters?.includes('laser')}
-function wreckCinematicActive(){const phase=build?.wreckStory?.phase;return ['signal','drift','inspect','bossEntry','abduct','dialogue','return','scan','reveal','briefing','departure'].includes(phase)}
+function wreckCinematicActive(){const phase=build?.wreckStory?.phase;return ['signal','drift','discoveryDialogue','bossEntry','abduct','dialogue','return','scan','reveal','briefing','departure'].includes(phase)}
+function ensureWreckDiscoveryDialogue(){
+ let overlay=document.getElementById('wreckDiscoveryDialogue');
+ if(!overlay){overlay=document.createElement('section');overlay.id='wreckDiscoveryDialogue';overlay.className='wreck-story-dialogue hidden';overlay.innerHTML='<button type="button"><small>PILOT LOG · 驾驶员通讯</small><strong>失联编队战机</strong><p>“这不是失联编队的战机吗？<br>我要把它带回去。”</p><span>点击继续</span></button>';document.querySelector('#app')?.appendChild(overlay);overlay.querySelector('button').onclick=()=>continueWreckDiscovery()}
+ return overlay;
+}
+function continueWreckDiscovery(){const story=build?.wreckStory;if(!story||story.phase!=='discoveryDialogue')return;document.getElementById('wreckDiscoveryDialogue')?.classList.add('hidden');story.phase='bossEntry';story.timer=0;audioSystem?.play('ui');toast('高能反应接近','important');const boss=spawnBoss(3,{wreckStory:true});boss.wreckStory=true;boss.cinematicEntry=true;boss.bossEntering=true;boss.bossEntryTime=0;boss.y=-210;boss.entryStartY=-210;boss.targetY=128}
 function ensureWreckDialogue(){
  let overlay=document.getElementById('wreckStoryDialogue');
  if(!overlay){overlay=document.createElement('section');overlay.id='wreckStoryDialogue';overlay.className='wreck-story-dialogue hidden';overlay.innerHTML='<button type="button"><small>UNKNOWN HOSTILE SIGNAL</small><strong>裂隙猎手</strong><p>“想带回这个手下败将的遗骸？<br>那就先击败我。”</p><span>点击继续</span></button>';document.querySelector('#app')?.appendChild(overlay);overlay.querySelector('button').onclick=()=>continueTierThreeWreckStory()}
@@ -246,7 +252,7 @@ function ensureWreckAnalysis(){
 function finishTierThreeWreckStory(){const story=build?.wreckStory;if(!story||story.phase!=='briefing')return;document.getElementById('wreckAnalysisDialogue')?.classList.add('hidden');story.phase='departure';story.timer=0;IWSave.data.story.wrecks[0]=true;IWSave.data.story.wrecksFound=IWSave.data.story.wrecks.filter(Boolean).length;IWSave.unlockFighter('laser');IWSave.clearCheckpoint();audioSystem?.play('ui');toast('曙光棱镜已加入机库 · 正在返航','important')}
 function continueTierThreeWreckStory(){const story=build?.wreckStory;if(!story||story.phase!=='dialogue')return;hideWreckDialogue();story.phase='guarded';story.timer=0;story.alpha=0;const boss=enemies.find(e=>e.boss&&e.wreckStory);if(boss){boss.bossEntering=false;boss.y=boss.targetY;boss.shoot=.55;boss.bossModeTimer=.65}touchMoveActive=false;touchMovePointerId=null;touchTargetX=player.x;touchTargetY=player.y;mouseMoveActive=false;mouseDeltaX=mouseDeltaY=0;joyX=joyY=0;player.fireCd=Math.min(player.fireCd,180);player.vx=player.vy=player.targetVx=player.targetVy=0;paused=false;state='game';last=performance.now();audioSystem?.play('ui');toast('遗骸夺回作战开始','important')}
 function beginTierThreeWreckStory(force=false){
- hideWreckDialogue();clearEntityArray(enemyBullets);clearEntityArray(bullets);clearEntityArray(missiles);clearEntityArray(particles);clearEntityArray(pickups);enemyLasers.length=0;lightningArcs.length=0;blastWaves.length=0;drones.length=0;enemies.length=0;battleEventSystem.cancelForBoss?.();build.bossPendingNumber=0;build.bossPendingTimer=0;build.projectionActive=0;build.awakeFrontShieldActive=0;build.heavyEscortShieldActive=0;
+ hideWreckDialogue();document.getElementById('wreckDiscoveryDialogue')?.classList.add('hidden');clearEntityArray(enemyBullets);clearEntityArray(bullets);clearEntityArray(missiles);clearEntityArray(particles);clearEntityArray(pickups);enemyLasers.length=0;lightningArcs.length=0;blastWaves.length=0;drones.length=0;enemies.length=0;battleEventSystem.cancelForBoss?.();build.bossPendingNumber=0;build.bossPendingTimer=0;build.projectionActive=0;build.awakeFrontShieldActive=0;build.heavyEscortShieldActive=0;
  const story={fighterId:'laser',phase:'signal',timer:0,x:W/2,y:76,alpha:1,rotation:-.18,float:0,assetReady:false,assetFailed:false,debugForce:!!force};build.wreckStory=story;
  if(typeof preloadStoryWreckAsset==='function')preloadStoryWreckAsset('laser').then(ready=>{if(build?.wreckStory!==story)return;story.assetReady=!!ready;story.assetFailed=!ready}).catch(()=>{if(build?.wreckStory===story)story.assetFailed=true});else story.assetFailed=true;
  player.fireCd=Math.max(player.fireCd,900);player.vx=player.vy=player.targetVx=player.targetVy=0;audioSystem?.play('ui');toast('系统检测到失联战机信号……','important');
@@ -259,15 +265,15 @@ function releaseTierThreeWreck(){
 }
 function updateWreckStory(dt){
  const story=build?.wreckStory;if(!story)return;
- const cinematic=['signal','drift','bossEntry','abduct','dialogue'].includes(story.phase);story.timer+=dt;story.rotation=(story.rotation||0)+dt*.17;story.float=Math.sin(story.timer*1.35)*5;
+ const cinematic=['signal','drift','discoveryDialogue','bossEntry','abduct','dialogue'].includes(story.phase);story.timer+=dt;story.rotation=(story.rotation||0)+dt*.17;story.float=Math.sin(story.timer*1.35)*5;
  const playerTargetY=H-SAFE_BOTTOM-118;if(cinematic){player.x+=(W/2-player.x)*Math.min(1,dt*2.3);player.y+=(playerTargetY-player.y)*Math.min(1,dt*2.3);player.vx=player.vy=player.targetVx=player.targetVy=0;player.tilt*=Math.max(0,1-dt*5);player.pitch*=Math.max(0,1-dt*5)}
  if(story.phase==='signal'){
   story.alpha=1;story.y=76+Math.sin(story.timer*1.1)*3;if((story.assetReady||story.assetFailed)&&story.timer>=1.55){story.phase='drift';story.timer=0;story.y=76;story.alpha=1}
  }else if(story.phase==='drift'){
   const targetY=Math.max(180,playerTargetY-205),p=Math.min(1,story.timer/5.1),ease=1-Math.pow(1-p,2.25);story.y=76+(targetY-76)*ease;story.x=W/2+Math.sin(story.timer*.78)*15;
-  if(story.timer>=5.1){story.phase='inspect';story.timer=0;story.x=W/2;story.y=H*.43;audioSystem?.play('ui')}
- }else if(story.phase==='inspect'){
-  story.x=W/2;story.y=H*.43+Math.sin(story.timer*1.5)*4;if(story.timer>=2.2){story.phase='bossEntry';story.timer=0;audioSystem?.play('ui');toast('高能反应接近','important');const boss=spawnBoss(3,{wreckStory:true});boss.wreckStory=true;boss.cinematicEntry=true;boss.bossEntering=true;boss.bossEntryTime=0;boss.y=-210;boss.entryStartY=-210;boss.targetY=128}
+  if(story.timer>=5.1){story.phase='discoveryDialogue';story.timer=0;story.x=W/2;story.y=targetY;ensureWreckDiscoveryDialogue().classList.remove('hidden');audioSystem?.play('ui')}
+ }else if(story.phase==='discoveryDialogue'){
+  story.x=W/2;story.y=Math.max(180,playerTargetY-205)+Math.sin(story.timer*1.5)*4;
  }else if(story.phase==='bossEntry'){
   const boss=enemies.find(e=>e.boss&&e.wreckStory);if(boss){const p=Math.min(1,story.timer/2.15),ease=1-Math.pow(1-p,3);boss.y=-210+(boss.targetY+210)*ease;boss.bossEntryTime=Math.min(boss.bossIntroTravel||1.7,story.timer*.72)}if(story.timer>=2.3){story.phase='abduct';story.timer=0}
  }else if(story.phase==='abduct'){
@@ -916,7 +922,7 @@ function suicideBlast(e){
  for(const other of [...enemies])if(other!==e&&Math.hypot(other.x-e.x,other.y-e.y)<72)other.hp-=40;
 }
 function enemyReward(e){
- if(e.rewardless||e.eventMeteor)return [0,0];
+ if(e.rewardless)return [0,0];
  if(e.boss){const tier=e.bossStage||1;if(e.projectionBoss)return [100,180+tier*75];return [100,300+tier*180+(e.awakenedBoss?260:0)]}
  const data={scout:[1,7],heavy:[2,17],sniper:[2,13],suicide:[2,11],support:[2,18],barrage:[3,21],raider:[3,12],carrier:[5,26],jammer:[3,17]};
  return [...(data[e.type]||[30,8])];

@@ -1,9 +1,9 @@
-const CACHE='iw-cache-10.2.5-collision-v69';
+const CACHE='iw-cache-10.2.6-wreck-dialogue-v70';
 const ASSETS=[
   './',
   './index.html',
-  './style.css?v=10.2.5',
-  './game.js?v=10.2.5',
+  './style.css?v=10.2.6',
+  './game.js?v=10.2.6',
   './manifest.webmanifest',
   './apple-touch-icon.png',
   './favicon.png',

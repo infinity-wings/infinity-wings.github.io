@@ -70,7 +70,7 @@ function drawEnemyArchivePreview(canvas,type){
  const previewSize=encounter?.size||[196,144],scale=isBoss?Math.min(112/previewSize[0],78/previewSize[1]):(type==='carrier'||type==='heavy'||type==='barrage')?.82:.98;
  c.save();c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,w,h);c.globalAlpha=1;c.globalCompositeOperation='source-over';
  c.translate(w/2,h/2+4);c.scale(scale,scale);
- const model={type:isBoss?'boss':type,boss:isBoss,bossNumber,bossStage:encounter?.tier||bossNumber,bossKind:encounter?.kind||'',bossName:encounter?.name,bossArtKey:encounter?.art,bossSpriteType:encounter?.sprite,bossRenderSize:previewSize,projectionBoss:encounter?.role==='projection',miniBoss:encounter?.role==='mini',eventMeteor:false,x:0,y:0,r:isBoss?Math.max(...(encounter?.hit||[70,60])):28,age:Math.max(1,Number(elapsed)||1),dir:1,hp:100,max:100,maxHp:100,shield:0,fuse:2.2};
+ const model={type:isBoss?'boss':type,boss:isBoss,bossNumber,bossStage:encounter?.tier||bossNumber,bossKind:encounter?.kind||'',bossName:encounter?.name,bossArtKey:encounter?.art,bossSpriteType:encounter?.sprite,bossRenderSize:previewSize,projectionBoss:encounter?.role==='projection',miniBoss:encounter?.role==='mini',x:0,y:0,r:isBoss?Math.max(...(encounter?.hit||[70,60])):28,age:Math.max(1,Number(elapsed)||1),dir:1,hp:100,max:100,maxHp:100,shield:0,fuse:2.2};
  drawEnemyShip(model,c);c.restore();
 }
 function renderArchiveView(view){
@@ -112,7 +112,7 @@ document.addEventListener('pointerup',event=>{
  setTimeout(()=>{if((pointerActivationSeen.get(control)||0)>=stamp)return;syntheticPenActivation.set(control,performance.now());control.click()},0);
 },true);
 const uiPrefs={
- shake:true,
+ shake:localStorage.getItem('iwShake')!=='off',
  scan:true,
  sfx:localStorage.getItem('iwSfx')!=='off',
  music:localStorage.getItem('iwMusic')!=='off',
@@ -187,13 +187,14 @@ document.addEventListener('pointerlockchange',()=>{
 });
 document.addEventListener('pointerlockerror',()=>{mouseMoveActive=false;refreshMouseCursorState();toast('点击战场启用鼠标控制')});
 function refreshPauseToggles(){
- const sfxSetting=$('#sfxSetting'),musicSetting=$('#musicSetting');
+ const sfxSetting=$('#sfxSetting'),musicSetting=$('#musicSetting'),shakeSetting=$('#shakeSetting');
  const sfxVolumeSetting=$('#sfxVolumeSetting'),musicVolumeSetting=$('#musicVolumeSetting');
  const touchSensitivitySetting=$('#touchSensitivitySetting'),controlModeSetting=$('#controlModeSetting');
  const sfxVolumeValue=$('#sfxVolumeValue'),musicVolumeValue=$('#musicVolumeValue');
  const touchSensitivityValue=$('#touchSensitivityValue');
  if(sfxSetting)sfxSetting.checked=uiPrefs.sfx;
  if(musicSetting)musicSetting.checked=uiPrefs.music;
+ if(shakeSetting)shakeSetting.checked=uiPrefs.shake;
  if(sfxVolumeSetting)sfxVolumeSetting.value=String(Math.round(audioSystem.prefs.sfxVolume*100));
  if(musicVolumeSetting)musicVolumeSetting.value=String(Math.round(audioSystem.prefs.musicVolume*100));
  if(touchSensitivitySetting)touchSensitivitySetting.value=String(Math.round(uiPrefs.touchSensitivity*100));
@@ -359,6 +360,7 @@ $('#controlsButton').onclick=()=>$('#controlsPanel').classList.toggle('hidden');
 $('#gameSettingsButton').onclick=()=>{settingsReturnState='pause';showScreen(UI.settings);refreshPauseToggles()};
 $('#sfxSetting')?.addEventListener('change',e=>{uiPrefs.sfx=e.target.checked;audioSystem.setEnabled('sfx',uiPrefs.sfx);refreshPauseToggles()});
 $('#musicSetting')?.addEventListener('change',e=>{uiPrefs.music=e.target.checked;audioSystem.setEnabled('music',uiPrefs.music);refreshPauseToggles()});
+$('#shakeSetting')?.addEventListener('change',e=>{uiPrefs.shake=e.target.checked;localStorage.setItem('iwShake',uiPrefs.shake?'on':'off');if(!uiPrefs.shake)shake=0;refreshPauseToggles()});
 $('#sfxVolumeSetting')?.addEventListener('input',e=>{const value=Math.max(0,Math.min(100,Number(e.target.value)||0));audioSystem.setVolume('sfx',value/100);const out=$('#sfxVolumeValue');if(out)out.textContent=Math.round(value)+'%'});
 $('#musicVolumeSetting')?.addEventListener('input',e=>{const value=Math.max(0,Math.min(100,Number(e.target.value)||0));audioSystem.setVolume('music',value/100);const out=$('#musicVolumeValue');if(out)out.textContent=Math.round(value)+'%'});
 $('#touchSensitivitySetting')?.addEventListener('input',e=>{const value=Math.max(80,Math.min(220,Number(e.target.value)||150));uiPrefs.touchSensitivity=value/100;localStorage.setItem('iwTouchSensitivity',String(value));refreshPauseToggles()});

@@ -212,7 +212,8 @@ function draw(){
  const lowFx=perfQ<.86||renderLoad>(38+10*perfQ)||(particles?.length||0)>250;
  ctx.clearRect(0,0,W,H);drawDeepSpaceBackground();
  drawSpaceTravelLayers(perfQ,threat);
- if(shake&&uiPrefs.shake){ctx.translate((Math.random()-.5)*shake,(Math.random()-.5)*shake);shake*=.85}
+ // 镜头只响应玩家机体的真实生命损失。
+ if(damageShake&&uiPrefs.shake){ctx.translate((Math.random()-.5)*damageShake,(Math.random()-.5)*damageShake);damageShake*=.85}
  const bossWarning=typeof bossWarningState==='function'?bossWarningState():null;
  if(bossWarning){withRenderState('Boss预警',()=>{const pulse=.72+.28*Math.sin(elapsed*14);ctx.globalAlpha=.78+.22*pulse;ctx.fillStyle='rgba(66,4,18,.88)';ctx.fillRect(W/2-155,82,310,48);ctx.strokeStyle='#ff526d';ctx.lineWidth=2;ctx.strokeRect(W/2-155,82,310,48);ctx.fillStyle='#fff0f3';ctx.font='bold 15px system-ui';ctx.textAlign='center';ctx.fillText(`警告 · 第 ${bossWarning.number} 号 Boss 接近`,W/2,102);ctx.fillStyle='#ff9baa';ctx.font='bold 13px ui-monospace,monospace';ctx.fillText(`${Math.max(0,bossWarning.remaining).toFixed(1)} 秒`,W/2,121)})}
  if(!(particles instanceof PooledEntityArray))particles=ensureEntityArray('particles',particles);

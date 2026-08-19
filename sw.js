@@ -1,9 +1,9 @@
-const CACHE='iw-cache-10.2.6-wreck-dialogue-v70';
+const CACHE='iw-cache-10.2.7-impact-audio-v71';
 const ASSETS=[
   './',
   './index.html',
-  './style.css?v=10.2.6',
-  './game.js?v=10.2.6',
+  './style.css?v=10.2.7',
+  './game.js?v=10.2.7',
   './manifest.webmanifest',
   './apple-touch-icon.png',
   './favicon.png',
@@ -44,6 +44,9 @@ const ASSETS=[
   './assets/effects/player-shield-level2-v4.png',
   './assets/effects/player-shield-level3-v3.png',
   './assets/effects/escort-front-barrier-v2.png',
+  './assets/audio/shield-hit.wav',
+  './assets/audio/shield-break.wav',
+  './assets/audio/hull-damage.wav',
   './assets/meteors/meteor-small-v1.png',
   './assets/meteors/meteor-medium-v1.png',
   './assets/meteors/meteor-large-v1.png'

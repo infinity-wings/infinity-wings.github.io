@@ -242,6 +242,7 @@ const IWStability={
   }
   this.sanitizePlayerPose();
   if(typeof shake!=='undefined')shake=Number.isFinite(shake)?Math.max(0,Math.min(32,shake)):0;
+  if(typeof damageShake!=='undefined')damageShake=Number.isFinite(damageShake)?Math.max(0,Math.min(24,damageShake)):0;
   if(typeof hardSanitizeCombatState==='function'){
    try{hardSanitizeCombatState()}catch(error){this.faultCount++;console.warn('稳定性清理已降级',error)}
   }

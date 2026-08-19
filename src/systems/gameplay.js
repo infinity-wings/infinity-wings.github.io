@@ -982,7 +982,7 @@ function timeCooldownScale(){return coreManager.getLevel('time')>=2?.82:1;}
 function damageEnemy(e,d,opts={}){
  if(e.bossRetreating||e.bossEntering)return false;
  if(e.boss){const guards=enemies.filter(g=>g.bossGuardFor===e&&g.hp>0);e.guardActive=guards.length>0;if(e.guardActive&&!opts.piercing){e.guardFlash=.16;return false}if(e.guardActive&&opts.piercing)d*=.42;}
- if(e.shield>0){const absorbed=Math.min(e.shield,d);e.shield-=absorbed;d-=absorbed;if(d<=0)return false;}
+ if(e.shield>0){const absorbed=Math.min(e.shield,d);e.shield-=absorbed;d-=absorbed;audioSystem?.play(e.shield<=0?'shieldBreak':'shieldHit');if(d<=0)return false;}
  e.lastHitAt=elapsed;e.hp-=d;if(e.hp<=0){audioSystem?.play(e.boss||e.type==='carrier'?'explosionLarge':'explosionSmall');const archiveId=e.boss?`boss-${e.bossNumber||e.bossStage}`:e.type;if(typeof markEnemyDefeated==='function')markEnemyDefeated(archiveId);if(IWSave){const list=IWSave.data.progression.defeated;if(!list.includes(archiveId))list.push(archiveId);IWSave.data.progression.highestThreat=Math.max(IWSave.data.progression.highestThreat,(e.bossStage||1)-1);IWSave.commit()}const [points,experience]=enemyReward(e);score+=points;spawnExperienceFragments(e,experience);build.killWindow.push(elapsed);addBarrierCharge(barrierChargeValue(e));maybeDropRepair(e);if(e.type==='carrier')releaseCarrierDrones(e);if(e.type==='suicide')suicideBlast(e);if(e.boss){build.bossesDefeated=(build.bossesDefeated||0)+1;advanceBossDirector(e.bossNumber);if(e.wreckStory)releaseTierThreeWreck();if(e.finalBoss){build.finalBossDefeated=true;toast('最终 Boss 已击毁 · 终焉信号消散','important');setTimeout(()=>{if(build?.finalBossDefeated)showChapterComplete?.()},2200)}else if(!e.wreckStory)toast(`${e.bossName}${e.projectionBoss?'投影':'真身'}已击毁 · 大量经验释放`);for(let burst=0;burst<5;burst++)explode(e.x+(Math.random()-.5)*e.r*1.4,e.y+(Math.random()-.5)*e.r*1.1,18);blastWaves.push({x:e.x,y:e.y,life:.72,maxLife:.72,radius:18,prevRadius:0,maxRadius:e.r*2.8,absorbed:0,temporalCollapse:true});shake=Math.max(shake,22)}else build.bossDirectorProgress=(build.bossDirectorProgress||0)+1;if(!e.wreckStory)awakeningSystem.onEnemyKilled(e,opts);battleEventSystem.onEnemyKilled(e);if(!e.boss)explode(e.x,e.y,e.type==='carrier'?30:18);return true}return false
 }
 function despawnTimedBoss(e){
@@ -996,12 +996,11 @@ function despawnTimedBoss(e){
 }
 function playerCombatRadius(){const layers=Math.max(0,Math.min(3,build?.shieldLayers||0));return layers?64:player.r}
 function damagePlayer(d){
- audioSystem?.play('damage');
  if(awakeningSystem.onPlayerDamage(d))return;
  if(build?.debugLockHp){player.hp=Math.max(1,player.hp);return}
  if(player.inv>0)return;build.lastHitAt=elapsed;
- if((build.shieldLayers||0)>0){build.shieldLayers--;player.inv=.42;shake=8;toast('偏转护层承受冲击');if(coreManager.getLevel('shield')===3){for(let i=enemyBullets.length-1;i>=0;i--)if(Math.hypot(enemyBullets[i].x-player.x,enemyBullets[i].y-player.y)<150)enemyBullets.splice(i,1);blastWaves.push({x:player.x,y:player.y,life:.35,maxLife:.35,radius:18,prevRadius:0,maxRadius:150,absorbed:0,shieldPulse:true});}return;}
- player.hp-=d;player.inv=.65;shake=12;
+ if((build.shieldLayers||0)>0){build.shieldLayers--;player.inv=.42;audioSystem?.play('shieldBreak');toast('偏转护层承受冲击');if(coreManager.getLevel('shield')===3){for(let i=enemyBullets.length-1;i>=0;i--)if(Math.hypot(enemyBullets[i].x-player.x,enemyBullets[i].y-player.y)<150)enemyBullets.splice(i,1);blastWaves.push({x:player.x,y:player.y,life:.35,maxLife:.35,radius:18,prevRadius:0,maxRadius:150,absorbed:0,shieldPulse:true});}return;}
+ player.hp-=d;player.inv=.65;audioSystem?.play('hullDamage');damageShake=Math.max(damageShake,Math.min(18,8+Math.max(0,d)*.18));
  if(player.hp<=0&&build.rewind&&!build.rewindUsed&&rewindHistory.length){const snap=rewindHistory[0];Object.assign(player,{x:snap.x,y:snap.y,hp:Math.max(35,snap.hp)});clearEntityArray(enemyBullets);enemyLasers=[];build.rewindUsed=1;toast('回溯保险已启动');return}
  if(player.hp<=0&&awakeningSystem.onLethalDamage())return;
  if(player.hp<=0)startDeathSequence()

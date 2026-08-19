@@ -360,7 +360,7 @@ $('#controlsButton').onclick=()=>$('#controlsPanel').classList.toggle('hidden');
 $('#gameSettingsButton').onclick=()=>{settingsReturnState='pause';showScreen(UI.settings);refreshPauseToggles()};
 $('#sfxSetting')?.addEventListener('change',e=>{uiPrefs.sfx=e.target.checked;audioSystem.setEnabled('sfx',uiPrefs.sfx);refreshPauseToggles()});
 $('#musicSetting')?.addEventListener('change',e=>{uiPrefs.music=e.target.checked;audioSystem.setEnabled('music',uiPrefs.music);refreshPauseToggles()});
-$('#shakeSetting')?.addEventListener('change',e=>{uiPrefs.shake=e.target.checked;localStorage.setItem('iwShake',uiPrefs.shake?'on':'off');if(!uiPrefs.shake)shake=0;refreshPauseToggles()});
+$('#shakeSetting')?.addEventListener('change',e=>{uiPrefs.shake=e.target.checked;localStorage.setItem('iwShake',uiPrefs.shake?'on':'off');if(!uiPrefs.shake)damageShake=0;refreshPauseToggles()});
 $('#sfxVolumeSetting')?.addEventListener('input',e=>{const value=Math.max(0,Math.min(100,Number(e.target.value)||0));audioSystem.setVolume('sfx',value/100);const out=$('#sfxVolumeValue');if(out)out.textContent=Math.round(value)+'%'});
 $('#musicVolumeSetting')?.addEventListener('input',e=>{const value=Math.max(0,Math.min(100,Number(e.target.value)||0));audioSystem.setVolume('music',value/100);const out=$('#musicVolumeValue');if(out)out.textContent=Math.round(value)+'%'});
 $('#touchSensitivitySetting')?.addEventListener('input',e=>{const value=Math.max(80,Math.min(220,Number(e.target.value)||150));uiPrefs.touchSensitivity=value/100;localStorage.setItem('iwTouchSensitivity',String(value));refreshPauseToggles()});

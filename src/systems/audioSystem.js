@@ -22,6 +22,9 @@ class InfinityAudioSystem{
    bgm:'./assets/audio/bgm.mp3',
    weaponShot:'./assets/audio/main-cannon.mp3',
    droneShot:'./assets/audio/drone-shot.mp3',
+   shieldHit:'./assets/audio/shield-hit.wav',
+   shieldBreak:'./assets/audio/shield-break.wav',
+   hullDamage:'./assets/audio/hull-damage.wav',
    explosionLarge:'./assets/audio/explosion-large.mp3',
    explosionSmall:'./assets/audio/explosion-small.mp3'
   };
@@ -182,7 +185,7 @@ class InfinityAudioSystem{
  play(name){
   if(document.hidden||this.backgrounded)return;this.unlock();
   const gateName=name==='shot'?'weaponShot':name==='droneShot'?'droneShot':name;
-  const gateGap=gateName==='weaponShot'?.085:gateName==='droneShot'?.11:(name==='hit'?.09:.03);if(!this.canPlay(gateName,gateGap))return;
+  const gateGap=gateName==='weaponShot'?.085:gateName==='droneShot'?.11:(name==='hit'?.09:name==='shieldHit'?.1:name==='shieldBreak'?.18:name==='hullDamage'?.2:.03);if(!this.canPlay(gateName,gateGap))return;
   if(name==='ui'){this.tone(720,.055,'square',.045);this.tone(1080,.045,'sine',.03,.035)}
   else if(name==='shot'){
    if(!this.playBuffer('weaponShot',{gain:.05,duration:.072,rate:1.08})){this.loadBuffer('weaponShot');this.tone(1180,.045,'triangle',.012,0,-260);this.tone(760,.055,'sine',.007,.008,-180)}
@@ -197,6 +200,9 @@ class InfinityAudioSystem{
   else if(name==='explosion'){if(!this.playBuffer('explosionSmall',{gain:.14,duration:.42})){this.noise(.34,.12,0,580);this.tone(95,.32,'sine',.09,0,-55)}}
   else if(name==='thunder'){this.noise(.2,.10,0,2400);this.tone(72,.25,'square',.06,0,35)}
   else if(name==='shield'){this.tone(260,.22,'sine',.06);this.tone(520,.28,'sine',.07,.04,280)}
+  else if(name==='shieldHit'){if(!this.playBuffer('shieldHit',{gain:.12})){this.loadBuffer('shieldHit');this.tone(480,.16,'sine',.05,0,-180)}}
+  else if(name==='shieldBreak'){if(!this.playBuffer('shieldBreak',{gain:.2})){this.loadBuffer('shieldBreak');this.noise(.28,.08,0,2600);this.tone(720,.34,'triangle',.07,0,-420)}}
+  else if(name==='hullDamage'){if(!this.playBuffer('hullDamage',{gain:.2})){this.loadBuffer('hullDamage');this.noise(.2,.1,0,850);this.tone(125,.24,'square',.075,0,-65)}}
   else if(name==='pickup'){this.tone(660,.08,'sine',.05);this.tone(990,.11,'sine',.05,.07)}
   else if(name==='upgrade'){[392,523,659,784].forEach((f,i)=>this.tone(f,.16,'triangle',.055,i*.07))}
   else if(name==='awakening'){[196,294,392,587,784].forEach((f,i)=>this.tone(f,.28,'sawtooth',.05,i*.09,80));this.noise(.45,.05,.28,1600)}

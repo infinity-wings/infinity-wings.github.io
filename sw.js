@@ -1,9 +1,9 @@
-const CACHE='iw-cache-10.2.4-wreck-analysis-v68';
+const CACHE='iw-cache-10.2.5-collision-v69';
 const ASSETS=[
   './',
   './index.html',
-  './style.css?v=10.2.4',
-  './game.js?v=10.2.4',
+  './style.css?v=10.2.5',
+  './game.js?v=10.2.5',
   './manifest.webmanifest',
   './apple-touch-icon.png',
   './favicon.png',

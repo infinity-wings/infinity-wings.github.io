@@ -1182,7 +1182,7 @@ function update(dt){
   else if(e.huntTarget){const targetY=Math.min(145,H*.2);e.y+=(targetY-e.y)*Math.min(1,dt*2.2);e.x+=e.dir*(e.enraged?36:25)*dt*slow;if(e.x<75||e.x>W-75)e.dir*=-1;}
   else if(e.type==='suicide'){
    const distance=Math.hypot(player.x-e.x,player.y-e.y);
-   if(e.suicidePhase==='entry'&&distance<250){e.suicidePhase='tracking';e.fuse=e.fuseDuration||1.35;e.warning=1;e.heading=Math.atan2(player.y-e.y,player.x-e.x)}
+   if(e.suicidePhase==='entry'&&distance<350){e.suicidePhase='tracking';e.fuse=e.fuseDuration||1.35;e.warning=1;e.heading=Math.atan2(player.y-e.y,player.x-e.x)}
    if(e.suicidePhase==='entry'){const targetY=Math.max(70,Math.min(H*.64,player.y-110)),vertical=Math.max(-.42,Math.min(.42,(targetY-e.y)/180));e.x+=Math.cos(e.heading||0)*e.v*dt*slow;e.y+=vertical*e.v*dt*slow}
    else if(e.suicidePhase==='tracking'){e.fuse=Math.max(0,e.fuse-dt);const desired=Math.atan2(player.y-e.y,player.x-e.x),current=Number.isFinite(e.heading)?e.heading:desired,diff=((desired-current+Math.PI*3)%(Math.PI*2))-Math.PI,maxTurn=Math.PI*(150/180)*dt;e.heading=current+Math.max(-maxTurn,Math.min(maxTurn,diff));const trackingProgress=1-e.fuse/(e.fuseDuration||1.35),trackingSpeed=e.v+35+trackingProgress*45;e.x+=Math.cos(e.heading)*trackingSpeed*dt*slow;e.y+=Math.sin(e.heading)*trackingSpeed*dt*slow;if(e.fuse<=0){e.suicidePhase='dash';e.warning=2}}
    else{e.x+=Math.cos(e.heading)*(e.dashSpeed||265)*dt*slow;e.y+=Math.sin(e.heading)*(e.dashSpeed||265)*dt*slow}
@@ -1201,7 +1201,12 @@ function update(dt){
   const fullyVisible=e.sideEntry?(e.x>=e.r+8&&e.x<=W-e.r-8):e.y>=e.r+8;
   if(!e.boss&&!e.attackArmed&&fullyVisible){e.attackArmed=true;e.shoot=e.type==='sniper'?120:['heavy','barrage'].includes(e.type)?400:e.type==='carrier'?350:250}
   if(e.attackArmed){e.shoot-=dt*1000*slow;if(e.shoot<=0&&!e.boss&&!['suicide','support','jammer'].includes(e.type)){enemyShoot(e);if(e.type!=='sniper'||e.sniperAim==null)e.shoot=e.huntTarget?(e.enraged?560:760):enemyAttackInterval(e,threat)}}
-  if(!e.bossRetreating&&(e.boss?enemyHitTest(e,player.x,player.y,playerCombatRadius()):Math.hypot(player.x-e.x,player.y-e.y)<playerCombatRadius()+e.r)){damagePlayer(e.boss?30:e.type==='suicide'?28:16);if(e.type==='suicide')suicideBlast(e);explode(e.x,e.y);enemies.splice(i,1);if(dying)break;continue}
+  if(!e.bossRetreating&&(e.boss?enemyHitTest(e,player.x,player.y,playerCombatRadius()):Math.hypot(player.x-e.x,player.y-e.y)<playerCombatRadius()+e.r)){
+   if(e.boss){
+    const wasVulnerable=player.inv<=0;damagePlayer(50);if(wasVulnerable&&!dying){const dx=player.x-e.x,dy=player.y-e.y,len=Math.hypot(dx,dy)||1,push=46;player.x=Math.max(playerCombatRadius(),Math.min(W-playerCombatRadius(),player.x+dx/len*push));player.y=Math.max(65,Math.min(H-SAFE_BOTTOM-playerCombatRadius(),player.y+dy/len*push));player.inv=Math.max(player.inv,1);player.vx=dx/len*155;player.vy=dy/len*155;shake=Math.max(shake,18)}if(dying)break;continue
+   }
+   damagePlayer(e.type==='suicide'?28:16);if(e.type==='suicide')suicideBlast(e);explode(e.x,e.y);enemies.splice(i,1);if(dying)break;continue
+  }
   if(e.y>H+50||e.x<-70||e.x>W+70)enemies.splice(i,1)
  }
  build.jammerNetHitCd=Math.max(0,(build.jammerNetHitCd||0)-dt);
